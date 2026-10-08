@@ -1,50 +1,197 @@
 Summary,Issue Type,Description,完了条件,Sprint,Labels
-1日目 環境構築とGit初期設定,Task,"uvとNode.jsの確認・導入、Gitのuser.name、user.email、改行コードの設定を行う。",バージョン表が揃い、Gitの設定が済んでいる,KIDS Sprint 1,day01
-1日目 Claude Codeのプロジェクト設定,Task,"CLAUDE.md、CLAUDE.local.md、.claude/settings.json、カスタムコマンドを作成する。今日のClaude Code機能：CLAUDE.md、権限設定、カスタムコマンド、/memory、/release-notes。",/start-day が動き、権限設定の意味を説明できる,KIDS Sprint 1,day01
-1日目 GitHubリポジトリへの接続,Task,"SSH鍵を作成してGitHubに登録し、リポジトリ kids-play を作成して最初のコミットをpushする。Secret scanningとPush protectionを有効にする。",初回コミットがGitHubにあり、Push protectionが有効,KIDS Sprint 1,day01
-1日目 Jiraの準備,Task,"Jira Cloud Freeに登録し、スクラムプロジェクト（キー：KIDS）を作成、GitHubと連携、CSVをインポートし、スプリント1を開始する。",スプリント1が開始され、ボードに課題が並んでいる,KIDS Sprint 1,day01
-2日目 企画とバックログ整理,Task,"画面ラフとミニアプリの仕様を決め、Jiraのバックログを整理する。今日のClaude Code機能：Planモード、/clear、/context、チェックポイント。",4つのミニアプリの仕様が docs/design.md にあり、バックログに優先順位が付いている,KIDS Sprint 1,day02
-2日目 デザインシステムとプロトタイプ,Task,"Claude Designでデザインシステムと、トップ画面・4つのミニアプリのプロトタイプを作る。子どもに見せて決定し、実装に引き継ぐ。",決定したデザインが docs/design.md に反映されている,KIDS Sprint 1,day02
-2日目 脅威分析の初版,Task,"データフロー図（Mermaid）を描き、STRIDEで脅威を洗い出し、リスク評価と対策をまとめる。TARAとの対応を整理する。",docs/security/threat-model.md の初版がある,KIDS Sprint 1,day02
-トップ画面（メニュー）,Story,"保護者として、子どもが自分で遊びを選べるように、大きなアイコンが並ぶトップ画面がほしい。","4つのアイコンから各ミニアプリに移動できる。ボタンは64px以上。消音ボタンがある。縦横どちらでも崩れない",KIDS Sprint 1,day02
-どうぶつタッチ,Story,"子どもとして、動物をタップして鳴き声とアニメーションを楽しみたい。画像は自作SVG、音はWeb Audio APIで生成する。","動物をタップすると鳴き声とアニメーションが出る。マウスとタッチの両方で動く。1タップでトップに戻れる",KIDS Sprint 1,day02
-2日目 ブランチからPRとマージの流れ,Task,"ブランチ作成、コミット、プルリクエスト、レビュー、マージの流れを1回通す。ブランチ名とコミットにJiraの課題キーを入れる。",PRを1本マージし、Jiraの課題にブランチとPRが表示されている,KIDS Sprint 1,day02
-おとあそびピアノ,Story,"子どもとして、色の鍵盤をタップして音を鳴らしたい。Web Audio APIで音を生成する。","8つの鍵盤で音が鳴る。同時押しができる。初期音量が控えめ。消音が効く",KIDS Sprint 1,day03
-3日目 SVG素材スキルの作成,Task,"同じ作風で子ども向けSVG素材を作るスキルを .claude/skills/ に作成する。今日のClaude Code機能：スキル。",スキルを使ってSVG素材を2つ以上作成できた,KIDS Sprint 1,day03
-3日目 安全なJavaScriptとESLint,Task,"innerHTMLを使わない書き方とユーザー入力の扱いを確認し、ESLintとセキュリティ関連ルール、Prettierを導入する。",ESLintとPrettierが通り、innerHTMLの使用が0件,KIDS Sprint 1,day03
-おえかきスタンプ,Story,"子どもとして、指でお絵かきをしてスタンプを押し、画像として保存したい。CanvasとPointer Eventsを使う。","指とマウスで描ける。色と太さを選べる。スタンプが押せる。全部消せる。PNGで保存できる",KIDS Sprint 1,day04
-4日目 Hooksの導入,Task,"編集後にPrettierとESLintを自動実行するHook（PostToolUse）と、秘密情報ファイルへのアクセスをブロックするHook（PreToolUse）を作る。",編集後に整形が自動で走り、.envの読み取りがブロックされる,KIDS Sprint 1,day04
-5日目 GitHub Pagesで公開,Task,"フロントエンドをGitHub Pagesで公開する。パスがすべて相対パスであることを確認する。",公開URLでトップと3つのミニアプリが動く,KIDS Sprint 1,day05
-PWA化とオフライン対応,Story,"保護者として、電波のない場所でも子どもが遊べるように、ホーム画面に追加してオフラインで動かしたい。manifestとService Workerを作る。","Androidのホーム画面に追加できる。機内モードでも起動して遊べる",KIDS Sprint 1,day05
-5日目 CSPとDependabotとCodeQL,Task,"Content Security Policyをmetaタグで設定し、Service Workerのキャッシュ範囲を確認する。DependabotとCodeQLを有効にする。",CSP違反が0件で、DependabotとCodeQLが有効,KIDS Sprint 1,day05
-5日目 レビュー用サブエージェント,Task,"子ども向けデザインルールとアクセシビリティの確認担当、プライバシー確認担当のサブエージェントを .claude/agents/ に作る。",2つのサブエージェントでレビューを実行できた,KIDS Sprint 1,day05
-5日目 画面録画（素材1）,Task,"PCのブラウザで遊んでいる様子をXbox Game Barで録画する。サンプルデータのみを使う。",素材1がリポジトリ外に保存されている,KIDS Sprint 1,day05
-Androidアプリ化（Capacitor）,Story,"保護者として、家族のAndroid端末にアプリとして入れて遊ばせたい。Capacitorを導入し、Android Studioでビルドして、USBデバッグで実機にインストールする。","実機にアプリが入り、3つのミニアプリが動く。エミュレータは使わない",KIDS Sprint 1,day06
-6日目 Androidアプリのセキュリティ,Task,"権限を最小限にし、バックアップ設定とWebViewの設定を確認する。署名鍵をリポジトリの外で管理する。",AndroidManifestの権限が最小で、署名鍵がリポジトリにない,KIDS Sprint 1,day06
-6日目 MCPとAIエージェントのセキュリティ,Task,"ブラウザ操作のMCPで画面確認を自動化する。JiraのMCP連携は利用条件を確認してから。プロンプトインジェクション、MCPサーバーの信頼性、権限の最小化を学ぶ。",MCPで画面確認を1回実行し、注意点を playbook に記録した,KIDS Sprint 1,day06
-6日目 画面録画（素材2）,Task,"Androidアプリで遊んでいる様子を録画する。",素材2がリポジトリ外に保存されている,KIDS Sprint 1,day06
-7日目 子どもに遊んでもらい感想を集める,Task,"PCとAndroidで子どもに遊んでもらい、感想をJiraの課題にする。個人が特定できる書き方をしない。",感想から課題を3件以上作成した,KIDS Sprint 1,day07
-7日目 スプリントレビューとレトロスペクティブ,Task,"スプリント1のレビューとレトロスペクティブを行い、スプリント2を計画して開始する。脅威分析を見直す。1週目のClaude Codeの使い方をQCDで評価する。",スプリント1が完了し、スプリント2が開始されている,KIDS Sprint 1,day07
-7日目 DaVinci Resolveの準備と絵コンテ,Task,"DaVinci Resolve（無料版）をインストールして動作確認し、1分の紹介動画の絵コンテを完成させる。",短い動画を書き出せて、docs/video-storyboard.md が完成している,KIDS Sprint 1,day07
-8日目 えほんの設計,Task,"保存処理のインターフェース、画面、保存先を切り替える設定を設計する。Claude Designのえほん画面を実装に引き継ぐ。",保存インターフェースが文書化され、IndexedDB版とFastAPI版で共通になっている,KIDS Sprint 2,day08
-わたしのえほん：録音と再生,Story,"子どもとして、描いた絵に自分の声でお話を録音し、紙芝居のように再生したい。MediaRecorderを使う。テストを先に書く。","録音して再生できる。マイクの許可は録音ボタンを押したときに求める。ページを順に再生できる",KIDS Sprint 2,day08
-わたしのえほん：端末内への保存と削除,Story,"保護者として、子どもの絵と声が端末の外に出ないようにしたい。IndexedDBに保存し、削除機能を付ける。","再読み込み後もえほんが残る。削除できる。外部への通信が0件",KIDS Sprint 2,day09
-9日目 Androidアプリ版えほん,Task,"マイク権限を追加し、Capacitorで再ビルドして、実機で録音と再生を確認する。git worktreeで並列作業を試す。",実機で録音と再生ができる,KIDS Sprint 2,day09
-9日目 画面録画（素材3）,Task,"サンプルデータ（自作SVGと合成音）でえほんを録画する。",素材3がリポジトリ外に保存されている,KIDS Sprint 2,day09
-保存API（FastAPI + SQLite、PC内のみ）,Story,"開発者として、保存先を差し替えられる設計を確かめるために、localhostでのみ有効なサーバー保存APIがほしい。","localhostでサーバー保存が動く。公開設定ではアップロードAPIが拒否することをpytestで確認している",KIDS Sprint 2,day10
-10日目 APIのセキュリティ,Task,"Pydanticで入力を検証し、ファイルアップロードを制限する。OWASP Top 10を確認し、pip-auditとruffのセキュリティルールを実行する。/code-reviewと/security-review、claude -pを試す。",pip-auditとruffの指摘が0件、または対応方針が記録されている,KIDS Sprint 2,day10
-11日目 WSL2とDocker Desktopの導入,Task,"WSL2を導入してLinuxコマンドを復習し、.wslconfigでメモリ上限を設定する。Docker Desktopを導入する。",WSLでUbuntuが動き、docker run hello-world が成功する,KIDS Sprint 2,day11
-Dockerで動かす（Dockerfileとcompose）,Story,"開発者として、ローカルとサーバーで同じイメージを動かしたい。nginx、フロントエンド、APIをdocker composeで起動する。","docker compose up でローカル起動できる。コンテナは非rootユーザーで動く",KIDS Sprint 2,day11
-CI（GitHub ActionsとGHCR）,Story,"開発者として、PRでテストを自動実行し、mainへのマージでイメージをビルドしてGHCRにpushしたい。TrivyのスキャンとSBOM（CycloneDX）の生成を含める。","PRでCIが成功する。GHCRにイメージがある。SBOMが成果物として保存される。重大な脆弱性でCIが失敗する",KIDS Sprint 2,day11
-12日目 AWSアカウントの安全設定,Task,"rootのMFA、IAMユーザーの作成とMFA、予算アラートを設定する。料金が発生する条件を先に確認する。",rootとIAMユーザーにMFAがあり、予算アラートが設定されている,KIDS Sprint 2,day12
-AWSでサーバー構築（HTTP）,Story,"開発者として、自分で構築したサーバーでデモ版を公開したい。EC2、Elastic IP、セキュリティグループ、Docker、nginxリバースプロキシを設定する。","Elastic IPにHTTPでアクセスするとデモ版が表示される。journalctlとdocker logsでログを確認できる",KIDS Sprint 2,day12
-12日目 サーバーのハードニング,Task,"SSHを鍵認証のみにし、パスワードログインとrootログインを無効にする。ufw、unattended-upgrades、IMDSv2必須化、セキュリティグループの最小化を行う。",ハードニングの各項目を確認し、結果を docs/security/ に記録した,KIDS Sprint 2,day12
-HTTPS化（DuckDNSとLet's Encrypt）,Story,"保護者として、AWS版でも録音機能を安全に使いたい。DuckDNSでサブドメインを取得し、certbotでHTTPS化して自動更新を設定する。","HTTPSで表示される。HTTPはHTTPSにリダイレクトされる。実機のブラウザで録音できる。保存先は端末内のみ",KIDS Sprint 2,day13
-自動デプロイ（OIDCとSSM）,Story,"開発者として、mainへのマージだけでAWSにデプロイしたい。OIDCでIAMロールを引き受け、SSM Run Commandでデプロイする。アクセスキーは発行しない。","小さな変更をマージすると、テスト、ビルド、push、デプロイまで自動で完了する。信頼ポリシーが自分のリポジトリとmainに限定されている",KIDS Sprint 2,day13
-13日目 HTTPSとクラウドのセキュリティ診断,Task,"SSL LabsでTLSを評価し、nginxでセキュリティヘッダーを設定する。自分のサーバーにOWASP ZAPのベースラインスキャンを実行し、結果に対応する。",SSL Labsの評価とZAPの結果が docs/security/ に記録されている,KIDS Sprint 2,day13
-13日目 プラグイン化と画面録画（素材4）,Task,"コマンド、スキル、サブエージェント、Hooksを1つのプラグインにまとめる。HTTPSのAWS版と自動デプロイの様子を録画する。",プラグインとして読み込めて、素材4が保存されている,KIDS Sprint 2,day13
-紹介動画（1分）,Story,"見る人として、1分でこのプロジェクトの全体が分かる動画がほしい。DaVinci Resolveで編集し、1080p H.264で書き出す。","動画がREADMEから見られる。子どもの顔・声・絵、秘密情報が映っていない",KIDS Sprint 2,day14
-14日目 READMEと発表資料の仕上げ,Task,"READMEを整備する（構成図、CI/CDの流れ）。Claude Designで成果発表スライドと1枚資料を作り、PDFをREADMEからリンクする。",READMEの全項目が埋まり、PDFへのリンクがある,KIDS Sprint 2,day14
-14日目 セキュリティ報告書とSECURITY.md,Task,"docs/security/security-report.md を仕上げ（脅威分析、対策、スキャン結果、残るリスク、ISO/SAE 21434との対応表）、SECURITY.md を作成する。",security-report.md と SECURITY.md が完成している,KIDS Sprint 2,day14
-14日目 AWSの後片付け,Task,"デモ版を残すかどうかを料金を確認して判断する。不要ならEC2、Elastic IP、IAMロールなどをすべて削除する。",料金が発生するリソースが0、または残す判断と月額の見込みが記録されている,KIDS Sprint 2,day14
-14日目 スプリント2のレビューと振り返り,Task,"スプリント2のレビューとレトロスペクティブを行う。Claude Code活用ガイドを仕上げ、14日間を振り返る。",スプリント2が完了し、docs/claude-code-playbook.md が完成している,KIDS Sprint 2,day14
+1日目 環境構築とGit初期設定,Task,"uvとNode.jsの確認・導入、Gitのuser.name、user.email、改行コードの設定を行う。
+
+【完了条件】
+バージョン表が揃い、Gitの設定が済んでいる",バージョン表が揃い、Gitの設定が済んでいる,KIDS Sprint 1,day01
+1日目 Claude Codeのプロジェクト設定,Task,"CLAUDE.md、CLAUDE.local.md、.claude/settings.json、カスタムコマンドを作成する。今日のClaude Code機能：CLAUDE.md、権限設定、カスタムコマンド、/memory、/release-notes。
+
+【完了条件】
+/start-day が動き、権限設定の意味を説明できる",/start-day が動き、権限設定の意味を説明できる,KIDS Sprint 1,day01
+1日目 GitHubリポジトリへの接続,Task,"SSH鍵を作成してGitHubに登録し、リポジトリ kids-play を作成して最初のコミットをpushする。Secret scanningとPush protectionを有効にする。
+
+【完了条件】
+初回コミットがGitHubにあり、Push protectionが有効",初回コミットがGitHubにあり、Push protectionが有効,KIDS Sprint 1,day01
+1日目 Jiraの準備,Task,"Jira Cloud Freeに登録し、スクラムプロジェクト（キー：KIDS）を作成、GitHubと連携、CSVをインポートし、スプリント1を開始する。
+
+【完了条件】
+スプリント1が開始され、ボードに課題が並んでいる",スプリント1が開始され、ボードに課題が並んでいる,KIDS Sprint 1,day01
+2日目 企画とバックログ整理,Task,"画面ラフとミニアプリの仕様を決め、Jiraのバックログを整理する。今日のClaude Code機能：Planモード、/clear、/context、チェックポイント。
+
+【完了条件】
+4つのミニアプリの仕様が docs/design.md にあり、バックログに優先順位が付いている",4つのミニアプリの仕様が docs/design.md にあり、バックログに優先順位が付いている,KIDS Sprint 1,day02
+2日目 デザインシステムとプロトタイプ,Task,"Claude Designでデザインシステムと、トップ画面・4つのミニアプリのプロトタイプを作る。子どもに見せて決定し、実装に引き継ぐ。
+
+【完了条件】
+決定したデザインが docs/design.md に反映されている",決定したデザインが docs/design.md に反映されている,KIDS Sprint 1,day02
+2日目 脅威分析の初版,Task,"データフロー図（Mermaid）を描き、STRIDEで脅威を洗い出し、リスク評価と対策をまとめる。TARAとの対応を整理する。
+
+【完了条件】
+docs/security/threat-model.md の初版がある",docs/security/threat-model.md の初版がある,KIDS Sprint 1,day02
+トップ画面（メニュー）,Story,"保護者として、子どもが自分で遊びを選べるように、大きなアイコンが並ぶトップ画面がほしい。
+
+【完了条件】
+4つのアイコンから各ミニアプリに移動できる。ボタンは64px以上。消音ボタンがある。縦横どちらでも崩れない",4つのアイコンから各ミニアプリに移動できる。ボタンは64px以上。消音ボタンがある。縦横どちらでも崩れない,KIDS Sprint 1,day02
+どうぶつタッチ,Story,"子どもとして、動物をタップして鳴き声とアニメーションを楽しみたい。画像は自作SVG、音はWeb Audio APIで生成する。
+
+【完了条件】
+動物をタップすると鳴き声とアニメーションが出る。マウスとタッチの両方で動く。1タップでトップに戻れる",動物をタップすると鳴き声とアニメーションが出る。マウスとタッチの両方で動く。1タップでトップに戻れる,KIDS Sprint 1,day02
+2日目 ブランチからPRとマージの流れ,Task,"ブランチ作成、コミット、プルリクエスト、レビュー、マージの流れを1回通す。ブランチ名とコミットにJiraの課題キーを入れる。
+
+【完了条件】
+PRを1本マージし、Jiraの課題にブランチとPRが表示されている",PRを1本マージし、Jiraの課題にブランチとPRが表示されている,KIDS Sprint 1,day02
+おとあそびピアノ,Story,"子どもとして、色の鍵盤をタップして音を鳴らしたい。Web Audio APIで音を生成する。
+
+【完了条件】
+8つの鍵盤で音が鳴る。同時押しができる。初期音量が控えめ。消音が効く",8つの鍵盤で音が鳴る。同時押しができる。初期音量が控えめ。消音が効く,KIDS Sprint 1,day03
+3日目 SVG素材スキルの作成,Task,"同じ作風で子ども向けSVG素材を作るスキルを .claude/skills/ に作成する。今日のClaude Code機能：スキル。
+
+【完了条件】
+スキルを使ってSVG素材を2つ以上作成できた",スキルを使ってSVG素材を2つ以上作成できた,KIDS Sprint 1,day03
+3日目 安全なJavaScriptとESLint,Task,"innerHTMLを使わない書き方とユーザー入力の扱いを確認し、ESLintとセキュリティ関連ルール、Prettierを導入する。
+
+【完了条件】
+ESLintとPrettierが通り、innerHTMLの使用が0件",ESLintとPrettierが通り、innerHTMLの使用が0件,KIDS Sprint 1,day03
+おえかきスタンプ,Story,"子どもとして、指でお絵かきをしてスタンプを押し、画像として保存したい。CanvasとPointer Eventsを使う。
+
+【完了条件】
+指とマウスで描ける。色と太さを選べる。スタンプが押せる。全部消せる。PNGで保存できる",指とマウスで描ける。色と太さを選べる。スタンプが押せる。全部消せる。PNGで保存できる,KIDS Sprint 1,day04
+4日目 Hooksの導入,Task,"編集後にPrettierとESLintを自動実行するHook（PostToolUse）と、秘密情報ファイルへのアクセスをブロックするHook（PreToolUse）を作る。
+
+【完了条件】
+編集後に整形が自動で走り、.envの読み取りがブロックされる",編集後に整形が自動で走り、.envの読み取りがブロックされる,KIDS Sprint 1,day04
+5日目 GitHub Pagesで公開,Task,"フロントエンドをGitHub Pagesで公開する。パスがすべて相対パスであることを確認する。
+
+【完了条件】
+公開URLでトップと3つのミニアプリが動く",公開URLでトップと3つのミニアプリが動く,KIDS Sprint 1,day05
+PWA化とオフライン対応,Story,"保護者として、電波のない場所でも子どもが遊べるように、ホーム画面に追加してオフラインで動かしたい。manifestとService Workerを作る。
+
+【完了条件】
+Androidのホーム画面に追加できる。機内モードでも起動して遊べる",Androidのホーム画面に追加できる。機内モードでも起動して遊べる,KIDS Sprint 1,day05
+5日目 CSPとDependabotとCodeQL,Task,"Content Security Policyをmetaタグで設定し、Service Workerのキャッシュ範囲を確認する。DependabotとCodeQLを有効にする。
+
+【完了条件】
+CSP違反が0件で、DependabotとCodeQLが有効",CSP違反が0件で、DependabotとCodeQLが有効,KIDS Sprint 1,day05
+5日目 レビュー用サブエージェント,Task,"子ども向けデザインルールとアクセシビリティの確認担当、プライバシー確認担当のサブエージェントを .claude/agents/ に作る。
+
+【完了条件】
+2つのサブエージェントでレビューを実行できた",2つのサブエージェントでレビューを実行できた,KIDS Sprint 1,day05
+5日目 画面録画（素材1）,Task,"PCのブラウザで遊んでいる様子をXbox Game Barで録画する。サンプルデータのみを使う。
+
+【完了条件】
+素材1がリポジトリ外に保存されている",素材1がリポジトリ外に保存されている,KIDS Sprint 1,day05
+Androidアプリ化（Capacitor）,Story,"保護者として、家族のAndroid端末にアプリとして入れて遊ばせたい。Capacitorを導入し、Android Studioでビルドして、USBデバッグで実機にインストールする。
+
+【完了条件】
+実機にアプリが入り、3つのミニアプリが動く。エミュレータは使わない",実機にアプリが入り、3つのミニアプリが動く。エミュレータは使わない,KIDS Sprint 1,day06
+6日目 Androidアプリのセキュリティ,Task,"権限を最小限にし、バックアップ設定とWebViewの設定を確認する。署名鍵をリポジトリの外で管理する。
+
+【完了条件】
+AndroidManifestの権限が最小で、署名鍵がリポジトリにない",AndroidManifestの権限が最小で、署名鍵がリポジトリにない,KIDS Sprint 1,day06
+6日目 MCPとAIエージェントのセキュリティ,Task,"ブラウザ操作のMCPで画面確認を自動化する。JiraのMCP連携は利用条件を確認してから。プロンプトインジェクション、MCPサーバーの信頼性、権限の最小化を学ぶ。
+
+【完了条件】
+MCPで画面確認を1回実行し、注意点を playbook に記録した",MCPで画面確認を1回実行し、注意点を playbook に記録した,KIDS Sprint 1,day06
+6日目 画面録画（素材2）,Task,"Androidアプリで遊んでいる様子を録画する。
+
+【完了条件】
+素材2がリポジトリ外に保存されている",素材2がリポジトリ外に保存されている,KIDS Sprint 1,day06
+7日目 子どもに遊んでもらい感想を集める,Task,"PCとAndroidで子どもに遊んでもらい、感想をJiraの課題にする。個人が特定できる書き方をしない。
+
+【完了条件】
+感想から課題を3件以上作成した",感想から課題を3件以上作成した,KIDS Sprint 1,day07
+7日目 スプリントレビューとレトロスペクティブ,Task,"スプリント1のレビューとレトロスペクティブを行い、スプリント2を計画して開始する。脅威分析を見直す。1週目のClaude Codeの使い方をQCDで評価する。
+
+【完了条件】
+スプリント1が完了し、スプリント2が開始されている",スプリント1が完了し、スプリント2が開始されている,KIDS Sprint 1,day07
+7日目 DaVinci Resolveの準備と絵コンテ,Task,"DaVinci Resolve（無料版）をインストールして動作確認し、1分の紹介動画の絵コンテを完成させる。
+
+【完了条件】
+短い動画を書き出せて、docs/video-storyboard.md が完成している",短い動画を書き出せて、docs/video-storyboard.md が完成している,KIDS Sprint 1,day07
+8日目 えほんの設計,Task,"保存処理のインターフェース、画面、保存先を切り替える設定を設計する。Claude Designのえほん画面を実装に引き継ぐ。
+
+【完了条件】
+保存インターフェースが文書化され、IndexedDB版とFastAPI版で共通になっている",保存インターフェースが文書化され、IndexedDB版とFastAPI版で共通になっている,KIDS Sprint 2,day08
+わたしのえほん：録音と再生,Story,"子どもとして、描いた絵に自分の声でお話を録音し、紙芝居のように再生したい。MediaRecorderを使う。テストを先に書く。
+
+【完了条件】
+録音して再生できる。マイクの許可は録音ボタンを押したときに求める。ページを順に再生できる",録音して再生できる。マイクの許可は録音ボタンを押したときに求める。ページを順に再生できる,KIDS Sprint 2,day08
+わたしのえほん：端末内への保存と削除,Story,"保護者として、子どもの絵と声が端末の外に出ないようにしたい。IndexedDBに保存し、削除機能を付ける。
+
+【完了条件】
+再読み込み後もえほんが残る。削除できる。外部への通信が0件",再読み込み後もえほんが残る。削除できる。外部への通信が0件,KIDS Sprint 2,day09
+9日目 Androidアプリ版えほん,Task,"マイク権限を追加し、Capacitorで再ビルドして、実機で録音と再生を確認する。git worktreeで並列作業を試す。
+
+【完了条件】
+実機で録音と再生ができる",実機で録音と再生ができる,KIDS Sprint 2,day09
+9日目 画面録画（素材3）,Task,"サンプルデータ（自作SVGと合成音）でえほんを録画する。
+
+【完了条件】
+素材3がリポジトリ外に保存されている",素材3がリポジトリ外に保存されている,KIDS Sprint 2,day09
+保存API（FastAPI + SQLite、PC内のみ）,Story,"開発者として、保存先を差し替えられる設計を確かめるために、localhostでのみ有効なサーバー保存APIがほしい。
+
+【完了条件】
+localhostでサーバー保存が動く。公開設定ではアップロードAPIが拒否することをpytestで確認している",localhostでサーバー保存が動く。公開設定ではアップロードAPIが拒否することをpytestで確認している,KIDS Sprint 2,day10
+10日目 APIのセキュリティ,Task,"Pydanticで入力を検証し、ファイルアップロードを制限する。OWASP Top 10を確認し、pip-auditとruffのセキュリティルールを実行する。/code-reviewと/security-review、claude -pを試す。
+
+【完了条件】
+pip-auditとruffの指摘が0件、または対応方針が記録されている",pip-auditとruffの指摘が0件、または対応方針が記録されている,KIDS Sprint 2,day10
+11日目 WSL2とDocker Desktopの導入,Task,"WSL2を導入してLinuxコマンドを復習し、.wslconfigでメモリ上限を設定する。Docker Desktopを導入する。
+
+【完了条件】
+WSLでUbuntuが動き、docker run hello-world が成功する",WSLでUbuntuが動き、docker run hello-world が成功する,KIDS Sprint 2,day11
+Dockerで動かす（Dockerfileとcompose）,Story,"開発者として、ローカルとサーバーで同じイメージを動かしたい。nginx、フロントエンド、APIをdocker composeで起動する。
+
+【完了条件】
+docker compose up でローカル起動できる。コンテナは非rootユーザーで動く",docker compose up でローカル起動できる。コンテナは非rootユーザーで動く,KIDS Sprint 2,day11
+CI（GitHub ActionsとGHCR）,Story,"開発者として、PRでテストを自動実行し、mainへのマージでイメージをビルドしてGHCRにpushしたい。TrivyのスキャンとSBOM（CycloneDX）の生成を含める。
+
+【完了条件】
+PRでCIが成功する。GHCRにイメージがある。SBOMが成果物として保存される。重大な脆弱性でCIが失敗する",PRでCIが成功する。GHCRにイメージがある。SBOMが成果物として保存される。重大な脆弱性でCIが失敗する,KIDS Sprint 2,day11
+12日目 AWSアカウントの安全設定,Task,"rootのMFA、IAMユーザーの作成とMFA、予算アラートを設定する。料金が発生する条件を先に確認する。
+
+【完了条件】
+rootとIAMユーザーにMFAがあり、予算アラートが設定されている",rootとIAMユーザーにMFAがあり、予算アラートが設定されている,KIDS Sprint 2,day12
+AWSでサーバー構築（HTTP）,Story,"開発者として、自分で構築したサーバーでデモ版を公開したい。EC2、Elastic IP、セキュリティグループ、Docker、nginxリバースプロキシを設定する。
+
+【完了条件】
+Elastic IPにHTTPでアクセスするとデモ版が表示される。journalctlとdocker logsでログを確認できる",Elastic IPにHTTPでアクセスするとデモ版が表示される。journalctlとdocker logsでログを確認できる,KIDS Sprint 2,day12
+12日目 サーバーのハードニング,Task,"SSHを鍵認証のみにし、パスワードログインとrootログインを無効にする。ufw、unattended-upgrades、IMDSv2必須化、セキュリティグループの最小化を行う。
+
+【完了条件】
+ハードニングの各項目を確認し、結果を docs/security/ に記録した",ハードニングの各項目を確認し、結果を docs/security/ に記録した,KIDS Sprint 2,day12
+HTTPS化（DuckDNSとLet's Encrypt）,Story,"保護者として、AWS版でも録音機能を安全に使いたい。DuckDNSでサブドメインを取得し、certbotでHTTPS化して自動更新を設定する。
+
+【完了条件】
+HTTPSで表示される。HTTPはHTTPSにリダイレクトされる。実機のブラウザで録音できる。保存先は端末内のみ",HTTPSで表示される。HTTPはHTTPSにリダイレクトされる。実機のブラウザで録音できる。保存先は端末内のみ,KIDS Sprint 2,day13
+自動デプロイ（OIDCとSSM）,Story,"開発者として、mainへのマージだけでAWSにデプロイしたい。OIDCでIAMロールを引き受け、SSM Run Commandでデプロイする。アクセスキーは発行しない。
+
+【完了条件】
+小さな変更をマージすると、テスト、ビルド、push、デプロイまで自動で完了する。信頼ポリシーが自分のリポジトリとmainに限定されている",小さな変更をマージすると、テスト、ビルド、push、デプロイまで自動で完了する。信頼ポリシーが自分のリポジトリとmainに限定されている,KIDS Sprint 2,day13
+13日目 HTTPSとクラウドのセキュリティ診断,Task,"SSL LabsでTLSを評価し、nginxでセキュリティヘッダーを設定する。自分のサーバーにOWASP ZAPのベースラインスキャンを実行し、結果に対応する。
+
+【完了条件】
+SSL Labsの評価とZAPの結果が docs/security/ に記録されている",SSL Labsの評価とZAPの結果が docs/security/ に記録されている,KIDS Sprint 2,day13
+13日目 プラグイン化と画面録画（素材4）,Task,"コマンド、スキル、サブエージェント、Hooksを1つのプラグインにまとめる。HTTPSのAWS版と自動デプロイの様子を録画する。
+
+【完了条件】
+プラグインとして読み込めて、素材4が保存されている",プラグインとして読み込めて、素材4が保存されている,KIDS Sprint 2,day13
+紹介動画（1分）,Story,"見る人として、1分でこのプロジェクトの全体が分かる動画がほしい。DaVinci Resolveで編集し、1080p H.264で書き出す。
+
+【完了条件】
+動画がREADMEから見られる。子どもの顔・声・絵、秘密情報が映っていない",動画がREADMEから見られる。子どもの顔・声・絵、秘密情報が映っていない,KIDS Sprint 2,day14
+14日目 READMEと発表資料の仕上げ,Task,"READMEを整備する（構成図、CI/CDの流れ）。Claude Designで成果発表スライドと1枚資料を作り、PDFをREADMEからリンクする。
+
+【完了条件】
+READMEの全項目が埋まり、PDFへのリンクがある",READMEの全項目が埋まり、PDFへのリンクがある,KIDS Sprint 2,day14
+14日目 セキュリティ報告書とSECURITY.md,Task,"docs/security/security-report.md を仕上げ（脅威分析、対策、スキャン結果、残るリスク、ISO/SAE 21434との対応表）、SECURITY.md を作成する。
+
+【完了条件】
+security-report.md と SECURITY.md が完成している",security-report.md と SECURITY.md が完成している,KIDS Sprint 2,day14
+14日目 AWSの後片付け,Task,"デモ版を残すかどうかを料金を確認して判断する。不要ならEC2、Elastic IP、IAMロールなどをすべて削除する。
+
+【完了条件】
+料金が発生するリソースが0、または残す判断と月額の見込みが記録されている",料金が発生するリソースが0、または残す判断と月額の見込みが記録されている,KIDS Sprint 2,day14
+14日目 スプリント2のレビューと振り返り,Task,"スプリント2のレビューとレトロスペクティブを行う。Claude Code活用ガイドを仕上げ、14日間を振り返る。
+
+【完了条件】
+スプリント2が完了し、docs/claude-code-playbook.md が完成している",スプリント2が完了し、docs/claude-code-playbook.md が完成している,KIDS Sprint 2,day14

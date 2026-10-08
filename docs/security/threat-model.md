@@ -54,7 +54,9 @@ flowchart LR
 | ID | 対策 | 対応する脅威 | 実施日 | 状態 | 確認方法（証拠） |
 |---|---|---|---|---|---|
 | C-01 | .gitignore と Claude Code の deny で秘密情報と子どものデータを除外 | （2日目に対応付け） | 1日目 | 実施済み | `.gitignore`、`.claude/settings.json` |
-| C-02 | GitHubの Secret scanning と Push protection を有効化 | | 1日目 | 手順確認済み（リポジトリ作成後に有効化） | リポジトリの Settings |
+| C-02 | GitHubの Secret scanning と Push protection を有効化 | | 1日目 | 実施済み（アカウント側とリポジトリ側の両方で有効を確認） | アカウントとリポジトリの Settings |
+| C-03 | SSH秘密鍵をパスフレーズで保護し、ssh-agent で管理 | | 1日目 | 実施済み | – |
+| C-04 | Jira と GitHub の連携を kids-play のみに限定（最小権限） | | 1日目 | 実施済み | GitHub for Atlassian の設定画面 |
 
 ## 6. ISO/SAE 21434（TARA）との対応
 

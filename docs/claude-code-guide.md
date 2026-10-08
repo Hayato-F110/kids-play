@@ -51,6 +51,8 @@ Claude Codeの設定ファイルが「何のためにあり、どう使うか」
 | `/whats-new` | 週1回 | 新機能を調べ、役立ちそうなものを3つ紹介 |
 
 - コマンドの実体は `.claude/commands/<名前>.md` の文章。`$ARGUMENTS` に引数が入る
+- `/release-notes` のような組み込みコマンドは、Claude Code本体の機能で、カスタムコマンドやスキルとは別物
+- VS Code拡張のパネルでは `/release-notes` が候補に出ない（2.1.293で確認）。VS Codeのターミナルで `claude` を起動して実行する
 - `/review` が組み込みコマンドと同名で意図どおり動かない場合は、ファイル名を変えて別名にする（例：`kids-review.md`）
 
 ## 1日の流れ
