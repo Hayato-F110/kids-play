@@ -1,0 +1,104 @@
+# ============================================================
+# キッズあそびランド .gitignore
+# 方針：秘密情報と子どものデータは「絶対に」入れない
+# ============================================================
+
+# ---- 秘密情報（最重要） ----
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+secrets/
+.aws/
+credentials
+credentials.json
+*token*.txt
+duckdns*.txt
+# 設定の見本は env.example（先頭ドットなし）という名前でコミットする
+
+# ---- 子どものデータ（絵・録音。絶対にコミットしない） ----
+data/
+backend/data/
+uploads/
+recordings/
+*.sqlite
+*.sqlite3
+*.db
+
+# ---- Claude Code（個人用） ----
+CLAUDE.local.md
+kickoff-prompt.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# ---- Node ----
+node_modules/
+npm-debug.log*
+.eslintcache
+
+# ---- Android（Capacitor / Gradle） ----
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/local.properties
+android/.idea/
+android/captures/
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/
+*.apk
+*.aab
+*.iml
+
+# ---- Docker ----
+docker-compose.override.yml
+*.tar
+
+# ---- セキュリティスキャンの生成物（必要なものだけ docs/security/ に手で移す） ----
+trivy-results.*
+zap-report.*
+sbom*.json
+
+# ---- 動画（素材と書き出しは大きいのでリポジトリ外で管理） ----
+video/raw/
+video/export/
+*.mp4
+*.mov
+*.mkv
+*.drp
+
+# ---- Windows ----
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ---- VS Code ----
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.code-workspace
+
+# ---- その他 ----
+*.log
+*.tmp
+*.bak

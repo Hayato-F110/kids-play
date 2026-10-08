@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "bierner.markdown-mermaid",
+    "ms-vscode.live-server",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "charliermarsh.ruff",
+    "github.vscode-pull-request-github",
+    "github.vscode-github-actions",
+    "redhat.vscode-yaml",
+    "ms-vscode-remote.remote-wsl",
+    "ms-azuretools.vscode-containers",
+    "ms-vscode-remote.remote-ssh"
+  ]
+}

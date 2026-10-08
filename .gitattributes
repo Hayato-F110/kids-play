@@ -1,0 +1,14 @@
+# 改行コードをLFに統一する（Windows / WSL / Docker / EC2 で同じバイト列にする）
+* text=auto eol=lf
+
+# Windows専用スクリプトはCRLFのまま
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# バイナリ
+*.png binary
+*.jpg binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.jar binary
