@@ -1,0 +1,197 @@
+/* 全画面に共通の見た目：土台、上の帯、押せる部品 */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-rounded);
+  font-weight: 700;
+  /* 長押しで文字の選択やメニューが出ると、子どもが遊びに戻れなくなるため */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* ダブルタップでの拡大を止め、連打してもすぐ反応させるため */
+  touch-action: manipulation;
+}
+
+.screen {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-2);
+  /* dvh は、スマホのアドレスバーが出入りしても画面の実際の高さに合わせるため */
+  min-height: 100dvh;
+  padding: var(--space-2);
+}
+
+/* 上の帯：左におうち、右に消音。全画面で同じ位置にするため、列の幅を固定する */
+.topbar {
+  display: grid;
+  grid-template-columns: var(--corner-size) 1fr var(--corner-size);
+  align-items: center;
+  gap: var(--space-2);
+  /* 押したときに沈む分の余白 */
+  padding-bottom: var(--pop);
+}
+
+.topbar__title {
+  grid-column: 2;
+  margin: 0;
+  font-size: var(--label-lg);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.topbar__title span {
+  display: inline-block;
+}
+
+.topbar__right {
+  grid-column: 3;
+}
+
+.label {
+  margin: 0;
+  font-size: var(--label-md);
+  line-height: 1.3;
+}
+
+/* 画面の中央に、絵と短いことばを1つずつ置く（じゅんびちゅう など） */
+.notice {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-2);
+}
+
+.notice svg {
+  width: clamp(10rem, 40vmin, 16rem);
+  height: auto;
+}
+
+/* 押せる部品の土台：太い輪郭線と、ぼかさない段 */
+.btn {
+  display: grid;
+  place-items: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0;
+  border: var(--stroke) solid var(--color-text);
+  background: var(--btn-fill, var(--color-surface));
+  color: var(--color-text);
+  box-shadow: var(--shadow-pop);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out;
+}
+
+/* 押している間は、段の分だけ沈む */
+.btn:active,
+a:active > .btn {
+  transform: translateY(var(--pop));
+  box-shadow: none;
+}
+
+.btn:focus-visible,
+a:focus-visible > .btn {
+  outline: 0.25rem solid var(--color-primary);
+  outline-offset: 0.25rem;
+}
+
+.btn svg {
+  display: block;
+  /* タップが中のSVGではなくボタン自身に届くようにするため */
+  pointer-events: none;
+}
+
+/* 共通ボタン（おうち、消音）：円 */
+.btn--round {
+  --btn-fill: var(--color-primary);
+  width: var(--corner-size);
+  height: var(--corner-size);
+  border-radius: 50%;
+  color: var(--color-on-primary);
+}
+
+.btn--round svg {
+  width: 60%;
+  height: 60%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 消音中は、色だけでなくアイコンの形も変える（色だけで状態を伝えないため） */
+.btn--round[aria-pressed="true"] {
+  --btn-fill: var(--color-surface);
+  color: var(--color-text);
+}
+
+.btn--round[aria-pressed="true"] .icon-sound-on,
+.btn--round[aria-pressed="false"] .icon-sound-off {
+  display: none;
+}
+
+/* アイコンの塗り分け。<symbol> の中の class に当てる */
+.icon {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-white {
+  fill: var(--color-surface);
+}
+
+.icon-ink {
+  fill: var(--color-text);
+  stroke: none;
+}
+
+.icon-pink {
+  fill: var(--color-accent-2);
+}
+
+.icon-yellow {
+  fill: var(--color-accent-1);
+}
+
+.icon-green {
+  fill: var(--color-accent-3);
+}
+
+.icon-thin {
+  stroke-width: 4;
+}
+
+.icon-thick {
+  stroke-width: 6;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+}

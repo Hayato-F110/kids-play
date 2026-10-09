@@ -1,0 +1,39 @@
+/*
+ * デザイントークン。値の元は docs/design.md の表。
+ * 色・余白・大きさをここだけで定義し、ほかのCSSは var() で参照する。
+ * 大きさを rem にしているのは、端末の文字サイズ設定に合わせて全体が伸び縮みするようにするため（16px = 1rem）。
+ */
+:root {
+  --color-bg: #e8f4fb;
+  --color-surface: #ffffff;
+  --color-text: #23324a;
+  --color-text-soft: #4d5d78;
+  --color-primary: #2c63c4;
+  --color-on-primary: #ffffff;
+  --color-accent-1: #ffb23e;
+  --color-accent-2: #f2708f;
+  --color-accent-3: #4fbf8b;
+  --color-accent-4: #8f7be8;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+
+  --radius-sm: 0.75rem;
+  --radius-md: 1.5rem;
+  --radius-lg: 2.5rem;
+
+  --tap-min: 4rem;
+  --corner-size: 4.5rem;
+  --stroke: 0.25rem;
+  --pop: 0.375rem;
+  --shadow-pop: 0 var(--pop) 0 var(--color-text);
+
+  --font-rounded:
+    "Hiragino Maru Gothic ProN", "HGMaruGothicMPRO", "BIZ UDPGothic", "Yu Gothic UI", "Noto Sans JP",
+    sans-serif;
+  --label-lg: clamp(1.5rem, 5vw, 2rem);
+  --label-md: clamp(1.25rem, 4vw, 1.5rem);
+  --label-sm: 1.25rem;
+}
