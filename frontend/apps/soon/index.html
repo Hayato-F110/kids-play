@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>じゅんびちゅう</title>
+    <link rel="stylesheet" href="../../css/tokens.css" />
+    <link rel="stylesheet" href="../../css/base.css" />
+  </head>
+  <body>
+    <div class="screen">
+      <header class="topbar">
+        <a href="../../index.html" aria-label="おうちに もどる">
+          <span class="btn btn--round">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M7 24L24 9l17 15" />
+              <path d="M12 21v18h24V21" />
+              <path d="M21 39V29h6v10" />
+            </svg>
+          </span>
+        </a>
+        <button class="btn btn--round topbar__right" type="button" aria-pressed="false" data-mute-button>
+          <span class="visually-hidden" data-mute-label>おとを けす</span>
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M7 19h8l10-8v26l-10-8H7z" fill="currentColor" />
+            <g class="icon-sound-on">
+              <path d="M32 18q5 6 0 12" />
+              <path d="M37 12q10 12 0 24" />
+            </g>
+            <path class="icon-sound-off" d="M32 19l10 10M42 19L32 29" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- 失敗や行き止まりに見せない。「これから育つ」芽の絵で、楽しみに待てるようにする -->
+      <main class="notice">
+        <svg class="icon icon-thick" viewBox="0 0 200 200" role="img" aria-label="つちから でた め">
+          <path class="icon-yellow" d="M56 132h88l-10 48H66z" />
+          <path class="icon-white" d="M48 116h104v18H48z" />
+          <path d="M100 116V70" />
+          <path class="icon-green" d="M100 82c-4-22-24-30-42-26 2 20 20 32 42 26z" />
+          <path class="icon-green" d="M100 70c2-22 20-32 40-30-1 20-18 34-40 30z" />
+        </svg>
+        <p class="label">じゅんびちゅう</p>
+      </main>
+    </div>
+
+    <script type="module" src="../../js/main.js"></script>
+  </body>
+</html>

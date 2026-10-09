@@ -1,0 +1,65 @@
+/* トップ画面のメニュー */
+
+.menu__item {
+  display: grid;
+  justify-items: center;
+  /* 面が沈んでも名前に重ならないよう、沈む分を足す */
+  gap: calc(var(--space-1) + var(--pop));
+  color: var(--color-text);
+  text-decoration: none;
+  outline: none;
+}
+
+/*
+ * 面の色。HTMLの style 属性に書かないのは、5日目に入れるCSP（インラインのスタイルを禁止する設定）に備えるため
+ */
+.menu__item--animals {
+  --btn-fill: var(--color-accent-1);
+}
+
+.menu__item--piano {
+  --btn-fill: var(--color-accent-2);
+}
+
+.menu__item--draw {
+  --btn-fill: var(--color-accent-3);
+}
+
+.menu__item--storybook {
+  --btn-fill: var(--color-accent-4);
+}
+
+.menu__face {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+}
+
+.menu__face svg {
+  width: 68%;
+  height: 68%;
+}
+
+/* メニューを画面の上下の中央に置く */
+.menu-area {
+  display: grid;
+  align-content: center;
+}
+
+/* 縦長（基本）：2列×2段 */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
+/* 横長：4つ横並び。変わるものだけを上書きする */
+@media (orientation: landscape) {
+  .menu {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 56rem;
+  }
+}
+
