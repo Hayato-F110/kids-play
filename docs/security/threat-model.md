@@ -13,18 +13,57 @@
 | A2 | 秘密情報（AWS認証情報、SSH秘密鍵、DuckDNSトークン、署名鍵） | 悪用されるとサーバーの乗っ取りや課金につながる | 自分のPC、GitHub Secrets | 高 |
 | A3 | サーバー（EC2）とAWSアカウント | 踏み台や不正利用、高額請求 | AWS | 高 |
 | A4 | ソースコードと配布物の完全性 | 改ざんされたアプリが子どもの端末で動く | GitHub、GHCR、GitHub Pages | 中 |
-| A5 | （2日目に追加） | | | |
+| A5 | 子どもの安全な体験（聴覚、目、不適切な内容に触れないこと） | 大音量、激しい点滅、外部リンクや広告は、子どもに直接の害になる | フロントエンドの実装 | 高 |
 
 ## 2. データフロー図
 
-2日目に作成する。信頼境界（端末、インターネット、GitHub、AWS）を点線で示す。
+枠（subgraph）が信頼境界。枠をまたぐ矢印（DF-xx）が、脅威を探す主な場所になる。
+⬜ はまだ作っていない要素（作る日）。7日目の見直しで実態に合わせる。
 
 ```mermaid
 flowchart LR
-    child["子ども・保護者"] --> ui["フロントエンド（ブラウザ / PWA / アプリ）"]
-    ui --> idb[("IndexedDB")]
-    %% 2日目に、信頼境界、配信経路（Pages、AWS）、CI/CD、localhostのAPIを追加する
+    subgraph TB1["信頼境界1：家族の端末（Android / PC）"]
+        child["子ども・保護者"]
+        ui["P1 フロントエンド<br>ブラウザ / PWA / アプリ"]
+        idb[("D1 IndexedDB<br>絵と録音 ⬜9日目")]
+        child -- "DF-01 タップ、絵、声" --> ui
+        ui -- "DF-02 保存・読み出し" --> idb
+    end
+
+    subgraph TB2["信頼境界2：開発用PC"]
+        dev["P2 VS Code + Claude Code"]
+        secrets[("D2 秘密情報<br>SSH鍵、.env、署名鍵")]
+        localapi["P3 FastAPI + SQLite<br>localhostのみ ⬜10日目"]
+        dev -. "読まない（deny設定）" .- secrets
+    end
+
+    subgraph TB3["信頼境界3：GitHub"]
+        repo[("D3 リポジトリ")]
+        actions["P4 GitHub Actions ⬜11日目"]
+        pages["P5 GitHub Pages ⬜5日目"]
+        repo --> actions --> pages
+    end
+
+    subgraph TB4["信頼境界4：AWS ⬜12〜13日目"]
+        ec2["P6 EC2：nginx + コンテナ"]
+    end
+
+    subgraph TB5["信頼境界5：外部サービス"]
+        claude["P7 Anthropic<br>Claude Code、Claude Design"]
+        jira["P8 Jira Cloud"]
+    end
+
+    dev -- "DF-03 git push（SSH）" --> repo
+    pages -- "DF-04 配信（HTTPS）" --> ui
+    ec2 -- "DF-05 配信（HTTPS）" --> ui
+    actions -- "DF-06 デプロイ（OIDC + SSM）" --> ec2
+    dev -- "DF-07 USB（adb）でインストール" --> ui
+    dev -- "DF-08 コード、指示、デザイン" --> claude
+    repo -- "DF-09 ブランチ・PRの情報" --> jira
+    ui -. "DF-10 サーバー保存<br>localhostのときだけ" .-> localapi
 ```
+
+設計上の要点：DF-01 と DF-02 で扱う絵と声（A1）は、信頼境界1の外へ出る矢印を持たない。DF-10 は開発用PCの中だけで有効になる。
 
 ## 3. 脅威の洗い出し（STRIDE）
 
@@ -37,9 +76,26 @@ flowchart LR
 | **D**enial of service | サービス拒否 | バスの占有 |
 | **E**levation of privilege | 権限昇格 | 診断セッションの不正な昇格 |
 
+STRIDEの当てはめ方（STRIDE per element）：データフロー（矢印）には T・I・D、プロセス（P）には6つすべて、データストア（D）には T・R・I・D、外部の人やサービスには S・R を当てて考える。
+
 | ID | 対象（要素・データフロー） | STRIDE | 脅威シナリオ | 影響する資産 |
 |---|---|---|---|---|
-| T-01 | | | | |
+| T-01 | P1 フロントエンド、D1 | I、T | 画面に埋め込まれた悪意あるスクリプト（XSS）が、同じオリジンのIndexedDBから絵と録音を読み出し、外部へ送信する | A1 |
+| T-02 | DF-08（Claude Code、Claude Design） | I | 指示やデザインの依頼文に、子どもの実名・写真・絵・声を含めてしまい、外部サービスに送信される | A1 |
+| T-03 | | | | |
+| T-04 | | | | |
+| T-05 | | | | |
+| T-06 | | | | |
+
+T-01 と T-02 は書き方の見本。T-03 以降は、次の問いを手がかりに書く。
+
+- DF-03：誤って秘密情報をコミットして push したら？（I）
+- D3、P4：依存パッケージやGitHub Actionsの部品が改ざんされていたら？（T）
+- DF-04、DF-05：配信の途中や配信元で、アプリが書き換えられたら？（T、S）
+- P1：マイクの許可を、子どもが意味を分からずに押したら？ 録音が意図せず始まったら？（I、E）
+- P6：サーバーに不正ログインされたら？ 高額請求が起きたら？（S、E、D）
+- DF-10：公開環境で、サーバー保存が誤って有効になったら？（I）
+- D1：端末を他人が使ったら？ 端末を手放すときは？（I）
 
 ## 4. リスク評価
 
@@ -47,7 +103,9 @@ flowchart LR
 
 | ID | 影響度 | 起こりやすさ | リスク値 | 対応方針（低減・回避・受容・共有） |
 |---|---|---|---|---|
-| T-01 | | | | |
+| T-01 | 3 | 1 | 3 | 低減（innerHTMLを使わない、外部スクリプトを読み込まない、CSP） |
+| T-02 | 3 | 2 | 6 | 回避（ルールで禁止。サンプルは自作SVGと合成音のみ） |
+| T-03 | | | | |
 
 ## 5. 対策
 
