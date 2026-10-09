@@ -1,0 +1,155 @@
+/* どうぶつタッチ */
+
+.animals-area {
+  display: grid;
+  align-content: center;
+}
+
+/*
+ * 縦長（基本）：2列×3段。
+ * 幅の上限に画面の高さを入れているのは、3段が1画面に収まり、スクロールなしで全部の動物が見えるようにするため
+ */
+.animals {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+  max-width: min(30rem, (100dvh - 10rem) * 2 / 3);
+  margin-inline: auto;
+  /* 押したときに沈む分 */
+  padding-bottom: var(--pop);
+}
+
+/* 横長：3列×2段 */
+@media (orientation: landscape) {
+  .animals {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: min(54rem, (100dvh - 9rem) * 3 / 2);
+  }
+}
+
+.animal {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+}
+
+.animal svg {
+  width: 88%;
+  height: 88%;
+}
+
+/* 絵の塗り分け。<symbol> の中の class に当てる。線は 200×200 の絵に対して 6 */
+.art {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.art-white {
+  fill: var(--color-surface);
+}
+
+.art-ink {
+  fill: var(--color-text);
+  stroke: none;
+}
+
+.art-yellow {
+  fill: var(--color-accent-1);
+}
+
+.art-pink {
+  fill: var(--color-accent-2);
+}
+
+.art-green {
+  fill: var(--color-accent-3);
+}
+
+.art-cheek {
+  fill: var(--color-accent-2);
+  stroke: none;
+  opacity: 0.75;
+}
+
+.art-thin {
+  stroke-width: 5;
+}
+
+/*
+ * 押したときの動き。動物ごとに data-move で選ぶ。
+ * 0.6秒に1回で、1秒に3回を超える点滅にはならない
+ */
+.animal.is-playing svg {
+  animation-duration: 0.6s;
+  animation-timing-function: ease-in-out;
+}
+
+.animal[data-move="hop"].is-playing svg {
+  animation-name: hop;
+}
+
+.animal[data-move="wiggle"].is-playing svg {
+  animation-name: wiggle;
+}
+
+.animal[data-move="nod"].is-playing svg {
+  animation-name: nod;
+}
+
+@keyframes hop {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0);
+  }
+
+  28% {
+    transform: translateY(-14%);
+  }
+
+  78% {
+    transform: translateY(-6%);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  25%,
+  75% {
+    transform: rotate(-9deg);
+  }
+
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+@keyframes nod {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  40% {
+    transform: translateY(6%) scale(1.06, 0.94);
+  }
+
+  70% {
+    transform: translateY(-3%) scale(0.98, 1.03);
+  }
+}
+
+/* 動きを減らす設定の端末では、動かさない（音と、ボタンが沈む動きは残る） */
+@media (prefers-reduced-motion: reduce) {
+  .animal.is-playing svg {
+    animation: none;
+  }
+}

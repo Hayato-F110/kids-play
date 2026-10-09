@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>どうぶつ</title>
+    <link rel="stylesheet" href="../../css/tokens.css" />
+    <link rel="stylesheet" href="../../css/base.css" />
+    <link rel="stylesheet" href="animals.css" />
+  </head>
+  <body>
+    <!-- 動物の絵の置き場。作風の決まりは docs/design.md（顔だけ、太い線、丸い形） -->
+    <svg class="visually-hidden" aria-hidden="true">
+      <symbol id="animal-dog" viewBox="0 0 200 200">
+        <ellipse class="art-ink" cx="46" cy="88" rx="24" ry="46" transform="rotate(16 46 88)" />
+        <ellipse class="art-ink" cx="154" cy="88" rx="24" ry="46" transform="rotate(-16 154 88)" />
+        <circle class="art-yellow" cx="100" cy="104" r="66" />
+        <circle class="art-cheek" cx="56" cy="122" r="10" />
+        <circle class="art-cheek" cx="144" cy="122" r="10" />
+        <ellipse class="art-white" cx="100" cy="130" rx="34" ry="26" />
+        <circle class="art-ink" cx="76" cy="92" r="7" />
+        <circle class="art-ink" cx="124" cy="92" r="7" />
+        <ellipse class="art-ink" cx="100" cy="118" rx="11" ry="8" />
+        <path class="art-thin" d="M100 126v9M100 135q-9 10-19 2M100 135q9 10 19 2" />
+      </symbol>
+
+      <symbol id="animal-cat" viewBox="0 0 200 200">
+        <path class="art-white" d="M44 82L48 28l44 28z" />
+        <path class="art-white" d="M156 82l-4-54-44 28z" />
+        <path class="art-cheek" d="M58 66l2-22 18 12z" />
+        <path class="art-cheek" d="M142 66l-2-22-18 12z" />
+        <ellipse class="art-white" cx="100" cy="114" rx="68" ry="58" />
+        <path class="art-thin" d="M100 62v14M86 65l3 12M114 65l-3 12" />
+        <ellipse class="art-ink" cx="76" cy="106" rx="6" ry="9" />
+        <ellipse class="art-ink" cx="124" cy="106" rx="6" ry="9" />
+        <path class="art-pink art-thin" d="M93 121h14l-7 8z" />
+        <path class="art-thin" d="M100 129q-8 11-18 3M100 129q8 11 18 3" />
+        <path class="art-thin" d="M38 116h22M40 130l21-4M162 116h-22M160 130l-21-4" />
+      </symbol>
+
+      <symbol id="animal-cow" viewBox="0 0 200 200">
+        <path class="art-yellow" d="M70 52q-10-24-26-20q2 20 16 30z" />
+        <path class="art-yellow" d="M130 52q10-24 26-20q-2 20-16 30z" />
+        <ellipse class="art-white" cx="36" cy="82" rx="20" ry="12" transform="rotate(-18 36 82)" />
+        <ellipse class="art-white" cx="164" cy="82" rx="20" ry="12" transform="rotate(18 164 82)" />
+        <ellipse class="art-white" cx="100" cy="104" rx="58" ry="62" />
+        <ellipse class="art-ink" cx="128" cy="68" rx="18" ry="13" />
+        <circle class="art-ink" cx="78" cy="96" r="7" />
+        <circle class="art-ink" cx="122" cy="96" r="7" />
+        <ellipse class="art-pink" cx="100" cy="138" rx="40" ry="26" />
+        <ellipse class="art-ink" cx="86" cy="134" rx="5" ry="7" />
+        <ellipse class="art-ink" cx="114" cy="134" rx="5" ry="7" />
+        <path class="art-thin" d="M88 150q12 7 24 0" />
+      </symbol>
+
+      <symbol id="animal-chick" viewBox="0 0 200 200">
+        <path d="M100 48q-6-20-20-16M100 48q2-22 16-22" />
+        <circle class="art-yellow" cx="100" cy="112" r="64" />
+        <circle class="art-cheek" cx="60" cy="126" r="10" />
+        <circle class="art-cheek" cx="140" cy="126" r="10" />
+        <circle class="art-ink" cx="78" cy="100" r="7" />
+        <circle class="art-ink" cx="122" cy="100" r="7" />
+        <path class="art-pink" d="M86 116h28l-14 18z" />
+      </symbol>
+
+      <symbol id="animal-frog" viewBox="0 0 200 200">
+        <circle class="art-green" cx="62" cy="70" r="26" />
+        <circle class="art-green" cx="138" cy="70" r="26" />
+        <ellipse class="art-green" cx="100" cy="120" rx="72" ry="54" />
+        <circle class="art-white art-thin" cx="62" cy="70" r="14" />
+        <circle class="art-white art-thin" cx="138" cy="70" r="14" />
+        <circle class="art-ink" cx="62" cy="72" r="7" />
+        <circle class="art-ink" cx="138" cy="72" r="7" />
+        <circle class="art-cheek" cx="52" cy="128" r="10" />
+        <circle class="art-cheek" cx="148" cy="128" r="10" />
+        <circle class="art-ink" cx="92" cy="110" r="3" />
+        <circle class="art-ink" cx="108" cy="110" r="3" />
+        <path d="M62 132q38 30 76 0" />
+      </symbol>
+
+      <symbol id="animal-sheep" viewBox="0 0 200 200">
+        <circle class="art-white" cx="46" cy="104" r="24" />
+        <circle class="art-white" cx="154" cy="104" r="24" />
+        <ellipse class="art-pink" cx="50" cy="118" rx="17" ry="10" transform="rotate(-22 50 118)" />
+        <ellipse class="art-pink" cx="150" cy="118" rx="17" ry="10" transform="rotate(22 150 118)" />
+        <ellipse class="art-white" cx="100" cy="120" rx="46" ry="52" />
+        <circle class="art-white" cx="66" cy="74" r="24" />
+        <circle class="art-white" cx="134" cy="74" r="24" />
+        <circle class="art-white" cx="100" cy="62" r="26" />
+        <circle class="art-ink" cx="84" cy="114" r="7" />
+        <circle class="art-ink" cx="116" cy="114" r="7" />
+        <path class="art-pink art-thin" d="M92 134h16l-8 8z" />
+        <path class="art-thin" d="M100 142q-7 9-15 2M100 142q7 9 15 2" />
+      </symbol>
+    </svg>
+
+    <div class="screen">
+      <header class="topbar">
+        <a href="../../index.html" aria-label="おうちに もどる">
+          <span class="btn btn--round">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M7 24L24 9l17 15" />
+              <path d="M12 21v18h24V21" />
+              <path d="M21 39V29h6v10" />
+            </svg>
+          </span>
+        </a>
+        <button class="btn btn--round topbar__right" type="button" aria-pressed="false" data-mute-button>
+          <span class="visually-hidden" data-mute-label>おとを けす</span>
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M7 19h8l10-8v26l-10-8H7z" fill="currentColor" />
+            <g class="icon-sound-on">
+              <path d="M32 18q5 6 0 12" />
+              <path d="M37 12q10 12 0 24" />
+            </g>
+            <path class="icon-sound-off" d="M32 19l10 10M42 19L32 29" />
+          </svg>
+        </button>
+      </header>
+
+      <main class="animals-area">
+        <!-- data-animal は鳴き声（animals.js）、data-move は動き（animals.css）を選ぶ -->
+        <div class="animals">
+          <button class="btn animal" type="button" data-animal="dog" data-move="hop" aria-label="いぬ">
+            <svg class="art" aria-hidden="true"><use href="#animal-dog" /></svg>
+          </button>
+          <button class="btn animal" type="button" data-animal="cat" data-move="wiggle" aria-label="ねこ">
+            <svg class="art" aria-hidden="true"><use href="#animal-cat" /></svg>
+          </button>
+          <button class="btn animal" type="button" data-animal="cow" data-move="nod" aria-label="うし">
+            <svg class="art" aria-hidden="true"><use href="#animal-cow" /></svg>
+          </button>
+          <button class="btn animal" type="button" data-animal="chick" data-move="hop" aria-label="ひよこ">
+            <svg class="art" aria-hidden="true"><use href="#animal-chick" /></svg>
+          </button>
+          <button class="btn animal" type="button" data-animal="frog" data-move="hop" aria-label="かえる">
+            <svg class="art" aria-hidden="true"><use href="#animal-frog" /></svg>
+          </button>
+          <button class="btn animal" type="button" data-animal="sheep" data-move="wiggle" aria-label="ひつじ">
+            <svg class="art" aria-hidden="true"><use href="#animal-sheep" /></svg>
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="../../js/main.js"></script>
+    <script type="module" src="animals.js"></script>
+  </body>
+</html>
