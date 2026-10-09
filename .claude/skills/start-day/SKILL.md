@@ -1,4 +1,5 @@
 ---
+name: start-day
 description: 今日が何日目かを判定し、今日のゴールと作業の順番を示す
 ---
 
