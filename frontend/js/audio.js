@@ -63,9 +63,8 @@ const scheduleNote = (note, startAt) => {
   envelope.connect(master);
 
   // ビブラート：ゆっくりした別の波で、高さを細かく揺らす
-  let lfo = null;
   if (vibrato) {
-    lfo = context.createOscillator();
+    const lfo = context.createOscillator();
     lfo.frequency.value = vibrato.rate;
     const depth = context.createGain();
     depth.gain.value = vibrato.depth;

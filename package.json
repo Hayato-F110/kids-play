@@ -1,0 +1,18 @@
+{
+  "name": "kids-play",
+  "version": "1.0.0",
+  "description": "4〜8歳の子ども向けミニアプリ集（キッズあそびランド）。開発用の道具（整形と静的解析）だけをここで管理する",
+  "private": true,
+  "scripts": {
+    "lint": "eslint frontend",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "eslint-plugin-no-unsanitized": "^4.1.5",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10"
+  }
+}

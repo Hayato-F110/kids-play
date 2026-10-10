@@ -28,9 +28,7 @@ const CRIES = {
     { type: "square", freq: [300, 420], at: 0.46, dur: 0.09, gain: 0.35 },
   ],
   // めー：ふるえる音（ビブラート）
-  sheep: [
-    { type: "triangle", freq: [500, 460], dur: 0.7, gain: 0.7, vibrato: { rate: 9, depth: 28 } },
-  ],
+  sheep: [{ type: "triangle", freq: [500, 460], dur: 0.7, gain: 0.7, vibrato: { rate: 9, depth: 28 } }],
 };
 
 const play = (button) => {

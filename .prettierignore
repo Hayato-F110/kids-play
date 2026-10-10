@@ -1,0 +1,10 @@
+# Prettier で整形しないもの（.gitignore にあるものは、既定で対象外）
+
+# 自動で作られるファイル
+package-lock.json
+
+# Capacitor が6日目に生成する
+android/
+
+# 手で整えた表が多く、整形で差分が大きくなるため
+*.md
