@@ -41,9 +41,7 @@ const updateLight = (key) => {
 };
 
 const press = (pointerId, key) => {
-  const stop = key
-    ? startTone({ type: TONE_TYPE, freq: NOTES[key.dataset.note], gain: TONE_GAIN })
-    : null;
+  const stop = key ? startTone({ type: TONE_TYPE, freq: NOTES[key.dataset.note], gain: TONE_GAIN }) : null;
   pointers.set(pointerId, { key, stop });
   if (key) {
     updateLight(key);
