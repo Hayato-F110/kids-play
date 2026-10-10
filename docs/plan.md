@@ -3,6 +3,7 @@
 - 期間：2026-10-08（1日目）〜 2026-10-21（14日目）。1日4〜6時間
 - 進捗の記録は [learning-log.md](learning-log.md)、課題は Jira（キー：KIDS、元データは [jira-import.csv](jira-import.csv)）
 - 状態の記号：⬜ 未着手 ／ 🟨 作業中 ／ ✅ 完了 ／ ⚠️ 遅れ
+- 進め方：コードはClaudeが書き、学習者は依頼・動作確認・判断を担当する（2026-10-10に変更。目的は、AIに指示して動くものを作ること）
 - Claude Design作業は、Claude Codeの会話内で行う（2026-10-09に変更）。独立サイト（claude.ai/design）は2026-12-14に終了し、機能はClaude本体に統合されたため
 
 ## 全体の見通し
@@ -41,7 +42,7 @@ gantt
 |---|---|---|---|---|---|---|---|---|
 | 1<br>10/08 | ✅ | 環境構築（uv、Node.js）、Git初期設定、Claude Codeのプロジェクト設定、SSH鍵作成とGitHub登録、リポジトリ kids-play へ接続、Jira登録・スクラムプロジェクト作成・GitHub連携・スプリント1開始、土台ファイル作成 | Git基礎、SSH鍵、GitHub、Jiraの基本 | CLAUDE.md（@参照）、settings.json の権限、カスタムコマンド、/memory、/release-notes | .gitignore と deny 設定で秘密情報を守る。Secret scanning と Push protection の有効化手順を確認 | – | バージョン表が揃う／初回コミットがGitHubにある／Jiraでスプリント1が開始済み／`/start-day` が動く | 4〜5h |
 | 2<br>10/09 | ✅ | 企画（画面ラフ、ミニアプリの仕様）、Jiraのバックログ整理、トップ画面、どうぶつタッチ。ブランチ→PR→レビュー→マージ | HTML/CSS、ES Modules、SVG、CSSアニメーション、Pointer Events、PRの流れ | Planモード（Shift+Tab）、/clear と /context、チェックポイント（Esc 2回、/rewind） | 脅威分析：データフロー図（Mermaid）、STRIDE、リスク評価と対策を threat-model.md に。資産の明確化、TARAとの対応 | Claude Codeの会話内でデザインシステムを作成。子どもに見せて決定し、実装へ引き継ぐ。画面のプロトタイプは作らず、トップとどうぶつタッチは直接実装する（時間の都合で変更。残り3画面は各実装日に判断） | トップからどうぶつタッチに移動して遊べる／PRを1本マージ／threat-model.md 初版 | 5〜6h |
-| 3<br>10/10 | ⬜ | 2日目から持ち越し：Planモードとチェックポイント（/rewind）を試す。おとあそびピアノ | Web Audio API（Oscillator、Gain、エンベロープ）、音量制御、消音 | スキル（.claude/skills/）：同じ作風のSVG素材を作るスキル | 安全なJavaScript（innerHTML不使用、入力の扱い）、ESLintのセキュリティ関連ルール | 鍵盤8色を自分の言葉で依頼してデザインシステムに追加し、出てきた色に修正を1回頼む。ページ上でコメントを1つ付けてみる（2日目はClaudeが作成したため、自分で操作する）。実装とのずれがあれば修正 | 鍵盤で音が鳴る／消音が効く／初期音量が控えめ／ESLint通過 | 4〜5h |
+| 3<br>10/10 | ✅ | 2日目から持ち越し：Planモードとチェックポイント（/rewind）を試す。おとあそびピアノ | Web Audio API（Oscillator、Gain、エンベロープ）、音量制御、消音 | スキル（.claude/skills/）：同じ作風のSVG素材を作るスキル | 安全なJavaScript（innerHTML不使用、入力の扱い）、ESLintのセキュリティ関連ルール | 鍵盤8色を自分の言葉で依頼してデザインシステムに追加し、出てきた色に修正を1回頼む。ページ上でコメントを1つ付けてみる（2日目はClaudeが作成したため、自分で操作する）。実装とのずれがあれば修正 | 鍵盤で音が鳴る／消音が効く／初期音量が控えめ／ESLint通過 | 4〜5h |
 | 4<br>10/11 | ⬜ | おえかきスタンプ | Canvas 2D、Pointer Events（筆圧・マルチタッチ）、画像保存（toBlob） | Hooks：編集後にPrettier・ESLint・ruffを自動実行（PostToolUse）、秘密情報へのアクセスをブロック（PreToolUse） | 3日目の続き（ユーザー入力＝描画データの扱い、ダウンロード処理） | おえかきスタンプの画面を、Designのキャンバスでプロトタイプにしてから実装する（画面単位のデザインと引き継ぎ。時間がなければ7日目のえほん画面で行う） | 指とマウスで描ける／スタンプが押せる／PNGで保存できる／Hooksが動く | 5〜6h |
 | 5<br>10/12 | ⬜ | GitHub Pagesで公開、PWA化（manifest、Service Worker）、Androidのホーム画面に追加。PCで画面録画（素材①） | GitHub Pages、PWA、キャッシュ戦略、オフライン対応 | サブエージェント（.claude/agents/）：デザインルール確認担当、プライバシー確認担当 | CSP（metaタグ）、Service Workerのキャッシュ範囲確認、Dependabot と CodeQL を有効化 | – | 公開URLで遊べる／機内モードでも起動／Androidのホーム画面から起動／素材①あり | 4〜5h |
 | 6<br>10/13 | ⬜ | Capacitor導入、Android Studioでビルド、USBデバッグで実機インストール。Androidの画面録画（素材②） | Capacitor、Gradle、WebView、adb（Javaとの比較で理解） | MCP：ブラウザ操作（Playwright MCP等）、Jira連携（条件確認後）。AIエージェントのセキュリティ（プロンプトインジェクション、MCPの信頼性、最小権限） | Androidのセキュリティ：最小権限、バックアップ設定、WebView設定、署名鍵の管理 | – | 実機にアプリが入り3つのミニアプリが動く／署名鍵がリポジトリ外／素材②あり | 5〜6h |
