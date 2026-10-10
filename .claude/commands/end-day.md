@@ -4,7 +4,9 @@ description: 今日の作業をまとめ、学習ログとplaybookに追記す�
 
 1日の学習を終えます。次の手順で進めてください。
 
-1. `git log --since=midnight --oneline` と `git status`、この会話の内容から、今日の作業を把握する
+1. 前回の `/end-day` 以降のコミットと `git status`、この会話の内容から、今日の作業を把握する
+   - 前回の `/end-day` の位置は、docs/learning-log.md を最後に変更したコミットで調べる（`git log -1 --format=%H -- docs/learning-log.md`）。そのコミットから先を `git log <そのコミット>..HEAD --oneline` で見る
+   - 0時で区切らない。作業が24時を超えても、`/end-day` を実行するまでは同じ日として扱うため
 2. docs/learning-log.md に、テンプレートに沿って今日の記録を追記する
    - やったこと／学んだこと3行／今日学んだこと（3つの分類）／つまずいたこと／Claude Code活用メモ（QCD）／次にやること
    - 「学んだこと3行」は下書きを示し、私の言葉で直せるように確認を取る
