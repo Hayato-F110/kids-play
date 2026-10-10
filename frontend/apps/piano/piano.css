@@ -18,6 +18,8 @@
   margin-inline: auto;
   /* 押したときに沈む分 */
   padding-bottom: var(--pop);
+  /* 指をすべらせたとき、ブラウザがスクロールと判断して操作を取り上げるのを防ぐ */
+  touch-action: none;
 }
 
 /* 広い画面：8列×1段。8列でも鍵盤の幅が 64px を下回らない幅から切り替える */
@@ -35,6 +37,22 @@
   height: clamp(5rem, 28dvh, 14rem);
   border-radius: var(--radius-md);
   font-size: var(--label-md);
+}
+
+/*
+ * 押している間：沈んで、明るくなる。
+ * :active ではなく is-down（piano.js が付ける）で切り替える。指をすべらせて入った鍵盤には :active が付かないため
+ */
+.key.is-down {
+  transform: translateY(var(--pop));
+  box-shadow: none;
+  filter: brightness(1.12);
+}
+
+/* すべらせて出たあとの鍵盤は、指やマウスを離すまで :active が残るので、元の見た目に戻す */
+.key:active:not(.is-down) {
+  transform: none;
+  box-shadow: var(--shadow-pop);
 }
 
 /* 鍵盤の色。HTMLに style を書かず、data-note で選ぶ（5日目に入れるCSPで、HTML内の style を禁止できるようにするため） */
