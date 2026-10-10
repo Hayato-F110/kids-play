@@ -9,6 +9,7 @@ const MASTER_VOLUME = 0.25;
 const MAX_VOICES = 8;
 // 音の立ち上がりと終わりをなめらかにし、プチッという雑音を出さない
 const ATTACK_SECONDS = 0.02;
+const RELEASE_SECONDS = 0.1;
 const SILENCE = 0.0001;
 
 let context = null;
@@ -114,4 +115,61 @@ export const playNotes = (notes) => {
   } else {
     context.resume().then(start, () => {});
   }
+};
+
+/**
+ * 止めるまで鳴り続ける音を始める（ピアノの鍵盤など、押している間だけ鳴らすとき）。
+ * @param {{type?: OscillatorType, freq: number, gain?: number}} tone freq は Hz、gain は 0〜1
+ * @returns {(() => void) | null} 音を止める関数。鳴らせなかったとき（消音中、音の数が上限）は null
+ */
+export const startTone = ({ type = "sine", freq, gain = 1 }) => {
+  if (isMuted()) {
+    return null;
+  }
+  if (!ensureContext()) {
+    return null;
+  }
+  if (activeVoices >= MAX_VOICES) {
+    return null;
+  }
+
+  // 止まっている間は時計（currentTime）も進まないので、先に予約しておけば、再開したところから鳴り始める
+  if (context.state !== "running") {
+    context.resume().catch(() => {});
+  }
+
+  const startedAt = context.currentTime;
+
+  const oscillator = context.createOscillator();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(freq, startedAt);
+
+  const envelope = context.createGain();
+  envelope.gain.setValueAtTime(SILENCE, startedAt);
+  envelope.gain.linearRampToValueAtTime(gain, startedAt + ATTACK_SECONDS);
+
+  oscillator.connect(envelope);
+  envelope.connect(master);
+
+  activeVoices += 1;
+  oscillator.addEventListener("ended", () => {
+    activeVoices -= 1;
+    envelope.disconnect();
+  });
+  oscillator.start(startedAt);
+
+  let stopped = false;
+  return () => {
+    // 2回呼ばれても、止める予約を重ねない
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+
+    // 立ち上がりの途中で切るとプチッと鳴るので、立ち上がりが終わってから下げ始める
+    const releaseAt = Math.max(context.currentTime, startedAt + ATTACK_SECONDS);
+    envelope.gain.setValueAtTime(gain, releaseAt);
+    envelope.gain.exponentialRampToValueAtTime(SILENCE, releaseAt + RELEASE_SECONDS);
+    oscillator.stop(releaseAt + RELEASE_SECONDS);
+  };
 };
