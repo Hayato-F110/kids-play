@@ -15,6 +15,16 @@
   --color-accent-3: #4fbf8b;
   --color-accent-4: #8f7be8;
 
+  /* ピアノの鍵盤（ド〜高いド）。となり同士は、色あいに加えて明るさも変えてある */
+  --color-key-1: #f47c7c;
+  --color-key-2: #ffa95c;
+  --color-key-3: #ffdd5e;
+  --color-key-4: #9bd65c;
+  --color-key-5: #3bbfae;
+  --color-key-6: #6aaef5;
+  --color-key-7: #a48bec;
+  --color-key-8: #f79ac4;
+
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;

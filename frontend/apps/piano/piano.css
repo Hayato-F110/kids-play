@@ -1,0 +1,51 @@
+/* おとあそびピアノ */
+
+.piano-area {
+  display: grid;
+  align-content: center;
+}
+
+/* 鍵盤の並び */
+.keys {
+  /* 押したときに沈む分 */
+  padding-bottom: var(--pop);
+}
+
+/* 鍵盤1つの見た目 */
+.key {
+  border-radius: var(--radius-md);
+  font-size: var(--label-md);
+}
+
+/* 鍵盤の色。HTMLに style を書かず、data-note で選ぶ（5日目に入れるCSPで、HTML内の style を禁止できるようにするため） */
+.key[data-note="c4"] {
+  --btn-fill: var(--color-key-1);
+}
+
+.key[data-note="d4"] {
+  --btn-fill: var(--color-key-2);
+}
+
+.key[data-note="e4"] {
+  --btn-fill: var(--color-key-3);
+}
+
+.key[data-note="f4"] {
+  --btn-fill: var(--color-key-4);
+}
+
+.key[data-note="g4"] {
+  --btn-fill: var(--color-key-5);
+}
+
+.key[data-note="a4"] {
+  --btn-fill: var(--color-key-6);
+}
+
+.key[data-note="b4"] {
+  --btn-fill: var(--color-key-7);
+}
+
+.key[data-note="c5"] {
+  --btn-fill: var(--color-key-8);
+}

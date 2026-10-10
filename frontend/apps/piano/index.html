@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ぴあの</title>
+    <link rel="stylesheet" href="../../css/tokens.css" />
+    <link rel="stylesheet" href="../../css/base.css" />
+    <link rel="stylesheet" href="piano.css" />
+  </head>
+  <body>
+    <div class="screen">
+      <header class="topbar">
+        <a href="../../index.html" aria-label="おうちに もどる">
+          <span class="btn btn--round">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M7 24L24 9l17 15" />
+              <path d="M12 21v18h24V21" />
+              <path d="M21 39V29h6v10" />
+            </svg>
+          </span>
+        </a>
+        <button class="btn btn--round topbar__right" type="button" aria-pressed="false" data-mute-button>
+          <span class="visually-hidden" data-mute-label>おとを けす</span>
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M7 19h8l10-8v26l-10-8H7z" fill="currentColor" />
+            <g class="icon-sound-on">
+              <path d="M32 18q5 6 0 12" />
+              <path d="M37 12q10 12 0 24" />
+            </g>
+            <path class="icon-sound-off" d="M32 19l10 10M42 19L32 29" />
+          </svg>
+        </button>
+      </header>
+
+      <main class="piano-area">
+        <!-- data-note は、音の高さ（piano.js）と鍵盤の色（piano.css）を選ぶ -->
+        <div class="keys">
+          <button class="btn key" type="button" data-note="c4">ど</button>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="../../js/main.js"></script>
+  </body>
+</html>
