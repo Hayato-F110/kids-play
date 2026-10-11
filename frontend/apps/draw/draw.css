@@ -1,0 +1,408 @@
+/* おえかきスタンプ */
+
+/*
+ * 画面の高さをちょうど1画面にする（ほかの画面は min-height）。
+ * 紙が残りの高さをすべて使い、道具が画面の下に固定されるようにするため
+ */
+.screen--draw {
+  --tool-size: var(--tap-min);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+}
+
+/* 上の帯のまん中：ぜんぶけす、ほぞん */
+.actions {
+  display: flex;
+  justify-content: space-evenly;
+  gap: var(--space-2);
+}
+
+/* 吹き出しを、ボタンのすぐ下に出すための基準 */
+.action {
+  position: relative;
+}
+
+/* 道具のボタン（色、太さ、スタンプ、ぜんぶけす、ほぞん）に共通の形 */
+.tool {
+  position: relative;
+  width: var(--tool-size);
+  height: var(--tool-size);
+  border-radius: var(--radius-sm);
+}
+
+.tool--stamp {
+  border-radius: var(--radius-md);
+}
+
+.tool__icon {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tool__dots {
+  width: 75%;
+  height: 75%;
+}
+
+.tool img {
+  display: block;
+  width: 72%;
+  height: 72%;
+  /* タップが絵ではなくボタン自身に届くようにするため */
+  pointer-events: none;
+}
+
+.icon-blue {
+  fill: var(--color-primary);
+}
+
+/*
+ * 選んでいる道具：沈んだ形と、右上のチェック印で示す（色だけで状態を伝えないため）。
+ * 印は画像を使わず、::before（白い丸）と ::after（かぎ形の線）で描く
+ */
+.tool[aria-pressed="true"] {
+  transform: translateY(var(--pop));
+  box-shadow: none;
+}
+
+.tool[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  top: -0.875rem;
+  right: -0.875rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.tool[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: -0.5rem;
+  right: -0.3125rem;
+  width: 0.4375rem;
+  height: 0.75rem;
+  border: solid var(--color-text);
+  border-width: 0 0.1875rem 0.1875rem 0;
+  transform: rotate(45deg);
+}
+
+/* 色のボタンの面。HTMLに style を書かず、data-color で選ぶ（CSPで、HTML内の style を禁止できるようにするため） */
+.tool[data-color="red"] {
+  --btn-fill: var(--color-ink-1);
+}
+
+.tool[data-color="orange"] {
+  --btn-fill: var(--color-ink-2);
+}
+
+.tool[data-color="green"] {
+  --btn-fill: var(--color-ink-3);
+}
+
+.tool[data-color="blue"] {
+  --btn-fill: var(--color-ink-4);
+}
+
+.tool[data-color="purple"] {
+  --btn-fill: var(--color-ink-5);
+}
+
+.tool[data-color="black"] {
+  --btn-fill: var(--color-ink-6);
+}
+
+/* ぜんぶけすの1回目のあと（もう1回押すと消える）／ほぞんの直後 */
+.tool.is-armed {
+  --btn-fill: var(--color-accent-1);
+}
+
+.tool.is-done {
+  --btn-fill: var(--color-accent-3);
+}
+
+.tool__icon--done {
+  stroke-width: 5.5;
+}
+
+.tool.is-done .tool__icon--save,
+.tool:not(.is-done) .tool__icon--done {
+  display: none;
+}
+
+/* 吹き出し：絵と、短いことばを1つ */
+.bubble {
+  position: absolute;
+  top: calc(100% + var(--pop) + var(--space-2));
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  width: max-content;
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  border: var(--stroke) solid var(--color-text);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transform: translateX(-50%);
+  /* 吹き出しの下の紙に、タップが届くようにするため */
+  pointer-events: none;
+}
+
+.bubble[hidden] {
+  display: none;
+}
+
+/* ボタンを指す、三角のしっぽ */
+.bubble::before {
+  content: "";
+  position: absolute;
+  top: -0.8125rem;
+  left: calc(50% - 0.5625rem);
+  width: 1.125rem;
+  height: 1.125rem;
+  border: solid var(--color-text);
+  border-width: var(--stroke) 0 0 var(--stroke);
+  background: var(--color-surface);
+  transform: rotate(45deg);
+}
+
+.bubble__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.bubble svg {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bubble__art {
+  width: 3.75rem;
+}
+
+.bubble__art--saved {
+  width: 5.25rem;
+}
+
+.bubble__arrow {
+  width: 1.75rem;
+  stroke-width: 4;
+}
+
+.bubble__line {
+  stroke-width: 4;
+}
+
+.bubble__line--green {
+  stroke: var(--color-ink-3);
+}
+
+.bubble__line--blue {
+  stroke: var(--color-ink-4);
+}
+
+.bubble__text {
+  margin: 0;
+  font-size: var(--label-sm);
+  line-height: 1.4;
+}
+
+/* 紙。枠は外側の箱に付け、キャンバスはその中いっぱいに広げる */
+.paper {
+  position: relative;
+  overflow: hidden;
+  border: var(--stroke) solid var(--color-text);
+  border-radius: var(--radius-md);
+}
+
+/*
+ * object-fit: contain は、画面の向きを変えたあとも、描いた絵を切らず・伸ばさずに見せるため。
+ * 紙の形は、新しい紙のとき（最初と、ぜんぶけすのあと）にだけ決め直す（draw.js）
+ */
+.paper__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: crosshair;
+  /* 指で描いたとき、ブラウザがスクロールや拡大と判断して操作を取り上げるのを防ぐ */
+  touch-action: none;
+  transition: opacity 0.15s ease-out;
+}
+
+/* ぜんぶけすの1回目：消えたあとの様子を先に見せる */
+.paper.is-fading .paper__canvas {
+  opacity: 0.3;
+}
+
+/*
+ * 道具の並び。せまい画面（基本）：4列×2段の8枠。
+ * 色6つ（またはスタンプ4つ）＋太さ＋切り替え。紙を広く保つため、色とスタンプは同時に出さない
+ */
+.tools {
+  --ink-current: var(--color-ink-4);
+  display: grid;
+  grid-template-columns: repeat(4, var(--tool-size));
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+  /* 押したときに沈む分 */
+  padding-bottom: var(--pop);
+}
+
+/* グループの箱をないものとして扱い、中のボタンを直接8枠に並べる */
+.tools__group {
+  display: contents;
+}
+
+.tools[data-tool="pen"] .tools__group--stamps,
+.tools[data-tool="stamp"] .tools__group--colors,
+.tools .tools__group--sizes {
+  display: none;
+}
+
+/* 太さと切り替えは、ペンでもスタンプでも同じ場所（下の段の右2つ）に置く */
+.tool--cycle {
+  grid-row: 2;
+  grid-column: 3;
+}
+
+.tool--switch {
+  --btn-fill: var(--color-accent-3);
+  grid-row: 2;
+  grid-column: 4;
+}
+
+.tools[data-tool="pen"] .tool__to-pen,
+.tools[data-tool="stamp"] .tool__to-stamp {
+  display: none;
+}
+
+/* 太さの丸：いまの色で塗る。スタンプのときは、色を持たないので輪郭線の色にする */
+.tools[data-color="red"] {
+  --ink-current: var(--color-ink-1);
+}
+
+.tools[data-color="orange"] {
+  --ink-current: var(--color-ink-2);
+}
+
+.tools[data-color="green"] {
+  --ink-current: var(--color-ink-3);
+}
+
+.tools[data-color="purple"] {
+  --ink-current: var(--color-ink-5);
+}
+
+.tools[data-color="black"],
+.tools[data-tool="stamp"] {
+  --ink-current: var(--color-ink-6);
+}
+
+.dot {
+  fill: var(--ink-current);
+  stroke: var(--color-text);
+  stroke-width: 3;
+}
+
+/* 1つのボタンで太さを変えるとき：いまの太さの丸だけを出し、下の3つの点で何番目かを示す */
+.tool--cycle .dot {
+  display: none;
+}
+
+.tools[data-size="1"] .dot--1,
+.tools[data-size="2"] .dot--2,
+.tools[data-size="3"] .dot--3 {
+  display: inline;
+}
+
+.pip {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 2;
+}
+
+.tools[data-size="1"] .pip--1,
+.tools[data-size="2"] .pip--2,
+.tools[data-size="3"] .pip--3 {
+  fill: var(--color-text);
+}
+
+/* タブレットの縦：8枠のまま、ボタンを大きくする */
+@media (min-width: 40rem) and (min-height: 40rem) {
+  .screen--draw {
+    --tool-size: 5rem;
+  }
+}
+
+/* 高さのない横長（スマホの横）：道具を紙の右に置き、紙の高さを確保する */
+@media (orientation: landscape) and (max-height: 30rem) {
+  .screen--draw {
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .screen--draw .topbar {
+    grid-column: 1 / -1;
+  }
+
+  .tools {
+    align-content: start;
+    width: auto;
+  }
+}
+
+/*
+ * 広い画面（タブレットの横、PC）：色6つ、太さ3つ、スタンプ4つを1列に並べる。切り替えは要らない。
+ * 13個が 64px を下回らずに並ぶ幅から切り替える
+ */
+@media (min-width: 75rem) and (min-height: 30.0625rem) {
+  .screen--draw {
+    --tool-size: 4.5rem;
+  }
+
+  .actions {
+    justify-content: flex-end;
+    padding-right: var(--space-1);
+  }
+
+  .tools {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+    max-width: none;
+  }
+
+  .tools[data-tool] .tools__group {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .tool--cycle,
+  .tool--switch {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper__canvas {
+    transition: none;
+  }
+}

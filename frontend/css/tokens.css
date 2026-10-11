@@ -25,6 +25,17 @@
   --color-key-7: #a48bec;
   --color-key-8: #f79ac4;
 
+  /*
+   * おえかきの絵の具（あか、だいだい、みどり、あお、むらさき、くろ）。
+   * 新しい値は足さず、既存の色に別の名前を付ける。白い紙の上で見える色だけを選んである
+   */
+  --color-ink-1: var(--color-accent-2);
+  --color-ink-2: var(--color-accent-1);
+  --color-ink-3: var(--color-accent-3);
+  --color-ink-4: var(--color-primary);
+  --color-ink-5: var(--color-accent-4);
+  --color-ink-6: var(--color-text);
+
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;
