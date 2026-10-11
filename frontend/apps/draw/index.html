@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>おえかき</title>
+    <link rel="stylesheet" href="../../css/tokens.css" />
+    <link rel="stylesheet" href="../../css/base.css" />
+    <link rel="stylesheet" href="draw.css" />
+  </head>
+  <body>
+    <div class="screen screen--draw">
+      <header class="topbar">
+        <a href="../../index.html" aria-label="おうちに もどる">
+          <span class="btn btn--round">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M7 24L24 9l17 15" />
+              <path d="M12 21v18h24V21" />
+              <path d="M21 39V29h6v10" />
+            </svg>
+          </span>
+        </a>
+
+        <div class="actions">
+          <!-- ぜんぶけす：1回目は吹き出しで確かめ、2回目で消す（押し間違えても絵が残るようにするため） -->
+          <div class="action">
+            <button class="btn tool" type="button" data-clear aria-label="ぜんぶ けす">
+              <svg class="tool__icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path class="icon-white" d="M12 7h17l8 8v26H12z" />
+                <path d="M29 7v8h8" />
+                <path d="M24 22v10M19 27h10" />
+              </svg>
+            </button>
+            <div class="bubble" role="status" data-clear-bubble hidden>
+              <div class="bubble__row">
+                <svg class="bubble__art" viewBox="0 0 60 52" aria-hidden="true">
+                  <rect class="icon-white" x="3" y="3" width="54" height="46" rx="8" />
+                  <path class="bubble__line bubble__line--green" d="M11 36q9-10 18-2t20-4" />
+                  <path class="bubble__line bubble__line--blue" d="M12 20q5-8 10 0t10 0" />
+                  <circle class="icon-yellow" cx="44" cy="16" r="6" />
+                </svg>
+                <svg class="bubble__arrow" viewBox="0 0 28 28" aria-hidden="true">
+                  <path d="M4 14h19M15 6l8 8-8 8" />
+                </svg>
+                <svg class="bubble__art" viewBox="0 0 60 52" aria-hidden="true">
+                  <rect class="icon-white" x="3" y="3" width="54" height="46" rx="8" />
+                </svg>
+              </div>
+              <p class="bubble__text">けす？</p>
+            </div>
+          </div>
+
+          <div class="action">
+            <button class="btn tool" type="button" data-save aria-label="ほぞん">
+              <svg class="tool__icon tool__icon--save" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M24 7v22" />
+                <path d="M14 20l10 10 10-10" />
+                <path d="M8 40h32" />
+              </svg>
+              <svg class="tool__icon tool__icon--done" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M9 25l10 11 20-23" />
+              </svg>
+            </button>
+            <div class="bubble" role="status" data-save-bubble hidden>
+              <svg class="bubble__art bubble__art--saved" viewBox="0 0 84 68" aria-hidden="true">
+                <rect class="icon-white" x="4" y="10" width="62" height="54" rx="8" />
+                <path class="bubble__line bubble__line--green" d="M13 48q10-11 20-2t24-5" />
+                <path class="bubble__line bubble__line--blue" d="M14 31q5-8 10 0t10 0" />
+                <circle class="icon-yellow" cx="50" cy="26" r="6" />
+                <circle class="icon-green" cx="66" cy="16" r="13" />
+                <path d="M60 16.5l4.5 4.5 8-9" />
+              </svg>
+              <p class="bubble__text">できた！</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn--round topbar__right" type="button" aria-pressed="false" data-mute-button>
+          <span class="visually-hidden" data-mute-label>おとを けす</span>
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M7 19h8l10-8v26l-10-8H7z" fill="currentColor" />
+            <g class="icon-sound-on">
+              <path d="M32 18q5 6 0 12" />
+              <path d="M37 12q10 12 0 24" />
+            </g>
+            <path class="icon-sound-off" d="M32 19l10 10M42 19L32 29" />
+          </svg>
+        </button>
+      </header>
+
+      <main class="paper" data-paper>
+        <canvas class="paper__canvas" data-canvas aria-label="おえかきの かみ"></canvas>
+      </main>
+
+      <!--
+        道具。data-tool（pen / stamp）、data-color、data-size は draw.js が書き換え、draw.css が見た目を切り替える。
+        せまい画面では、色とスタンプのどちらかだけを出す（draw.css）
+      -->
+      <div class="tools" data-tools data-tool="pen" data-color="blue" data-size="2">
+        <div class="tools__group tools__group--colors">
+          <button
+            class="btn tool"
+            type="button"
+            data-color="red"
+            aria-pressed="false"
+            aria-label="あか"
+          ></button>
+          <button
+            class="btn tool"
+            type="button"
+            data-color="orange"
+            aria-pressed="false"
+            aria-label="だいだい"
+          ></button>
+          <button
+            class="btn tool"
+            type="button"
+            data-color="green"
+            aria-pressed="false"
+            aria-label="みどり"
+          ></button>
+          <button
+            class="btn tool"
+            type="button"
+            data-color="blue"
+            aria-pressed="true"
+            aria-label="あお"
+          ></button>
+          <button
+            class="btn tool"
+            type="button"
+            data-color="purple"
+            aria-pressed="false"
+            aria-label="むらさき"
+          ></button>
+          <button
+            class="btn tool"
+            type="button"
+            data-color="black"
+            aria-pressed="false"
+            aria-label="くろ"
+          ></button>
+        </div>
+
+        <!-- 太さ（スタンプのときは大きさ）。広い画面では3つ並べ、せまい画面では押すたびに変わる1つのボタンにする -->
+        <div class="tools__group tools__group--sizes">
+          <button class="btn tool" type="button" data-size="1" aria-pressed="false" aria-label="ちいさい">
+            <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+              <circle class="dot" cx="24" cy="24" r="5" />
+            </svg>
+          </button>
+          <button class="btn tool" type="button" data-size="2" aria-pressed="true" aria-label="ふつう">
+            <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+              <circle class="dot" cx="24" cy="24" r="10" />
+            </svg>
+          </button>
+          <button class="btn tool" type="button" data-size="3" aria-pressed="false" aria-label="おおきい">
+            <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+              <circle class="dot" cx="24" cy="24" r="17" />
+            </svg>
+          </button>
+        </div>
+        <button class="btn tool tool--cycle" type="button" data-size-cycle aria-label="おおきさを かえる">
+          <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+            <circle class="dot dot--1" cx="24" cy="19" r="5" />
+            <circle class="dot dot--2" cx="24" cy="19" r="9" />
+            <circle class="dot dot--3" cx="24" cy="19" r="14" />
+            <circle class="pip pip--1" cx="13" cy="42" r="3" />
+            <circle class="pip pip--2" cx="24" cy="42" r="3" />
+            <circle class="pip pip--3" cx="35" cy="42" r="3" />
+          </svg>
+        </button>
+
+        <div class="tools__group tools__group--stamps">
+          <button
+            class="btn tool tool--stamp"
+            type="button"
+            data-stamp="star"
+            aria-pressed="false"
+            aria-label="ほし"
+          >
+            <img src="../../assets/stamps/star.svg" alt="" draggable="false" />
+          </button>
+          <button
+            class="btn tool tool--stamp"
+            type="button"
+            data-stamp="flower"
+            aria-pressed="false"
+            aria-label="はな"
+          >
+            <img src="../../assets/stamps/flower.svg" alt="" draggable="false" />
+          </button>
+          <button
+            class="btn tool tool--stamp"
+            type="button"
+            data-stamp="heart"
+            aria-pressed="false"
+            aria-label="はーと"
+          >
+            <img src="../../assets/stamps/heart.svg" alt="" draggable="false" />
+          </button>
+          <button
+            class="btn tool tool--stamp"
+            type="button"
+            data-stamp="sun"
+            aria-pressed="false"
+            aria-label="おひさま"
+          >
+            <img src="../../assets/stamps/sun.svg" alt="" draggable="false" />
+          </button>
+        </div>
+
+        <!-- ペンとスタンプの切り替え。これから持つ道具の絵を出す -->
+        <button
+          class="btn tool tool--stamp tool--switch"
+          type="button"
+          data-switch
+          aria-label="スタンプに かえる"
+        >
+          <img class="tool__to-stamp" src="../../assets/stamps/star.svg" alt="" draggable="false" />
+          <svg class="tool__icon tool__to-pen" viewBox="0 0 48 48" aria-hidden="true">
+            <g transform="rotate(40 24 24)">
+              <rect class="icon-blue" x="16" y="3" width="16" height="28" rx="4" />
+              <path d="M16 15h16" />
+              <path class="icon-white" d="M17 31h14l-7 13z" />
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="../../js/main.js"></script>
+    <script type="module" src="draw.js"></script>
+  </body>
+</html>
