@@ -45,6 +45,8 @@ const state = {
 let pixelRatio = 1;
 // まだ何も描いていない紙かどうか。白紙の間だけ、画面の大きさに合わせて紙を作り直す
 let isBlank = true;
+// 「けす？」を取り消したタップ。同じタップで線を描かないように覚えておく
+let dismissedPointerId = null;
 
 // ---- 道具の表示 ----
 
@@ -145,15 +147,18 @@ const beginStroke = (event) => {
   const stroke = {
     color: inkColor(),
     baseWidth: LINE_WIDTHS[state.size - 1] * pixelRatio,
+    // 最後に描いた太さ。線の終わりを、直前と同じ太さでのばすために覚えておく
+    width: 0,
     last: point,
     mid: point,
   };
+  stroke.width = widthFor(event, stroke.baseWidth);
   strokes.set(event.pointerId, stroke);
 
   // 動かさずに離しても点が残るよう、最初に丸を1つ描く
   context.fillStyle = stroke.color;
   context.beginPath();
-  context.arc(point.x, point.y, widthFor(event, stroke.baseWidth) / 2, 0, Math.PI * 2);
+  context.arc(point.x, point.y, stroke.width / 2, 0, Math.PI * 2);
   context.fill();
 };
 
@@ -161,8 +166,9 @@ const beginStroke = (event) => {
 const extendStroke = (stroke, event) => {
   const point = toPaperPoint(event);
   const mid = { x: (stroke.last.x + point.x) / 2, y: (stroke.last.y + point.y) / 2 };
+  stroke.width = widthFor(event, stroke.baseWidth);
   context.strokeStyle = stroke.color;
-  context.lineWidth = widthFor(event, stroke.baseWidth);
+  context.lineWidth = stroke.width;
   context.lineCap = "round";
   context.lineJoin = "round";
   context.beginPath();
@@ -181,7 +187,7 @@ const endStroke = (pointerId) => {
   strokes.delete(pointerId);
   // 中間の点で止まっている線を、最後の点までのばす
   context.strokeStyle = stroke.color;
-  context.lineWidth = stroke.baseWidth;
+  context.lineWidth = stroke.width;
   context.lineCap = "round";
   context.beginPath();
   context.moveTo(stroke.mid.x, stroke.mid.y);
@@ -193,12 +199,13 @@ const pressStamp = (event) => {
   const image = stampImage();
   // 絵の読み込みが終わる前に押したときは、何もしない
   if (!image || !image.complete || image.naturalWidth === 0) {
-    return;
+    return false;
   }
   const point = toPaperPoint(event);
   const size = STAMP_SIZES[state.size - 1] * pixelRatio;
   context.drawImage(image, point.x - size / 2, point.y - size / 2, size, size);
   playNotes(SOUNDS.stamp);
+  return true;
 };
 
 canvas.addEventListener("pointerdown", (event) => {
@@ -210,14 +217,17 @@ canvas.addEventListener("pointerdown", (event) => {
   if (dismissedPointerId === event.pointerId) {
     return;
   }
-  isBlank = false;
+  // 「描いた紙」にするのは、実際に描けたときだけ。白紙の間は、画面の大きさに合わせて紙を作り直せるため
   if (state.tool === "stamp") {
-    pressStamp(event);
+    if (pressStamp(event)) {
+      isBlank = false;
+    }
     return;
   }
   // 紙の外へ出たあとも、この指の動きを受け取り続けるため
   canvas.setPointerCapture(event.pointerId);
   beginStroke(event);
+  isBlank = false;
 });
 
 canvas.addEventListener("pointermove", (event) => {
@@ -249,8 +259,6 @@ canvas.addEventListener("contextmenu", (event) => {
 // ---- ぜんぶけす（1回目で確かめ、2回目で消す）----
 
 let clearTimer = 0;
-// 「けす？」を取り消したタップ。同じタップで線を描かないように覚えておく
-let dismissedPointerId = null;
 
 const isClearArmed = () => clearButton.classList.contains("is-armed");
 
