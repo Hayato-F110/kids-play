@@ -34,4 +34,12 @@ export default defineConfig([
       eqeqeq: "error",
     },
   },
+  {
+    // Service Worker は、ページとは別の場所で動く。使える名前（self、caches、clients）がページと違う
+    files: ["frontend/sw.js"],
+    languageOptions: {
+      sourceType: "script",
+      globals: globals.serviceworker,
+    },
+  },
 ]);

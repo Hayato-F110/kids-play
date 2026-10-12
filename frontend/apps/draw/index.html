@@ -5,13 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <!--
       CSP：読み込んでよいものの許可リスト。ここにないもの（外部のスクリプト、HTMLに直接書いたscriptやstyle、外部への通信）は、
-      ブラウザが止める。まず全部を禁止し、自分のサイトのスクリプト・スタイル・画像だけを許可する。
+      ブラウザが止める。まず全部を禁止し、自分のサイトのスクリプト・スタイル・画像・manifest・Service Worker だけを許可する。
       5つのHTMLで同じ内容にする。変えるときは docs/security/threat-model.md の C-08 も直す
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'"
     />
+    <!-- ホーム画面に追加したときの名前・アイコン・色（manifest）。theme-color は tokens.css の --color-bg と同じ値にする -->
+    <meta name="theme-color" content="#e8f4fb" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
+    <link rel="icon" href="../../assets/icons/icon.svg" type="image/svg+xml" />
     <title>おえかき</title>
     <link rel="stylesheet" href="../../css/tokens.css" />
     <link rel="stylesheet" href="../../css/base.css" />

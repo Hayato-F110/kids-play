@@ -20,3 +20,16 @@ if (button && label) {
   });
   render();
 }
+
+// Service Worker（sw.js）を登録する。ファイルを端末に保存し、電波がなくても遊べるようにするため。
+// PC内のサーバー（localhost）では登録しない。作業中のファイルより、保存した古いファイルが先に出て、確認を誤るため。
+// 6日目のAndroidアプリ（Capacitor）も localhost で動くが、ファイルがアプリに入っているので、登録は要らない。
+// PC内で試すときだけ、URLの末尾に ?sw を付ける
+const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+const wantsWorker = !isLocal || new URLSearchParams(location.search).has("sw");
+if ("serviceWorker" in navigator && wantsWorker) {
+  // main.js から見た位置で指定する（どのフォルダのページから読まれても、同じ sw.js を指す）
+  navigator.serviceWorker.register(new URL("../sw.js", import.meta.url)).catch(() => {
+    // 登録できなくても、電波があれば遊べる。子どもの画面にはエラーを出さない
+  });
+}
