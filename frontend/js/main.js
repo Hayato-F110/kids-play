@@ -2,16 +2,14 @@
 import { isMuted, toggleMuted } from "./mute.js";
 
 const button = document.querySelector("[data-mute-button]");
-const label = document.querySelector("[data-mute-label]");
 
 const render = () => {
-  const muted = isMuted();
-  // 見た目は aria-pressed だけで切り替える（base.css）。状態の置き場を1つにして、表示とのずれを防ぐため
-  button.setAttribute("aria-pressed", String(muted));
-  label.textContent = muted ? "おとを だす" : "おとを けす";
+  // 見た目も読み上げも aria-pressed だけで切り替える（base.css）。状態の置き場を1つにして、表示とのずれを防ぐため。
+  // ボタンの名前は「おとを けす」のまま変えない。名前まで変えると、読み上げが「おとを だす、オン」となり、逆の意味に聞こえる
+  button.setAttribute("aria-pressed", String(isMuted()));
 };
 
-if (button && label) {
+if (button) {
   // ボタンの「押した」は click で受ける。タッチ・マウスに加えてキーボードでも動くため。
   // 遊びの面（鍵盤、キャンバスなど）は、押している間の動きが要るので Pointer Events を使う
   button.addEventListener("click", () => {
