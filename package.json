@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint frontend",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:pwa": "node scripts/check-pwa.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

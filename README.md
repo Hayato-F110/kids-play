@@ -26,7 +26,7 @@
 
 | 環境 | 方法 |
 |---|---|
-| Web（GitHub Pages） | （5日目にURLを追加） |
+| Web（GitHub Pages） | https://hayato-f110.github.io/kids-play/ |
 | PWA | 上のURLをAndroidのChromeで開き、「ホーム画面に追加」 |
 | Androidアプリ | Android Studioでビルドし、USBデバッグで実機にインストール（Google Playでは配布しない） |
 | AWS版（HTTPS） | （13日目に追加。学習後に停止する場合がある） |
