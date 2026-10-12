@@ -7,7 +7,8 @@
 // 一覧は、frontend/ の中身と一致させる。ずれは `npm run check:pwa` で見つける。
 
 // 保存場所の名前。一覧からファイルを消したときは、番号を上げて古い保存場所を捨てる
-const CACHE_NAME = "kids-play-v1";
+const CACHE_PREFIX = "kids-play-";
+const CACHE_NAME = `${CACHE_PREFIX}v1`;
 
 const FILES = [
   "index.html",
@@ -54,13 +55,19 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// 動き始めたとき：名前の違う古い保存場所を消し、開いているページをすぐに受け持つ
+// 動き始めたとき：名前の違う古い保存場所を消し、開いているページをすぐに受け持つ。
+// 消すのは、このアプリの保存場所（kids-play- で始まる名前）だけにする。
+// 保存場所はオリジン（github.io ならアカウント全体）で共有するので、同じオリジンの別のサイトの分を消さないため
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
       .then((names) =>
-        Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))),
+        Promise.all(
+          names
+            .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+            .map((name) => caches.delete(name)),
+        ),
       )
       .then(() => self.clients.claim()),
   );

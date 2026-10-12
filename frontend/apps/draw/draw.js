@@ -66,7 +66,7 @@ const render = () => {
     const selected = state.tool === "stamp" && button.dataset.stamp === state.stamp;
     button.setAttribute("aria-pressed", String(selected));
   }
-  switchButton.setAttribute("aria-label", state.tool === "pen" ? "スタンプに かえる" : "ペンに かえる");
+  switchButton.setAttribute("aria-label", state.tool === "pen" ? "すたんぷに かえる" : "ぺんに かえる");
 };
 
 // 色は tokens.css だけで決める。ここに色の値を書かず、ボタンの面の色を読んで使う
