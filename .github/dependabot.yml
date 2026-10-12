@@ -1,0 +1,37 @@
+# Dependabot の version updates（部品の新しい版が出たら、更新のPRを自動で作る）の設定。
+# 脅威分析の T-04（サプライチェーン）への対策 C-09。
+# 脆弱性の通知（alerts）と、脆弱性を直す更新（security updates）は、リポジトリの Settings 側で有効にしている。
+
+# 設定ファイルの書式の版。2 で固定
+version: 2
+
+updates:
+  # 開発用の道具（ESLint、Prettier など）。公開物には入らないが、開発用PCで動く
+  - package-ecosystem: "npm"
+    # package.json と package-lock.json のある場所（リポジトリの一番上）
+    directory: "/"
+    # 週に1回、新しい版を確認する
+    schedule:
+      interval: "weekly"
+    # 新しい版は、公開から7日たってから取り込む（既定は3日）。
+    # 公開直後に悪意ある版が見つかって取り下げられることがあるので、少し待つ。脆弱性を直す更新には、この待ち時間はかからない
+    cooldown:
+      default-days: 7
+    # 更新を1つのPRにまとめる。PRが何本も届いて、確認が雑になるのを防ぐため
+    groups:
+      dev-tools:
+        patterns:
+          - "*"
+
+  # GitHub Actions の部品（checkout、deploy-pages など）。公開物を作る経路に入っている
+  - package-ecosystem: "github-actions"
+    # "/" と書くと、.github/workflows の中を見る
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - "*"

@@ -122,7 +122,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 
 起こりやすさを 1 としたものは、今の構成（外部のライブラリも通信もない静的なページ）が前提。構成が変わる日（5日目のPWA、10日目のAPI、11日目の依存パッケージ）に見直す。
 
-5日目の見直し：公開物（`frontend/`）は、今も外部のライブラリを含まない。一方で、公開物を作る経路に GitHub Actions の部品が4つ入った（`pages.yml`）。部品はコミットIDで固定している（C-13）。開発用の道具（`package.json` の devDependencies 5つ）は、開発用PCで動くが、公開物には入らない。T-04 の起こりやすさは 1 のままにし、Dependabot（C-09）を入れた時点で、更新の取り込み方を決める。T-15 の 1 は、「このアカウントで他の Pages サイトを公開しない」（C-19）が前提。
+5日目の見直し：公開物（`frontend/`）は、今も外部のライブラリを含まない。一方で、公開物を作る経路に GitHub Actions の部品が4つ入った（`pages.yml`）。部品はコミットIDで固定している（C-13）。開発用の道具（`package.json` の devDependencies 5つ）は、開発用PCで動くが、公開物には入らない。T-04 の起こりやすさは 1 のままにする。更新の取り込み方は C-09 で決めた（週1回、公開から7日待つ、PRで人が確認してからマージ）。T-15 の 1 は、「このアカウントで他の Pages サイトを公開しない」（C-19）が前提。
 
 ## 5. 対策
 
@@ -136,7 +136,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | C-06 | innerHTML を使わない。外部のスクリプト・フォント・画像・リンクを置かない。HTMLに style 属性を書かない | T-01、T-04、T-10 | 2日目 | 実施済み（検索で0件） | `frontend/` を innerHTML、style=、http で検索 |
 | C-07 | 子どもの実名・写真・絵・声を、外部サービス（Claude、Jira、GitHub）に入力しないルール。反応の記録は個人を特定しない書き方にする | T-02 | 1日目 | 実施済み（運用） | `CLAUDE.md`、`docs/design.md` の反応メモ |
 | C-08 | CSP（Content Security Policy）で、読み込み元を自分のオリジンに限定し、通信を禁止する。5つのHTMLの meta タグに `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'` を置く。meta タグでは指定できない項目（他サイトの枠への埋め込みの禁止 frame-ancestors、違反の報告）は、GitHub Pages では設定できないので、AWS版の nginx のヘッダーで行う（C-14） | T-01、T-05 | 5日目（meta）、13日目（ヘッダー） | 一部実施 | 各 `index.html` の先頭。画面なしのブラウザで、5画面とおえかきの「ほぞん」の違反が0件であること、HTMLに直接書いた script と style、外部への通信、外部の画像が止まることを確認 |
-| C-09 | Dependabot と CodeQL を有効化 | T-04 | 5日目 | 予定 | – |
+| C-09 | Dependabot と CodeQL を有効化。Dependabot は、脆弱性の通知（alerts）、脆弱性を直す更新（security updates）、新しい版への更新（version updates：npm と GitHub Actions、週1回、公開から7日待つ）の3つ。CodeQL は default setup で、JavaScript とワークフローを、main への push・PR・週1回に解析する。更新のPRは、人が差分を確認してからマージする | T-04、T-01 | 5日目 | 実施済み（2026-10-12 の初回の解析：JavaScript 87ルール、ワークフロー 17ルールで指摘0件。Dependabot の通知0件） | リポジトリの Settings → Advanced Security、`.github/dependabot.yml`、Security タブ（Code scanning、Dependabot） |
 | C-10 | マイクの許可は、録音ボタンを押したときだけ求める。録音中であることを画面に示す | T-06 | 8日目 | 予定 | – |
 | C-11 | ページの削除と、全データの削除の機能 | T-09 | 9日目 | 予定 | – |
 | C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認 | T-08 | 10日目 | 予定 | – |
@@ -172,3 +172,4 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | 2026-10-12 | 対策C-08（CSP）を meta タグで実施。meta タグで指定できない項目を C-14 に回した | 5日目。GitHub Pages で公開した。Pages では応答ヘッダーを設定できない |
 | 2026-10-12 | 脅威T-14（Service Worker の保存範囲と、古いファイル）と対策C-18を追加。C-08 のCSPに manifest-src と worker-src を追加 | 5日目。PWA化で、端末内に新しい保存場所ができた |
 | 2026-10-12 | 脅威T-15（github.io のオリジンを他の Pages サイトと共有する）と対策C-19を追加。図の P4・P5 を実態に合わせた。T-04 の前提、C-13、C-17 の状態を更新。A1 の置き場所にダウンロードフォルダを追加 | 5日目。レビュー用サブエージェント（privacy-reviewer）の指摘 |
+| 2026-10-12 | 対策C-09（Dependabot と CodeQL）を実施。T-04 の更新の取り込み方を決めた | 5日目。公開物を作る経路に GitHub Actions の部品が入ったため |
