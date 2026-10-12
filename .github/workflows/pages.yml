@@ -1,0 +1,48 @@
+# frontend/ の中身を GitHub Pages に公開する。
+# 公開されるのは frontend/ だけ。docs/ や .claude/ は載せない（公開範囲を最小にする）。
+name: GitHub Pagesへ公開
+
+on:
+  # main に入った変更のうち、公開物かこのファイルが変わったときだけ動かす
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/pages.yml"
+  # Actions タブから手動でも動かせるようにする（最初の公開と、やり直し用）
+  workflow_dispatch:
+
+# このワークフローに渡す権限。書いていない権限は付かない（最小権限）
+permissions:
+  contents: read # リポジトリを読む
+  pages: write # Pages に公開する
+  id-token: write # 公開元がこのリポジトリであることを証明する（OIDC。13日目のAWSと同じ仕組み）
+
+# 公開は同時に1つだけ。途中の公開は止めずに最後まで進める
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # 公開先の環境。GitHubの画面に公開URLが表示される
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # アクションは、タグではなくコミットIDで固定する。
+      # タグは後から別の中身に付け替えられるため（サプライチェーン対策）
+      - name: リポジトリを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # 取り出したあとに認証情報を残さない
+      - name: Pagesの設定を読む
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: frontend/ だけをまとめて渡す
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: frontend
+      - name: 公開する
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
