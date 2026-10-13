@@ -41,6 +41,7 @@
       "Read(secrets/**)",
       "Read(data/**)",
       "Read(backend/data/**)",
+      "mcp__playwright__browser_run_code_unsafe",
       "PowerShell(adb*content delete*)",
       "PowerShell(adb*content update*)",
       "PowerShell(adb*content insert*)",

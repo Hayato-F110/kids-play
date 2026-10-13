@@ -52,6 +52,8 @@ build/
 
 # ---- Node ----
 node_modules/
+# Playwright MCP が画面の画像などを書き出す場所（確認用の一時ファイル）
+.playwright-mcp/
 npm-debug.log*
 .eslintcache
 
