@@ -14,7 +14,7 @@
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
   width: 100%;
-  max-width: min(30rem, (100dvh - 10rem) * 2 / 3);
+  max-width: min(30rem, (100dvh - 10rem - var(--safe-top) - var(--safe-bottom)) * 2 / 3);
   margin-inline: auto;
   /* 押したときに沈む分 */
   padding-bottom: var(--pop);
@@ -24,7 +24,7 @@
 @media (orientation: landscape) {
   .animals {
     grid-template-columns: repeat(3, 1fr);
-    max-width: min(54rem, (100dvh - 9rem) * 3 / 2);
+    max-width: min(54rem, (100dvh - 9rem - var(--safe-top) - var(--safe-bottom)) * 3 / 2);
   }
 }
 

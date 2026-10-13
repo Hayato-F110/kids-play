@@ -47,6 +47,16 @@
 
   --tap-min: 4rem;
   --corner-size: 4.5rem;
+
+  /*
+   * 端末の表示（時計や電池、下の操作バー、カメラの切り欠き）と重ならないための余白。
+   * Androidアプリ版は画面の端まで広がるので、端末が教えてくれる分だけ内側に寄せる。
+   * 前の値は Capacitor が入れる値（古い WebView 用）、後ろはブラウザの標準の値。どちらもなければ 0
+   */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
   --stroke: 0.25rem;
   --pop: 0.375rem;
   --shadow-pop: 0 var(--pop) 0 var(--color-text);
