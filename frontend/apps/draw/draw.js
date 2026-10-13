@@ -299,7 +299,13 @@ document.addEventListener(
   { capture: true },
 );
 
-// ---- ほぞん（PNGを端末にダウンロードするだけ。通信はしない）----
+// ---- ほぞん（PNGを端末に保存するだけ。通信はしない）----
+// ブラウザとPWAは、ダウンロードとして保存する。
+// Androidアプリ版は、ダウンロードを受け取れないので、アプリ側の入口（PictureSaver）から「ピクチャ」に保存する
+
+// Androidアプリ版（Capacitor）のときだけ入る。ブラウザとPWAでは undefined
+const nativeApp = window.Capacitor?.isNativePlatform?.() ? window.Capacitor : undefined;
+const pictureSaver = nativeApp?.Plugins?.PictureSaver;
 
 let savedTimer = 0;
 
@@ -322,7 +328,30 @@ const showSaved = () => {
   }, SAVED_NOTICE_MS);
 };
 
+const notifySaved = () => {
+  showSaved();
+  playNotes(SOUNDS.save);
+};
+
+// アプリ版で保存できない端末（古いAndroid）では、押しても残らないボタンを出さない
+if (nativeApp) {
+  const hideSave = () => {
+    saveButton.closest(".action").hidden = true;
+  };
+  if (pictureSaver) {
+    pictureSaver.canSave().then(({ value }) => !value && hideSave(), hideSave);
+  } else {
+    hideSave();
+  }
+}
+
 saveButton.addEventListener("click", () => {
+  if (pictureSaver) {
+    // 保存できたときだけ「できた」を出す。できなかったときは、何も起こさない（失敗の表示は出さない）
+    const data = canvas.toDataURL("image/png").split(",")[1];
+    pictureSaver.savePng({ fileName: fileName(), data }).then(notifySaved, () => {});
+    return;
+  }
   canvas.toBlob((blob) => {
     // 画像にできなかったとき（メモリ不足など）は、何も起こさない。失敗の表示は出さない
     if (!blob) {
@@ -338,8 +367,7 @@ saveButton.addEventListener("click", () => {
     setTimeout(() => {
       URL.revokeObjectURL(url);
     }, 1000);
-    showSaved();
-    playNotes(SOUNDS.save);
+    notifySaved();
   }, "image/png");
 });
 
