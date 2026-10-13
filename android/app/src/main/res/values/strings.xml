@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">あそびランド</string>
+    <string name="title_activity_main">あそびランド</string>
+    <string name="package_name">dev.kidsplay.app</string>
+    <string name="custom_url_scheme">dev.kidsplay.app</string>
+</resources>
