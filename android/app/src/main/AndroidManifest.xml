@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+        バックアップと機種変更の転送を、どちらも無効にする。
+        9日目から、子どもの絵と声をアプリの中（IndexedDB）に保存する。それを端末の外に出さないため。
+        allowBackup だけでは、Android 12 以上の一部の端末で機種変更の転送が止まらないので、
+        dataExtractionRules（Android 12 以上）と fullBackupContent（Android 11 以下）も指定する。
+    -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules_legacy"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -24,18 +32,14 @@
 
         </activity>
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"></meta-data>
-        </provider>
+        <!--
+            Capacitor のひな形にあった FileProvider（ほかのアプリにファイルを渡す入口）は外した。
+            このアプリは、ほかのアプリにファイルを渡さない。ひな形の設定は、外部ストレージ全体を渡せる範囲にしていた。
+        -->
     </application>
 
-    <!-- Permissions -->
-
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!--
+        権限は、なし。
+        画面のファイルはアプリの中にあり、外部と通信しない。INTERNET を外すと、WebView は外への読み込みを止める。
+    -->
 </manifest>
