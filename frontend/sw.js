@@ -19,6 +19,7 @@ const FILES = [
   "js/main.js",
   "js/mute.js",
   "js/audio.js",
+  "js/paint.js",
   "apps/animals/index.html",
   "apps/animals/animals.css",
   "apps/animals/animals.js",
