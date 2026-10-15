@@ -17,6 +17,8 @@ const FILES = [
   "css/base.css",
   "css/menu.css",
   "js/main.js",
+  "js/storage/validate.js",
+  "js/storage/memory.js",
   "js/mute.js",
   "js/audio.js",
   "js/paint.js",

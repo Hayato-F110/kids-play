@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "4〜8歳の子ども向けミニアプリ集（キッズあそびランド）。開発用の道具（整形と静的解析）だけをここで管理する",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint frontend",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:pwa": "node scripts/check-pwa.mjs"
+    "check:pwa": "node scripts/check-pwa.mjs",
+    "test": "node --test \"tests/**/*.test.mjs\""
   },
   "overrides": {
     "xcode": {
