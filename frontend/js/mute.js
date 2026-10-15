@@ -24,11 +24,25 @@ const save = (value) => {
 // export しない。外から直接書き換えられると、保存されないまま状態だけ変わるため
 let muted = load();
 
+// 消音が切り替わったときに知らせる相手。録音した声のように長く鳴る音を、押した瞬間に止めるため
+const listeners = new Set();
+
 export const isMuted = () => muted;
 
 export const setMuted = (value) => {
   muted = Boolean(value);
   save(muted);
+  for (const listener of listeners) {
+    listener(muted);
+  }
+};
+
+/**
+ * 消音の切り替えを受け取る。
+ * @param {(muted: boolean) => void} listener
+ */
+export const onMuteChange = (listener) => {
+  listeners.add(listener);
 };
 
 export const toggleMuted = () => {
