@@ -5,7 +5,7 @@
 
 - 14日間の計画：@docs/plan.md
 - デザインのルール：@docs/design.md
-- 構成図：docs/architecture.md ／ 脅威分析：docs/security/threat-model.md
+- 構成図：docs/architecture.md ／ 脅威分析：docs/security/threat-model.md ／ えほんの保存のインターフェース：docs/storage-interface.md
 - 学習ログ：docs/learning-log.md ／ Claude Code活用ガイド：docs/claude-code-playbook.md
 
 ## 学習者について
@@ -105,6 +105,7 @@ data/ secrets/       子どものデータ／秘密情報（gitignore済み。Cl
 ```powershell
 python -m http.server 8000 --directory frontend   # フロントをローカルで確認（3日目〜）
 npx prettier --check . ; npx eslint frontend       # 整形と静的解析（導入後）
+npm test                                           # フロントのテスト（node:test。8日目〜）
 uv run pytest ; uv run ruff check .                # バックエンドのテストと静的解析（10日目〜）
 docker compose up -d ; docker compose logs -f      # コンテナ起動とログ（11日目〜）
 ```
