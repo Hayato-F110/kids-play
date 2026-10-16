@@ -98,7 +98,7 @@ data/ secrets/       子どものデータ／秘密情報（gitignore済み。Cl
 - mainに直接コミットしない（1日目の初回コミットを除く）。ブランチ → PR → レビュー → マージ
 - 変更は小さく。1つのPRは1つの課題
 - 例外：Dependabot が自動で作るPRは、ブランチ名とコミットに Jira のキーが付かない。差分（何の版がどう上がるか）を確認してからマージする
-- PRの作成は、GitHub CLI（`gh`）でClaudeが行ってよい。マージは学習者がブラウザで行う（main に入れる承認は人が持つ）
+- PRの作成は、GitHub CLI（`gh`）でClaudeが行ってよい。マージは学習者が行う（main に入れる承認は人が持つ。手段はブラウザでも VS Code でもよい）。Claude は `gh pr merge` を実行しない（`.claude/settings.json` の deny で止めている）
 
 ## よく使うコマンド（Windows PowerShell）
 
