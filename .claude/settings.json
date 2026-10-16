@@ -66,7 +66,11 @@
       "Bash(adb*wipe*)",
       "Bash(adb*input *)",
       "Bash(adb*screencap*)",
-      "Bash(adb*screenrecord*)"
+      "Bash(adb*screenrecord*)",
+      "Bash(*gh pr merge*)",
+      "Bash(*gh api*/merge*)",
+      "PowerShell(*gh pr merge*)",
+      "PowerShell(*gh api*/merge*)"
     ],
     "ask": [
       "PowerShell(adb shell*)",
