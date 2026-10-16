@@ -2,7 +2,8 @@
 // 描いた絵は、この画面のキャンバスの中にだけある。どこにも送信しない（保存はダウンロードだけ）。
 
 import { playNotes } from "../../js/audio.js";
-import { createPaint, SIZE_STEPS } from "../../js/paint.js";
+import { createPaint } from "../../js/paint.js";
+import { createPaintTools } from "../../js/paint-tools.js";
 
 // ぜんぶけすの1回目のあと、何もしなければ元に戻すまでの時間。ほぞんの吹き出しを出しておく時間
 const CLEAR_CONFIRM_MS = 4000;
@@ -24,78 +25,19 @@ const clearButton = document.querySelector("[data-clear]");
 const clearBubble = document.querySelector("[data-clear-bubble]");
 const saveButton = document.querySelector("[data-save]");
 const saveBubble = document.querySelector("[data-save-bubble]");
-const sizeCycleButton = document.querySelector("[data-size-cycle]");
-const switchButton = document.querySelector("[data-switch]");
-
-// いま持っている道具。画面の表示は、すべてここから作る（render）
-const state = {
-  tool: tools.dataset.tool,
-  color: tools.dataset.color,
-  size: Number(tools.dataset.size),
-  stamp: "star",
-};
 
 // 「けす？」を取り消したタップ。同じタップで線を描かないように覚えておく
 let dismissedPointerId = null;
 
-// ---- 道具の表示 ----
-
-const render = () => {
-  tools.dataset.tool = state.tool;
-  tools.dataset.color = state.color;
-  tools.dataset.size = String(state.size);
-
-  for (const button of tools.querySelectorAll(".tools__group--colors [data-color]")) {
-    const selected = state.tool === "pen" && button.dataset.color === state.color;
-    button.setAttribute("aria-pressed", String(selected));
-  }
-  for (const button of tools.querySelectorAll(".tools__group--sizes [data-size]")) {
-    button.setAttribute("aria-pressed", String(Number(button.dataset.size) === state.size));
-  }
-  for (const button of tools.querySelectorAll("[data-stamp]")) {
-    const selected = state.tool === "stamp" && button.dataset.stamp === state.stamp;
-    button.setAttribute("aria-pressed", String(selected));
-  }
-  switchButton.setAttribute("aria-label", state.tool === "pen" ? "すたんぷに かえる" : "ぺんに かえる");
-};
-
-// 色は tokens.css だけで決める。ここに色の値を書かず、ボタンの面の色を読んで使う
-const inkColor = () => {
-  const button = tools.querySelector(`.tools__group--colors [data-color="${state.color}"]`);
-  return getComputedStyle(button).backgroundColor;
-};
-
-const stampImage = () => tools.querySelector(`[data-stamp="${state.stamp}"] img`);
+const paintTools = createPaintTools(tools);
 
 const paint = createPaint({
   paper,
   canvas,
-  getTool: () => ({ tool: state.tool, color: inkColor(), size: state.size, stampImage: stampImage() }),
+  getTool: paintTools.getTool,
   onStamp: () => playNotes(SOUNDS.stamp),
   // 「けす？」を出している間のタップは、取り消しの合図として使い、描かない
   shouldIgnore: (event) => dismissedPointerId === event.pointerId,
-});
-
-// ボタンの「押した」は click で受ける（キーボードでも動くため）
-tools.addEventListener("click", (event) => {
-  const button = event.target.closest("button");
-  if (!button) {
-    return;
-  }
-  if (button === switchButton) {
-    state.tool = state.tool === "pen" ? "stamp" : "pen";
-  } else if (button === sizeCycleButton) {
-    state.size = (state.size % SIZE_STEPS) + 1;
-  } else if (button.dataset.stamp) {
-    state.tool = "stamp";
-    state.stamp = button.dataset.stamp;
-  } else if (button.dataset.color) {
-    state.tool = "pen";
-    state.color = button.dataset.color;
-  } else if (button.dataset.size) {
-    state.size = Number(button.dataset.size);
-  }
-  render();
 });
 
 // ---- ぜんぶけす（1回目で確かめ、2回目で消す）----
@@ -211,5 +153,3 @@ saveButton.addEventListener("click", () => {
     notifySaved();
   }, "image/png");
 });
-
-render();
