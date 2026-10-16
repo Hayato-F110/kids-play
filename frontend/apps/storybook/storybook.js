@@ -257,7 +257,8 @@ const recorderView = () => {
 };
 
 const updateRing = () => {
-  ring.setAttribute("stroke-dashoffset", String(RING_LENGTH * (1 - recorder.progress())));
+  // SVG の属性ではなく style に書く。storybook.css の初期値（空の輪）は、属性より強く効いてしまうため
+  ring.style.strokeDashoffset = String(RING_LENGTH * (1 - recorder.progress()));
   if (recorder.state === "recording") {
     requestAnimationFrame(updateRing);
   }
