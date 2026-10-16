@@ -39,7 +39,17 @@
     </application>
 
     <!--
-        権限は、なし。
-        画面のファイルはアプリの中にあり、外部と通信しない。INTERNET を外すと、WebView は外への読み込みを止める。
+        権限は、マイクの2つだけ（えほんの録音のため。KIDS-32）。
+        Capacitor 8.5.3 の BridgeWebChromeClient.onPermissionRequest は、WebView がマイクを求めたとき、
+        RECORD_AUDIO と MODIFY_AUDIO_SETTINGS の両方を求める。どちらかがないと、録音は拒否になる。
+        許可の画面が出るのは、録音ボタンを押したときだけ（アプリの起動時には求めない）。
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!--
+        INTERNET は足さない。
+        画面のファイルはアプリの中にあり、外部と通信しない。INTERNET がないと、WebView は外への読み込みを止める。
+        録音した声も、外に送る手段がない。
     -->
 </manifest>
