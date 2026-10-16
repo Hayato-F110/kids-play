@@ -1,7 +1,7 @@
 // 音を出すモジュール。全ミニアプリが、ここだけを通して音を鳴らす。
 // 音量の上限、同時に鳴る数、消音の確認を1か所に集め、どの画面でも急な大音量が出ないようにする。
 
-import { isMuted } from "./mute.js";
+import { isMuted, onMuteChange } from "./mute.js";
 
 // 子ども向けなので控えめにする（docs/design.md の音量の方針）
 const MASTER_VOLUME = 0.25;
@@ -15,6 +15,16 @@ const SILENCE = 0.0001;
 let context = null;
 let master = null;
 let activeVoices = 0;
+// 鳴っている録音の声を止める関数。消音にしたら、すべて止める
+const playingRecordings = new Set();
+
+onMuteChange((muted) => {
+  if (muted) {
+    for (const stop of [...playingRecordings]) {
+      stop();
+    }
+  }
+});
 
 // 最初に音を鳴らすときまで作らない。ブラウザは、操作の前に音を出すことを許さないため
 const ensureContext = () => {
@@ -171,4 +181,63 @@ export const startTone = ({ type = "sine", freq, gain = 1 }) => {
     envelope.gain.exponentialRampToValueAtTime(SILENCE, releaseAt + RELEASE_SECONDS);
     oscillator.stop(releaseAt + RELEASE_SECONDS);
   };
+};
+
+/**
+ * 録音した声を鳴らす。合成音と同じ音量の上限（MASTER_VOLUME）と消音を通す。
+ * <audio> を使わないのは、急な大音量を防ぐ規則を声にも効かせるため（CSP に media-src を足さずに済む利点もある）。
+ * @param {Blob} blob 録音したデータ
+ * @param {() => void} [onEnded] 最後まで鳴ったとき、または止めたときに呼ぶ
+ * @returns {Promise<(() => void) | null>} 声を止める関数。鳴らせなかったとき（消音中、読めないデータ）は null
+ */
+export const playRecording = async (blob, onEnded = () => {}) => {
+  if (isMuted() || !ensureContext()) {
+    return null;
+  }
+  if (context.state !== "running") {
+    context.resume().catch(() => {});
+  }
+
+  let buffer;
+  try {
+    buffer = await context.decodeAudioData(await blob.arrayBuffer());
+  } catch {
+    return null;
+  }
+  // 読み込む間に消音された場合に備えて、もう一度確かめる
+  if (isMuted()) {
+    return null;
+  }
+
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  const envelope = context.createGain();
+  const startedAt = context.currentTime;
+  envelope.gain.setValueAtTime(SILENCE, startedAt);
+  envelope.gain.linearRampToValueAtTime(1, startedAt + ATTACK_SECONDS);
+  source.connect(envelope);
+  envelope.connect(master);
+
+  let stopped = false;
+  const stop = () => {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+    // 途中で切るとプチッと鳴るので、短く下げてから止める
+    const releaseAt = Math.max(context.currentTime, startedAt + ATTACK_SECONDS);
+    envelope.gain.setValueAtTime(envelope.gain.value, releaseAt);
+    envelope.gain.exponentialRampToValueAtTime(SILENCE, releaseAt + RELEASE_SECONDS);
+    source.stop(releaseAt + RELEASE_SECONDS);
+  };
+
+  playingRecordings.add(stop);
+  source.addEventListener("ended", () => {
+    stopped = true;
+    playingRecordings.delete(stop);
+    envelope.disconnect();
+    onEnded();
+  });
+  source.start(startedAt);
+  return stop;
 };
