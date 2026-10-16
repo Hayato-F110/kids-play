@@ -26,7 +26,8 @@ export const createRecorder = ({
 }) => {
   let state = "idle";
   let result = null;
-  let stream = null;
+  // いまの録音のマイクを止める関数（録音ごとに作る）
+  let releaseCurrent = null;
   let mediaRecorder = null;
   let startedAt = 0;
   let timer = null;
@@ -40,12 +41,8 @@ export const createRecorder = ({
 
   // マイクを手放す。ブラウザの「マイク使用中」の表示もこれで消える（T-06）
   const releaseMicrophone = () => {
-    if (stream) {
-      for (const track of stream.getTracks()) {
-        track.stop();
-      }
-      stream = null;
-    }
+    releaseCurrent?.();
+    releaseCurrent = null;
     if (timer !== null) {
       clearTimer(timer);
       timer = null;
@@ -66,43 +63,65 @@ export const createRecorder = ({
       // 録音ボタンを押したときだけ、ここでマイクを求める（C-10）。カメラは求めない
       given = await getUserMedia({ audio: true, video: false });
     } catch {
-      setState("unavailable");
+      // 待つ間に cancel されていたら、その後の状態（idle）を変えない
+      if (myAttempt === attempt) {
+        setState("unavailable");
+      }
       return;
     }
-    if (myAttempt !== attempt) {
+    // その回のマイクだけを止める。共有の変数を通すと、録り直した新しい録音のマイクまで止めてしまうため
+    let released = false;
+    const stopGiven = () => {
+      if (released) {
+        return;
+      }
+      released = true;
       for (const track of given.getTracks()) {
         track.stop();
       }
+    };
+    if (myAttempt !== attempt) {
+      stopGiven();
       return;
     }
-    stream = given;
+    releaseCurrent = stopGiven;
 
     const chunks = [];
-    const recorder = new MediaRecorder(stream);
-    mediaRecorder = recorder;
-    recorder.addEventListener("dataavailable", (event) => {
-      if (event.data && event.data.size > 0) {
-        chunks.push(event.data);
-      }
-    });
-    recorder.addEventListener("stop", () => {
-      const ms = Math.min(now() - startedAt, MAX_VOICE_MS);
-      releaseMicrophone();
-      if (mediaRecorder === recorder) {
+    let recorder;
+    try {
+      recorder = new MediaRecorder(given);
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data && event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      });
+      recorder.addEventListener("stop", () => {
+        // 前の録音の合図が遅れて届いたとき：その回のマイクだけを止め、今の録音には触らない
+        if (myAttempt !== attempt) {
+          stopGiven();
+          return;
+        }
+        const ms = Math.min(now() - startedAt, MAX_VOICE_MS);
+        releaseMicrophone();
         mediaRecorder = null;
-      }
-      // cancel で止めたときは、声を残さない
-      if (myAttempt !== attempt || chunks.length === 0) {
-        setState("idle");
-        return;
-      }
-      const type = chunks[0].type || recorder.mimeType || "audio/webm";
-      result = { blob: new Blob(chunks, { type }), ms: Math.round(ms) };
-      setState("recorded");
-    });
-
-    startedAt = now();
-    recorder.start();
+        if (chunks.length === 0) {
+          setState("idle");
+          return;
+        }
+        const type = chunks[0].type || recorder.mimeType || "audio/webm";
+        result = { blob: new Blob(chunks, { type }), ms: Math.round(ms) };
+        setState("recorded");
+      });
+      startedAt = now();
+      recorder.start();
+    } catch {
+      // この端末で録音できない（形式に未対応など）。マイクを手放して、録音ボタンをうすくする
+      releaseMicrophone();
+      mediaRecorder = null;
+      setState("unavailable");
+      return;
+    }
+    mediaRecorder = recorder;
     // 30秒で止める。保存の規則（MAX_VOICE_MS）と同じ値を使う
     timer = setTimer(() => {
       timer = null;
