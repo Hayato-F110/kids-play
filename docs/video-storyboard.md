@@ -38,7 +38,13 @@
 - 通知が映らず、何度でも同じように録り直せる。実機でファイルを操作しなくてよい（6日目の事故の対策 C-20）
 - 「Androidアプリとして動く」ことは、③a の実機のスクリーンショットで見せる
 
-録り方：
+録り方（スクリプトは `scripts/record-storybook/`。画面を直したら、14日目の前に録り直す）：
+
+```powershell
+python -m http.server 8000 --directory frontend   # 別のターミナルで動かしておく
+npm run record:storybook                          # video/raw/ に素材③を作り直す
+```
+
 - 画面なしの Edge（Playwright）を、スマホの縦の大きさ（412×892）で動かし、えほんを操作する。利用者データは毎回新しく作るので、IndexedDB は空から始まる
 - 偽のマイク（`--use-fake-device-for-media-stream` と `--use-file-for-fake-audio-capture`）に、ピアノと同じ作りの合成音（ド・レ・ミ・ソ、約3秒）を流す
 - 映像は、ブラウザの画面の配信（CDP の screencast）からコマを受け取り、30fps に並べ直す。Playwright の録画機能は、早送りや巻き戻しの位置合わせができない webm になったため使わない

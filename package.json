@@ -5,10 +5,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "eslint frontend",
+    "lint": "eslint frontend scripts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:pwa": "node scripts/check-pwa.mjs",
+    "record:storybook": "node scripts/record-storybook/index.mjs",
     "test": "node --test \"tests/**/*.test.mjs\""
   },
   "overrides": {
