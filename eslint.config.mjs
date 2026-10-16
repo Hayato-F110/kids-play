@@ -35,6 +35,22 @@ export default defineConfig([
     },
   },
   {
+    // 補助スクリプトは Node で動く。ブラウザの中で動かす部分（page.evaluate など）があるので、両方の名前を許す
+    files: ["scripts/**/*.mjs"],
+    plugins: { js },
+    extends: ["js/recommended"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: { ...globals.node, ...globals.browser },
+    },
+    rules: {
+      "prefer-const": "error",
+      "no-var": "error",
+      eqeqeq: "error",
+    },
+  },
+  {
     // Service Worker は、ページとは別の場所で動く。使える名前（self、caches、clients）がページと違う
     files: ["frontend/sw.js"],
     languageOptions: {
