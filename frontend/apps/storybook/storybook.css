@@ -1,0 +1,697 @@
+/* わたしのえほん。道具と紙の見た目は draw.css を使い、ここでは画面の並びと、えほんだけの部品を決める */
+
+/* 画面の高さをちょうど1画面にする。紙が残りの高さを使い、ボタンが画面の下に収まるようにするため */
+.screen--storybook {
+  --tool-size: var(--tap-min);
+  --ring-size: 9rem;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+}
+
+/* 場面の出し分け。いまの場面（data-view）が data-only に入っていない部品を隠す */
+.screen--storybook[data-view="shelf"] [data-only]:not([data-only~="shelf"]),
+.screen--storybook[data-view="edit"] [data-only]:not([data-only~="edit"]),
+.screen--storybook[data-view="read"] [data-only]:not([data-only~="read"]) {
+  display: none;
+}
+
+/* ---- 上の帯 ---- */
+
+.book-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.book-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.book-icon__cover {
+  fill: var(--color-accent-4);
+}
+
+.back-shelf {
+  --btn-fill: var(--color-accent-4);
+  grid-column: 2;
+  justify-self: center;
+  display: flex;
+  gap: 0.375rem;
+  min-width: 7rem;
+  height: var(--tap-min);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.badge-number {
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-surface);
+  font-size: var(--label-md);
+  line-height: 1;
+}
+
+/* ---- 大きな丸いボタン（よむ、ろくおん、きく など） ---- */
+
+.pill {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 4.5rem;
+  padding-inline: var(--space-3);
+  border-radius: 999px;
+  font-size: var(--label-lg);
+  /* 幅がせまくても、ことばを途中で折り返さない */
+  white-space: nowrap;
+}
+
+.pill__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ボタンの中の白い丸（マイク、再生の印） */
+.pill__badge {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.pill__badge svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pill:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ---- ほんだな ---- */
+
+.shelf {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+/* スマホの縦：2列×4段。番号と声の印がはみ出す分の余白をとる */
+.shelf__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 1.375rem 1.25rem;
+  min-height: 0;
+  padding: 0.75rem 0.75rem var(--space-2);
+}
+
+.page {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius-md);
+}
+
+/* 絵の画素の数でボタンが伸びないよう、ボタンの内側に重ねて置く */
+.page__pic {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--radius-md) - var(--stroke));
+  pointer-events: none;
+}
+
+/* ページ番号（1〜8）。左上に重ねる */
+.page__num {
+  position: absolute;
+  top: -0.75rem;
+  left: -0.625rem;
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-accent-4);
+  font-size: var(--label-md);
+  line-height: 1;
+}
+
+/* 声があるページの印。右下に重ねる */
+.voice-badge,
+.page__voice {
+  position: absolute;
+  right: -0.625rem;
+  bottom: -0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.voice-badge svg,
+.page__voice svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.voice-badge {
+  right: 0.625rem;
+  bottom: 0.625rem;
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.voice-badge[hidden] {
+  display: none;
+}
+
+/* 新しいページの枠と、まだ使っていない枠：点線（押せる枠だけ「＋」を出す） */
+.page-new,
+.page-slot {
+  min-width: 0;
+  min-height: 0;
+  border: var(--stroke) dashed var(--color-text-soft);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+.page-new {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.page-new svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.page-new:focus-visible {
+  outline: 0.25rem solid var(--color-primary);
+  outline-offset: 0.25rem;
+}
+
+.page-slot {
+  opacity: 0.45;
+}
+
+.pill--read {
+  --btn-fill: var(--color-accent-4);
+  margin-bottom: var(--pop);
+}
+
+/* ---- ページを作る ---- */
+
+.edit {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+/* 録音。いまの状態の部品だけを出す */
+.recorder > * {
+  display: none;
+}
+
+.recorder[data-state="idle"] .pill--record,
+.recorder[data-state="asking"] .pill--record,
+.recorder[data-state="unavailable"] .pill--record {
+  display: flex;
+}
+
+.recorder[data-state="recording"] .recording {
+  display: flex;
+}
+
+.recorder[data-state="recorded"] .recorded {
+  display: flex;
+}
+
+.pill--record {
+  --btn-fill: var(--color-accent-2);
+  width: 100%;
+}
+
+/* マイクが使えないとき（許可なし、マイクがない）：disabled にして、.pill:disabled でうすくするだけ。失敗の表現にしない */
+
+.recording {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem var(--space-2);
+  border: var(--stroke) solid var(--color-text);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.recording__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: var(--label-md);
+}
+
+.recording__dot {
+  width: 1rem;
+  height: 1rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-accent-2);
+  /* ゆっくり明るさを変える（1秒に3回より遅く、激しい点滅にしない） */
+  animation: glow 2s ease-in-out infinite;
+}
+
+.recording__body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+/* 声の波の絵。録音中とよむ間だけ、ゆっくり伸び縮みする */
+.bars {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+}
+
+.bars span {
+  width: 0.75rem;
+  height: 3rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 0.375rem;
+  background: var(--color-accent-2);
+  animation: wave 1.8s ease-in-out infinite;
+}
+
+.bars span:nth-child(2) {
+  height: 4.5rem;
+  animation-delay: 0.3s;
+}
+
+.bars span:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--ring-size);
+  height: var(--ring-size);
+}
+
+.ring__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  /* 輪は「とめる」ボタンの上に重なるので、タップを下のボタンへ通す */
+  pointer-events: none;
+}
+
+.ring__track {
+  stroke: var(--color-bg);
+  stroke-width: 12;
+}
+
+/* 満ちていく輪。円周（2π×66 ≒ 415）を線の長さにし、storybook.js が見えない部分（offset）を減らしていく */
+.ring__fill {
+  stroke: var(--color-accent-4);
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 415;
+  stroke-dashoffset: 415;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.ring__edge {
+  stroke: var(--color-text);
+  stroke-width: 3;
+}
+
+.ring__stop {
+  --btn-fill: var(--color-accent-2);
+  width: calc(var(--ring-size) * 0.62);
+  height: calc(var(--ring-size) * 0.62);
+  border-radius: 50%;
+}
+
+.ring__stop svg {
+  width: 40%;
+  height: 40%;
+}
+
+.recorded {
+  gap: var(--space-2);
+}
+
+.pill--retake {
+  flex: 0 1 auto;
+  padding-inline: var(--space-2);
+  font-size: var(--label-md);
+}
+
+.pill--listen {
+  --btn-fill: var(--color-accent-4);
+  flex: 1 1 0;
+}
+
+.pill--listen .icon-play path {
+  fill: var(--color-accent-4);
+  stroke-width: 5;
+}
+
+.pill--listen .icon-pause rect {
+  fill: var(--color-text);
+  stroke: none;
+}
+
+.pill--listen[aria-pressed="false"] .icon-pause,
+.pill--listen[aria-pressed="true"] .icon-play {
+  display: none;
+}
+
+/* 録音中は、絵の道具と紙をうすくして押せなくする（録音に集中し、押し間違いで止まらないように） */
+.screen--storybook.is-recording .tools,
+.screen--storybook.is-recording .paper {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ---- よむ ---- */
+
+.read {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.paper--read .paper__canvas {
+  cursor: default;
+}
+
+.read__status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 2.5rem;
+}
+
+.bars--read span {
+  width: 0.625rem;
+  height: 1.5rem;
+  background: var(--color-accent-4);
+}
+
+.bars--read span:nth-child(2) {
+  height: 2.25rem;
+}
+
+.bars--read span:nth-child(4) {
+  height: 1.125rem;
+  animation-delay: 0.9s;
+}
+
+/* 声が鳴っていない間は、波の絵を出さない（場所は残して、点が動かないようにする） */
+.screen--storybook:not(.is-speaking) .bars--read {
+  visibility: hidden;
+}
+
+.read__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.read__dot {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+/* いまのページの点は、色に加えて大きさも変える（色だけで伝えない） */
+.read__dot.is-current {
+  width: 1.375rem;
+  height: 1.375rem;
+  background: var(--color-accent-4);
+}
+
+.read__nav {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--pop);
+}
+
+.pill--nav {
+  width: 7rem;
+}
+
+.pill--next {
+  --btn-fill: var(--color-accent-4);
+}
+
+.pill--nav .pill__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  stroke-width: 6;
+}
+
+/* ---- 横長の画面 ---- */
+
+@media (orientation: landscape) {
+  /* ほんだな：4列×2段 */
+  .shelf__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 2rem 2.5rem;
+    padding: 0.875rem 1.5rem 1rem;
+  }
+
+  .pill--read {
+    justify-self: center;
+    width: min(100%, 22.5rem);
+  }
+
+  /* ページを作る：紙を左、録音を右、道具を下に置く */
+  .edit {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .edit .paper {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .recorder {
+    grid-row: 1;
+    grid-column: 2;
+    display: grid;
+    align-content: center;
+    /* 録音中の枠（波の絵、輪、波の絵）が収まる幅 */
+    width: 24rem;
+  }
+
+  .recorded {
+    flex-direction: column;
+  }
+
+  .edit .tools {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .read__nav {
+    justify-content: center;
+    gap: var(--space-4);
+  }
+}
+
+/*
+ * 高さのない横長（スマホの横）：紙／録音／道具を3列に並べ、縦に積まない（高さが足りないため）。
+ * 録音のボタンは絵だけにする（ことばは aria-label で読み上げられる）
+ */
+@media (orientation: landscape) and (max-height: 30rem) {
+  .screen--storybook {
+    --ring-size: 6.5rem;
+  }
+
+  .edit {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .edit .paper {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .recorder {
+    grid-column: 2;
+    width: auto;
+  }
+
+  .recorder .pill__text,
+  .recording__label,
+  .recording .bars {
+    display: none;
+  }
+
+  .recorder .pill {
+    width: 5rem;
+    padding-inline: 0;
+  }
+
+  .edit .tools {
+    grid-row: 1;
+    grid-column: 3;
+    align-content: center;
+    width: auto;
+  }
+
+  /* ほんだな：「よむ」を右の列に移し、ページの段の高さを確保する */
+  .shelf {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .shelf__grid {
+    gap: 1rem 1.25rem;
+    padding: 0.75rem 0.75rem 0.75rem;
+  }
+
+  .pill--read {
+    align-self: center;
+    width: auto;
+    margin-bottom: 0;
+  }
+
+  .read {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .paper--read {
+    grid-row: 1 / -1;
+  }
+
+  .read__status {
+    flex-direction: column;
+  }
+
+  .read__nav {
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+}
+
+/* せまい縦の画面（幅360px 前後）：とりなおすは絵だけにし、きくと横に並べる */
+@media (max-width: 25rem) {
+  .pill--retake .pill__text {
+    display: none;
+  }
+
+  .pill--retake {
+    width: 5rem;
+  }
+}
+
+/* タブレット：ボタンを大きくする */
+@media (min-width: 40rem) and (min-height: 40rem) {
+  .screen--storybook {
+    --tool-size: 5rem;
+    --ring-size: 12rem;
+  }
+}
+
+/*
+ * 広い画面：draw.css が道具を1列に並べる（13個）。おえかきと同じく、ボタンを少し小さくして幅に収める
+ * （draw.css の --tool-size は .screen--draw にだけ付いているため、ここでも決める）
+ */
+@media (min-width: 75rem) and (min-height: 30.0625rem) {
+  .screen--storybook {
+    --tool-size: 4.5rem;
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.6);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bars span,
+  .recording__dot {
+    animation: none;
+  }
+}

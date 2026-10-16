@@ -16,11 +16,20 @@ const PAPER_COLOR = "#ffffff";
  *   canvas: HTMLCanvasElement,
  *   getTool: () => {tool: "pen" | "stamp", color: string, size: number, stampImage: HTMLImageElement | null},
  *   onStamp?: () => void,
+ *   onChange?: () => void,
  *   shouldIgnore?: (event: PointerEvent) => boolean,
  * }} options getTool は、いま持っている道具（color は CSS の色、size は 1〜SIZE_STEPS）。
- *   onStamp はスタンプを押せたとき、shouldIgnore は描かずに捨てるタップを決めるときに呼ぶ
+ *   onStamp はスタンプを押せたとき、onChange は線を描き終えたかスタンプを押したとき、
+ *   shouldIgnore は描かずに捨てるタップを決めるときに呼ぶ
  */
-export const createPaint = ({ paper, canvas, getTool, onStamp = () => {}, shouldIgnore = () => false }) => {
+export const createPaint = ({
+  paper,
+  canvas,
+  getTool,
+  onStamp = () => {},
+  onChange = () => {},
+  shouldIgnore = () => false,
+}) => {
   const context = canvas.getContext("2d");
 
   // キャンバスの画素と、CSSのpxの比。紙を作り直したときに決まる
@@ -122,6 +131,7 @@ export const createPaint = ({ paper, canvas, getTool, onStamp = () => {}, should
     context.moveTo(stroke.mid.x, stroke.mid.y);
     context.lineTo(stroke.last.x, stroke.last.y);
     context.stroke();
+    onChange();
   };
 
   const pressStamp = (event, tool) => {
@@ -134,6 +144,7 @@ export const createPaint = ({ paper, canvas, getTool, onStamp = () => {}, should
     const size = STAMP_SIZES[tool.size - 1] * pixelRatio;
     context.drawImage(image, point.x - size / 2, point.y - size / 2, size, size);
     onStamp();
+    onChange();
     return true;
   };
 
@@ -193,5 +204,28 @@ export const createPaint = ({ paper, canvas, getTool, onStamp = () => {}, should
       strokes.clear();
       resetPaper();
     },
+
+    // 何も描いていない紙かどうか（えほんで、絵のないページを保存しないため）
+    isBlank: () => isBlank,
+
+    /**
+     * 保存してあった絵を、いまの紙に描き直す。紙の形が違っても、切らず・伸ばさずに真ん中に収める。
+     * 紙が画面に出てから呼ぶ（隠れている間は紙の大きさが決まらないため）
+     * @param {Blob} blob
+     */
+    load: async (blob) => {
+      const bitmap = await createImageBitmap(blob);
+      strokes.clear();
+      resetPaper();
+      const fit = Math.min(canvas.width / bitmap.width, canvas.height / bitmap.height);
+      const width = bitmap.width * fit;
+      const height = bitmap.height * fit;
+      context.drawImage(bitmap, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      bitmap.close();
+      isBlank = false;
+    },
+
+    // 紙をPNGにする。できなかったとき（メモリ不足など）は null
+    toBlob: () => new Promise((resolve) => canvas.toBlob(resolve, "image/png")),
   };
 };
