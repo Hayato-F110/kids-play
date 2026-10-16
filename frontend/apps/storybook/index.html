@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!--
+      CSP：読み込んでよいものの許可リスト。ここにないもの（外部のスクリプト、HTMLに直接書いたscriptやstyle、外部への通信）は、
+      ブラウザが止める。まず全部を禁止し、自分のサイトのスクリプト・スタイル・画像・manifest・Service Worker だけを許可する。
+      すべてのHTMLで同じ内容にする。変えるときは docs/security/threat-model.md の C-08 も直す
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <!-- ホーム画面に追加したときの名前・アイコン・色（manifest）。theme-color は tokens.css の --color-bg と同じ値にする -->
+    <meta name="theme-color" content="#e8f4fb" />
+    <link rel="manifest" href="../../manifest.webmanifest" />
+    <link rel="icon" href="../../assets/icons/icon.svg" type="image/svg+xml" />
+    <title>えほん</title>
+    <link rel="stylesheet" href="../../css/tokens.css" />
+    <link rel="stylesheet" href="../../css/base.css" />
+    <!-- 絵を描く道具の見た目は、おえかきと同じものを使う -->
+    <link rel="stylesheet" href="../draw/draw.css" />
+    <link rel="stylesheet" href="storybook.css" />
+  </head>
+  <body>
+    <!--
+      1つのページの中で、3つの場面を切り替える（data-view：shelf ほんだな／edit ページを作る／read よむ）。
+      場面ごとに見せる部品は data-only に書き、storybook.css が出し分ける
+    -->
+    <div class="screen screen--storybook" data-screen data-view="shelf">
+      <!-- 読み上げ用の知らせ（録音が始まった、何ページめを読んでいる）。見た目には出さない -->
+      <p class="visually-hidden" role="status" data-announce></p>
+      <header class="topbar">
+        <a href="../../index.html" aria-label="おうちに もどる">
+          <span class="btn btn--round">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M7 24L24 9l17 15" />
+              <path d="M12 21v18h24V21" />
+              <path d="M21 39V29h6v10" />
+            </svg>
+          </span>
+        </a>
+
+        <h1 class="topbar__title book-title" data-only="shelf">
+          <svg class="book-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path class="book-icon__cover" d="M5 12q9-4 19 2q10-6 19-2v26q-9-4-19 2q-10-6-19-2z" />
+            <path d="M24 14v26" />
+          </svg>
+          <span>えほん</span>
+        </h1>
+
+        <!-- ほんだなに もどる。ページを作っている間は、何ページめかを数字で添える -->
+        <button
+          class="btn back-shelf"
+          type="button"
+          data-only="edit read"
+          data-back
+          aria-label="ほんだなに もどる"
+        >
+          <svg class="book-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path class="icon-white" d="M5 12q9-4 19 2q10-6 19-2v26q-9-4-19 2q-10-6-19-2z" />
+            <path d="M24 14v26" />
+          </svg>
+          <span class="badge-number" data-only="edit" data-edit-number>1</span>
+        </button>
+
+        <button class="btn btn--round topbar__right" type="button" aria-pressed="false" data-mute-button>
+          <span class="visually-hidden">おとを けす</span>
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M7 19h8l10-8v26l-10-8H7z" fill="currentColor" />
+            <g class="icon-sound-on">
+              <path d="M32 18q5 6 0 12" />
+              <path d="M37 12q10 12 0 24" />
+            </g>
+            <path class="icon-sound-off" d="M32 19l10 10M42 19L32 29" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- ===== ほんだな：ページの一覧（1〜8）と「よむ」 ===== -->
+      <main class="shelf" data-only="shelf">
+        <!-- ページのボタンは storybook.js が作る -->
+        <div class="shelf__grid" data-shelf-grid></div>
+        <button class="btn pill pill--read" type="button" data-read aria-label="よむ">
+          <svg class="pill__icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path class="icon-white" d="M15 9l25 15-25 15z" />
+          </svg>
+          <span>よむ</span>
+        </button>
+      </main>
+
+      <!-- ===== ページを作る：絵と録音 ===== -->
+      <section class="edit" data-only="edit">
+        <div class="paper" data-paper>
+          <canvas class="paper__canvas" data-canvas role="img" aria-label="えほんの え"></canvas>
+          <span class="voice-badge" data-voice-badge aria-label="こえ あり" role="img" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 10v4M9.5 6v12M14.5 8v8M19 11v2" />
+            </svg>
+          </span>
+        </div>
+
+        <!-- 録音。押せるものを状態ごとに入れ替える（data-state：idle / asking / recording / recorded / unavailable） -->
+        <div class="recorder" data-recorder data-state="idle">
+          <button class="btn pill pill--record" type="button" data-record aria-label="ろくおん">
+            <span class="pill__badge">
+              <svg viewBox="0 0 48 48" aria-hidden="true">
+                <rect class="icon-pink" x="17" y="5" width="14" height="24" rx="7" />
+                <path d="M10 22q0 14 14 14t14-14" />
+                <path d="M24 36v7" />
+              </svg>
+            </span>
+            <span class="pill__text">ろくおん</span>
+          </button>
+
+          <div class="recording">
+            <p class="recording__label"><span class="recording__dot"></span><span>ろくおんちゅう</span></p>
+            <div class="recording__body">
+              <div class="bars" aria-hidden="true"><span></span><span></span><span></span></div>
+              <!-- 30秒の上限は、満ちていく輪で示す（数字は出さない） -->
+              <div class="ring">
+                <svg class="ring__svg" viewBox="0 0 148 148" aria-hidden="true">
+                  <circle class="ring__track" cx="74" cy="74" r="66" />
+                  <circle class="ring__fill" cx="74" cy="74" r="66" data-ring />
+                  <circle class="ring__edge" cx="74" cy="74" r="72" />
+                  <circle class="ring__edge" cx="74" cy="74" r="60" />
+                </svg>
+                <button class="btn ring__stop" type="button" data-stop aria-label="ろくおんを とめる">
+                  <svg viewBox="0 0 40 40" aria-hidden="true">
+                    <rect class="icon-ink" x="5" y="5" width="30" height="30" rx="7" />
+                  </svg>
+                </button>
+              </div>
+              <div class="bars" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div class="recorded">
+            <button class="btn pill pill--retake" type="button" data-retake aria-label="とりなおす">
+              <svg class="pill__icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M38 26a14 14 0 1 1-4-11" />
+                <path d="M36 6v10H26" />
+                <circle class="icon-pink" cx="24" cy="27" r="5" />
+              </svg>
+              <span class="pill__text">とりなおす</span>
+            </button>
+            <button
+              class="btn pill pill--listen"
+              type="button"
+              data-listen
+              aria-pressed="false"
+              aria-label="きく"
+            >
+              <span class="pill__badge">
+                <svg class="icon-play" viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M15 8l26 16-26 16z" />
+                </svg>
+                <svg class="icon-pause" viewBox="0 0 48 48" aria-hidden="true">
+                  <rect x="12" y="10" width="9" height="28" rx="3" />
+                  <rect x="27" y="10" width="9" height="28" rx="3" />
+                </svg>
+              </span>
+              <span class="pill__text">きく</span>
+            </button>
+          </div>
+        </div>
+
+        <!--
+          道具。data-tool（pen / stamp）、data-color、data-size は paint-tools.js が書き換え、draw.css が見た目を切り替える。
+          せまい画面では、色とスタンプのどちらかだけを出す（draw.css）
+        -->
+        <div class="tools" data-tools data-tool="pen" data-color="purple" data-size="2">
+          <div class="tools__group tools__group--colors">
+            <button
+              class="btn tool"
+              type="button"
+              data-color="red"
+              aria-pressed="false"
+              aria-label="あか"
+            ></button>
+            <button
+              class="btn tool"
+              type="button"
+              data-color="orange"
+              aria-pressed="false"
+              aria-label="だいだい"
+            ></button>
+            <button
+              class="btn tool"
+              type="button"
+              data-color="green"
+              aria-pressed="false"
+              aria-label="みどり"
+            ></button>
+            <button
+              class="btn tool"
+              type="button"
+              data-color="blue"
+              aria-pressed="false"
+              aria-label="あお"
+            ></button>
+            <button
+              class="btn tool"
+              type="button"
+              data-color="purple"
+              aria-pressed="true"
+              aria-label="むらさき"
+            ></button>
+            <button
+              class="btn tool"
+              type="button"
+              data-color="black"
+              aria-pressed="false"
+              aria-label="くろ"
+            ></button>
+          </div>
+
+          <!-- 太さ（スタンプのときは大きさ）。広い画面では3つ並べ、せまい画面では押すたびに変わる1つのボタンにする -->
+          <div class="tools__group tools__group--sizes">
+            <button class="btn tool" type="button" data-size="1" aria-pressed="false" aria-label="ちいさい">
+              <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+                <circle class="dot" cx="24" cy="24" r="5" />
+              </svg>
+            </button>
+            <button class="btn tool" type="button" data-size="2" aria-pressed="true" aria-label="ふつう">
+              <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+                <circle class="dot" cx="24" cy="24" r="10" />
+              </svg>
+            </button>
+            <button class="btn tool" type="button" data-size="3" aria-pressed="false" aria-label="おおきい">
+              <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+                <circle class="dot" cx="24" cy="24" r="17" />
+              </svg>
+            </button>
+          </div>
+          <button class="btn tool tool--cycle" type="button" data-size-cycle aria-label="おおきさを かえる">
+            <svg class="tool__dots" viewBox="0 0 48 48" aria-hidden="true">
+              <circle class="dot dot--1" cx="24" cy="19" r="5" />
+              <circle class="dot dot--2" cx="24" cy="19" r="9" />
+              <circle class="dot dot--3" cx="24" cy="19" r="14" />
+              <circle class="pip pip--1" cx="13" cy="42" r="3" />
+              <circle class="pip pip--2" cx="24" cy="42" r="3" />
+              <circle class="pip pip--3" cx="35" cy="42" r="3" />
+            </svg>
+          </button>
+
+          <div class="tools__group tools__group--stamps">
+            <button
+              class="btn tool tool--stamp"
+              type="button"
+              data-stamp="star"
+              aria-pressed="false"
+              aria-label="ほし"
+            >
+              <img src="../../assets/stamps/star.svg" alt="" draggable="false" />
+            </button>
+            <button
+              class="btn tool tool--stamp"
+              type="button"
+              data-stamp="flower"
+              aria-pressed="false"
+              aria-label="はな"
+            >
+              <img src="../../assets/stamps/flower.svg" alt="" draggable="false" />
+            </button>
+            <button
+              class="btn tool tool--stamp"
+              type="button"
+              data-stamp="heart"
+              aria-pressed="false"
+              aria-label="はーと"
+            >
+              <img src="../../assets/stamps/heart.svg" alt="" draggable="false" />
+            </button>
+            <button
+              class="btn tool tool--stamp"
+              type="button"
+              data-stamp="sun"
+              aria-pressed="false"
+              aria-label="おひさま"
+            >
+              <img src="../../assets/stamps/sun.svg" alt="" draggable="false" />
+            </button>
+          </div>
+
+          <!-- ペンとスタンプの切り替え。これから持つ道具の絵を出す -->
+          <button
+            class="btn tool tool--stamp tool--switch"
+            type="button"
+            data-switch
+            aria-label="すたんぷに かえる"
+          >
+            <img class="tool__to-stamp" src="../../assets/stamps/star.svg" alt="" draggable="false" />
+            <svg class="tool__icon tool__to-pen" viewBox="0 0 48 48" aria-hidden="true">
+              <g transform="rotate(40 24 24)">
+                <rect class="icon-blue" x="16" y="3" width="16" height="28" rx="4" />
+                <path d="M16 15h16" />
+                <path class="icon-white" d="M17 31h14l-7 13z" />
+              </g>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== よむ：1ページめから順に、絵を出して声を鳴らす（紙芝居） ===== -->
+      <section class="read" data-only="read">
+        <div class="paper paper--read">
+          <canvas class="paper__canvas" data-read-canvas role="img" aria-label="えほんの え"></canvas>
+        </div>
+        <div class="read__status">
+          <div class="bars bars--read" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <!-- いま何ページめか。点の数がページの数 -->
+          <div class="read__dots" data-read-dots aria-hidden="true"></div>
+        </div>
+        <div class="read__nav">
+          <button class="btn pill pill--nav" type="button" data-prev aria-label="まえの ページ">
+            <svg class="pill__icon" viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M30 10L16 24l14 14" />
+            </svg>
+          </button>
+          <button class="btn pill pill--nav pill--next" type="button" data-next aria-label="つぎの ページ">
+            <svg class="pill__icon" viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M18 10l14 14-14 14" />
+            </svg>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="../../js/main.js"></script>
+    <script type="module" src="storybook.js"></script>
+  </body>
+</html>
