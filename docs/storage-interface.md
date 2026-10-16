@@ -7,8 +7,8 @@
 
 | 保存先 | ファイル | 使う場面 | 状態 |
 |---|---|---|---|
-| メモリ | `frontend/js/storage/memory.js` | テスト、IndexedDB 版ができるまでの画面の確認。再読み込みで消える | 8日目 |
-| IndexedDB | `frontend/js/storage/indexeddb.js` | すべての公開環境（GitHub Pages、PWA、Androidアプリ、AWS版）の既定 | 9日目（KIDS-31） |
+| メモリ | `frontend/js/storage/memory.js` | テスト。IndexedDB が使えないブラウザでの代わり（再読み込みで消える） | 8日目 |
+| IndexedDB | `frontend/js/storage/indexeddb.js` | すべての公開環境（GitHub Pages、PWA、Androidアプリ、AWS版）の既定 | 9日目（KIDS-31）。再読み込みしても残る |
 | FastAPI + SQLite | `frontend/js/storage/server.js` | PC の localhost で、設定で有効にしたときだけ | 10日目（KIDS-34） |
 
 ### 保存先の選び方（安全側に倒す）
@@ -20,7 +20,7 @@
 3. CSP：ブラウザが通信を許す先を、自分のオリジンだけにする。今は `connect-src` がない（`default-src 'none'` により通信はすべて止まる）。10日目にサーバー保存のために足すとしても `connect-src 'self'` までにし、ほかのオリジンは入れない（C-08）
 
 設定を忘れたり誤ったりしても、子どもの絵と声が公開サーバーに送られないようにするため（脅威分析の T-08。ISO/SAE 21434 でいう、独立した複数の対策を重ねる考え方）。
-選ぶ処理は `frontend/js/storage/index.js` に置く（10日目）。
+選ぶ処理は `frontend/js/storage/index.js` に置く。9日目の時点では IndexedDB を選び、開けなければメモリ版にする。サーバー保存の分岐は10日目に足す。
 
 ## データの形（ページ）
 
@@ -65,5 +65,5 @@
 約束は `tests/storage-contract.mjs` に書いてある。新しい保存先を作ったら、そのテストに保存先を作る関数を渡して呼ぶ（`tests/storage-memory.test.mjs` が例）。
 
 ```powershell
-npm test   # Node 標準のテスト（node:test）。インストールは不要
+npm test   # Node 標準のテスト（node:test）。IndexedDB 版は fake-indexeddb（開発用）で動かす
 ```

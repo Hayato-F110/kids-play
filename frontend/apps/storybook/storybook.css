@@ -246,6 +246,130 @@
   margin-bottom: var(--pop);
 }
 
+/* ---- ながおしで けす ---- */
+
+/* 長押しで、文字の選択やスマホのメニュー（画像の保存など）が出ないようにする */
+.page,
+.book-title {
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* 消している間は、押しているもの以外をうすくする */
+.screen--storybook.is-holding .page:not(.is-holding),
+.screen--storybook.is-holding .page-new,
+.screen--storybook.is-holding .pill--read {
+  opacity: 0.4;
+}
+
+.page.is-holding {
+  outline: var(--stroke) solid var(--color-primary);
+  outline-offset: 0.25rem;
+}
+
+.page.is-holding .page__pic {
+  opacity: 0.5;
+}
+
+/* 満ちていく輪とごみ箱。押しているものの真ん中に重ねる */
+.hold-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+/* 題名の中では、base.css の「.topbar__title span」が display を上書きするので、強い指定で戻す */
+.topbar__title .hold-mark {
+  display: grid;
+}
+
+.hold-mark__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hold-mark__bg {
+  fill: var(--color-surface);
+  stroke: var(--color-text);
+  stroke-width: 3;
+}
+
+.hold-mark__track {
+  fill: none;
+  stroke: var(--color-bg);
+  stroke-width: 7;
+}
+
+/* 円周 163.4（半径26）。storybook.js の HOLD_RING_LENGTH と同じ値 */
+.hold-mark__fill {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 163.4;
+  stroke-dashoffset: 163.4;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.hold-mark__trash {
+  position: relative;
+  width: 1.875rem;
+  height: 1.875rem;
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 「ながおしで けす」の吹き出し。ほんだなの真ん中より少し下に出す */
+.shelf {
+  position: relative;
+}
+
+.hold-bubble {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0.625rem 1.125rem;
+  translate: -50% 2.875rem;
+  border: 0.1875rem solid var(--color-text);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--label-md);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hold-bubble[hidden] {
+  display: none;
+}
+
+.hold-bubble svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ---- ページを作る ---- */
 
 .edit {

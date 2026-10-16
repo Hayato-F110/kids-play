@@ -82,6 +82,14 @@
       <main class="shelf" data-only="shelf">
         <!-- ページのボタンは storybook.js が作る -->
         <div class="shelf__grid" data-shelf-grid></div>
+        <!-- 長押しで消している間だけ出す吹き出し。読み上げには storybook.js が別に知らせる -->
+        <p class="hold-bubble" data-hold-bubble hidden aria-hidden="true">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="18" />
+            <path d="M24 13v11l7 5" />
+          </svg>
+          <span>ながおしで けす</span>
+        </p>
         <button class="btn pill pill--read" type="button" data-read aria-label="よむ">
           <svg class="pill__icon" viewBox="0 0 48 48" aria-hidden="true">
             <path class="icon-white" d="M15 9l25 15-25 15z" />
