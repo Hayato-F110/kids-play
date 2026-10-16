@@ -252,6 +252,10 @@ attachHold(shelfTitle, {
   onDelete: () => storage.deleteAll(),
   focusAfter: () => shelfGrid.querySelector(".page-new"),
 });
+// 題名は文字と絵なので、指で押し続けると、ブラウザが自分の長押し（文字の選択やメニュー）を始め、
+// 指の操作を途中で打ち切ることがある（2026-10-16、PC の Edge の端末のまねで確認）。
+// 題名はタップで何もしないので、指の既定の動きを止めてよい（ページのボタンで止めると、タップで開けなくなる）
+shelfTitle.addEventListener("touchstart", (event) => event.preventDefault(), { passive: false });
 
 // ===== ほんだな =====
 
