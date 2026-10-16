@@ -26,9 +26,11 @@ flowchart LR
     subgraph TB1["信頼境界1：家族の端末（Android / PC）"]
         child["子ども・保護者"]
         ui["P1 フロントエンド<br>ブラウザ / PWA / アプリ"]
-        idb[("D1 IndexedDB<br>絵と録音 ⬜9日目")]
+        mic["マイク"]
+        idb[("D1 IndexedDB<br>絵と録音")]
         child -- "DF-01 タップ、絵、声" --> ui
-        ui -- "DF-02 保存・読み出し" --> idb
+        mic -- "DF-12 声<br>録音ボタンを押したときだけ" --> ui
+        ui -- "DF-02 保存・読み出し・削除<br>画面が隠れたときも保存" --> idb
     end
 
     subgraph TB2["信頼境界2：開発用PC"]
@@ -66,7 +68,7 @@ flowchart LR
     ui -. "DF-10 サーバー保存<br>localhostのときだけ" .-> localapi
 ```
 
-設計上の要点：DF-01 と DF-02 で扱う絵と声（A1）は、信頼境界1の外へ出る矢印を持たない。DF-10 は開発用PCの中だけで有効になる。
+設計上の要点：DF-01、DF-02、DF-12 で扱う絵と声（A1）は、信頼境界1の外へ出る矢印を持たない。声の流れは「マイク → 録音（P1 の中の Blob）→ 保存（D1）→ 再生（P1 の Web Audio）」で、どこでも端末の外へ出ない。DF-10 は開発用PCの中だけで有効になる。
 
 ## 3. 脅威の洗い出し（STRIDE）
 
@@ -151,7 +153,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | C-08 | CSP（Content Security Policy）で、読み込み元を自分のオリジンに限定し、通信を禁止する。すべてのHTMLの meta タグに `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'` を置く。meta タグでは指定できない項目（他サイトの枠への埋め込みの禁止 frame-ancestors、違反の報告）は、GitHub Pages では設定できないので、AWS版の nginx のヘッダーで行う（C-14） | T-01、T-05 | 5日目（meta）、13日目（ヘッダー） | 一部実施 | 各 `index.html` の先頭。画面なしのブラウザで、全画面とおえかきの「ほぞん」の違反が0件であること、HTMLに直接書いた script と style、外部への通信、外部の画像が止まることを確認 |
 | C-09 | Dependabot と CodeQL を有効化。Dependabot は、脆弱性の通知（alerts）、脆弱性を直す更新（security updates）、新しい版への更新（version updates：npm と GitHub Actions、週1回、公開から7日待つ）の3つ。CodeQL は default setup で、JavaScript とワークフローを、main への push・PR・週1回に解析する。更新のPRは、人が差分を確認してからマージする | T-04、T-01 | 5日目 | 実施済み（2026-10-12 の初回の解析：JavaScript 87ルール、ワークフロー 17ルールで指摘0件。Dependabot の通知0件） | リポジトリの Settings → Advanced Security、`.github/dependabot.yml`、Security タブ（Code scanning、Dependabot） |
 | C-10 | マイクの許可は、録音ボタンを押したときだけ求める（音だけ。カメラは求めない）。録音中であることを画面に示す。止めたとき・30秒で自動で止まったとき・画面を離れたとき・画面が隠れたときに、マイクを手放す（画面を離れたときの録音は残さない） | T-06 | 8日目 | 実施（KIDS-30。Android アプリ版の権限は9日目） | `frontend/apps/storybook/recorder.js`、`tests/recorder.test.mjs`（許可を求める時期、30秒、手放す、cancel）。画面なしの Edge で、偽のマイクを使い、録音から再生までと外部への通信0件を確認 |
-| C-11 | ページの削除と、全データの削除の機能 | T-09 | 9日目 | 予定 | – |
+| C-11 | ページの削除と、全データの削除の機能。ページは2秒、全データは題名を5秒長押しする（保護者向け。子どもがうっかり消さないため） | T-09 | 9日目 | 実施（KIDS-31） | `frontend/apps/storybook/hold.js`、`tests/hold.test.mjs`、`tests/storage-indexeddb.test.mjs`。画面なしの Edge で、消したページと全データが、再読み込みのあとも消えたままであることを確認 |
 | C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（三重の安全側。docs/storage-interface.md） | T-08 | 10日目 | 予定 | – |
 | C-13 | コンテナは小さいベースイメージと非root。Trivy と SBOM。GitHub Actionsの部品はバージョンを固定 | T-04 | 5日目（部品の固定）、11日目（コンテナ） | 一部実施（`pages.yml` の部品4つをコミットIDで固定） | `.github/workflows/pages.yml`（`uses:` の行） |
 | C-14 | HTTPSのみで配信。HSTSなどのセキュリティヘッダー | T-05 | 13日目 | 予定 | – |
@@ -159,7 +161,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | C-16 | Claude Codeが外部から読んだ文章は、指示ではなくデータとして扱う。外部サービスの操作と push は実行前に確認する。MCPは最小権限 | T-11 | 1日目（確認のルール）、6日目（MCP） | 一部実施（MCP は Playwright の1つだけ。版を 0.0.83 に固定し、開ける先を localhost:8000 に限定） | `CLAUDE.md`、`.claude/settings.json`、`.mcp.json` |
 | C-17 | おえかきの保存は、端末へのダウンロードだけにする（通信しない）。ファイル名には日時だけを入れ、個人が分かる情報を入れない。保存先が端末内であることと、同期やバックアップの設定への注意を、READMEの保護者向けの説明に書く | T-13 | 4日目（実装）、5日目（README） | 実施済み | `frontend/apps/draw/draw.js`（fileName、ほぞんの処理）、`README.md` のプライバシー方針。操作中の外部への通信が0件であることを、画面なしのブラウザで確認 |
 | C-18 | Service Worker が保存するのは、`sw.js` の一覧に書いた公開物だけにする（許可リスト）。一覧にない要求には手を出さず、そのままネットワークへ通す。保存した分は、開くたびに裏で取り直して入れ替える。PC内のサーバーでは登録しない | T-14 | 5日目 | 実施済み | `frontend/sw.js`、`npm run check:pwa`（一覧と実際のファイルのずれを検出）。画面なしのブラウザで、保存が27件であること、サーバーを止めても5画面が開くこと、一覧にない要求では保存が増えないことを確認 |
-| C-19 | このアカウントでは、他の GitHub Pages サイトを公開しない（公開する場合は、中身を自分で管理する静的なページだけにする）。Service Worker が消すキャッシュは、`kids-play-` で始まる名前に限定する。9日目（IndexedDB に絵と録音を入れる日）の前に、他の Pages サイトがないことを確認する | T-15 | 5日目（sw.js）、9日目（確認） | 一部実施（sw.js の限定は KIDS-51 で実施。2026-10-12 時点で、Pages を使うリポジトリは kids-play だけ。9日目の前にもう一度確認する） | `frontend/sw.js`（activate の処理）。画面なしのブラウザで、別の名前のキャッシュが残り、`kids-play-` の古いキャッシュだけが消えることを確認。GitHub の API（自分のリポジトリのうち `has_pages` が true のもの）で、Pages の一覧を確認 |
+| C-19 | このアカウントでは、他の GitHub Pages サイトを公開しない（公開する場合は、中身を自分で管理する静的なページだけにする）。Service Worker が消すキャッシュは、`kids-play-` で始まる名前に限定する。9日目（IndexedDB に絵と録音を入れる日）の前に、他の Pages サイトがないことを確認する | T-15 | 5日目（sw.js）、9日目（確認） | 実施（sw.js の限定は KIDS-51 で実施。2026-10-16、IndexedDB を使い始める前に、自分のリポジトリのうち Pages が有効なものは kids-play だけで、`<ユーザー名>.github.io` のリポジトリもないことを確認） | `frontend/sw.js`（activate の処理）。画面なしのブラウザで、別の名前のキャッシュが残り、`kids-play-` の古いキャッシュだけが消えることを確認。GitHub の API（自分のリポジトリのうち `has_pages` が true のもの）で、Pages の一覧を確認 |
 | C-20 | AIエージェントが実機に届く経路を、仕組みで絞る。(1) adb 経由の削除・書き換え（`content delete`、`rm`、`-delete` など）、入力の送信（`input`）、端末の画面の撮影（`screencap`）を、Claude Code の deny で止める。(2) `adb shell` で始まるコマンドは、毎回、人の承認を求める（ask）。(3) 実機の画面の確認は、アプリの WebView へのデバッグ接続（アプリの中身だけが取れる）で行い、音・指の操作・端末の見た目は人が確かめる。(4) 確認で端末に作ったファイルの後片づけは、人が行う。(5) 実機を使わないときはUSBケーブルを抜き、作業のあとはUSBデバッグをオフにする。(6) 実機をつなぐ前に、端末の大事なデータのバックアップがあることを確かめる | T-16 | 6日目 | 一部実施（(1)(2) を設定。(2) は7日目に、承認の画面が出ることを確認。(3)(4) は運用。(5)(6) は学習者の運用） | `.claude/settings.json`（deny と ask の adb の行）。deny は書き方を変えたコマンドまでは防げないので、(2) の承認と重ねる |
 | C-21 | Androidアプリの設定を最小にする。(1) バックアップと機種変更の転送を無効にする（`allowBackup="false"` に加えて、Android 12 以上の `dataExtractionRules` と、Android 11 以下の `fullBackupContent` で、全データを対象から外す）。(2) 権限は、なし（`INTERNET` も外す。画面のファイルはアプリの中にある）。(3) ひな形の FileProvider を外す。(4) Web から呼べる入口は `PictureSaver` の1つだけにし、ファイル名の形・大きさ・PNGであることを確かめる。(5) 署名鍵は、リポジトリの外に置く（`.gitignore` で二重に除外）。リリース版は作っていないので、鍵はまだない。(6) WebView のデバッグ接続は、Capacitor の既定（開発中だけ有効）のままにする。リリース版を作るときに、無効であることを確かめる | T-17、T-13 | 6日目 | 一部実施（(1)〜(5) を実施。(6) は、リリース版を作るときに確認） | `android/app/src/main/AndroidManifest.xml`、`res/xml/data_extraction_rules.xml`、`res/xml/backup_rules_legacy.xml`、`PictureSaverPlugin.java`。APK の中のマニフェストを aapt2 で読み、権限が自分用の1つだけ、`allowBackup=false`、FileProvider がないことを確認。実機で、権限なしでも5画面が開くこと、保存の入口が不正な入力を断ることを確認 |
 
@@ -192,3 +194,4 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | 2026-10-13 | 脅威T-17（Androidアプリの設定と、Web から呼べる入口）と対策C-21を追加。A1 の置き場所と T-13 に、Androidアプリ版の保存先（ピクチャ）を追加 | 6日目。Capacitor でAndroidアプリにした。ひな形は、バックアップが有効で、ファイルを渡す範囲が広かった。WebView がダウンロードを受け取らないので、保存の入口を自分で作った |
 | 2026-10-13 | 資産A6（開発に使う端末とPCにある、アプリと関係のない個人のデータ）、脅威T-16（AIエージェントが adb 経由で実機を誤って操作する）、対策C-20を追加 | 6日目。Claude Code が、実機の確認中に2回、端末を誤って操作した。1回目は、画面を確かめない座標のタップで、ほかのアプリを操作し、端末のホーム画面を撮影した。2回目は、確認用の画像1枚を消すつもりのコマンドの誤りで、端末の画像（内蔵と microSD）をすべて削除した。これまでの脅威分析は外からの攻撃者を想定していて、内側で動くエージェントの誤操作を脅威として扱っていなかった |
 | 2026-10-14 | 7日目の見直し。T-16 のリスク値を 9 → 3 に（対策のあとの評価）。データフロー図に P9（Playwright MCP）と DF-11 を追加し、DF-07 を「インストールとシェルの操作」に広げた。C-16、C-20 の状態を更新。TARA との対応に、意図しない誤操作の行を追加。2日目の初版との比較を4章に記録 | 7日目（スプリント1の締め）。`adb shell` で承認の画面が出ることを確認した |
+| 2026-10-16 | D1（IndexedDB）を実装した。データの流れの図にマイクと DF-12 を足し、DF-02 に削除と「画面が隠れたときの保存」を足した。C-11 を実施に、C-19 を確認済みにした | 9日目。KIDS-31。privacy-reviewer の指摘（C-11 を IndexedDB と同時に入れる、図に新しい流れを足す、C-19 の確認を記録する） |

@@ -4,12 +4,13 @@
 import { playRecording } from "../../js/audio.js";
 import { createPaint } from "../../js/paint.js";
 import { createPaintTools } from "../../js/paint-tools.js";
-import { createMemoryStorage } from "../../js/storage/memory.js";
+import { openStorage } from "../../js/storage/index.js";
 import { MAX_PAGES } from "../../js/storage/validate.js";
+import { createHold } from "./hold.js";
 import { createRecorder } from "./recorder.js";
 
-// 保存先。9日目に IndexedDB 版へ差し替える（KIDS-31）。今はメモリなので、再読み込みで消える
-const storage = createMemoryStorage();
+// 保存先。端末の中（IndexedDB）に置き、再読み込みしても残る。開くのを待ってから画面を作る
+const storage = await openStorage();
 
 // 描き終えてから保存するまでの間。線を引くたびに画像を作り直さないようにするため
 const SAVE_DELAY_MS = 600;
@@ -18,10 +19,23 @@ const READ_PAGE_MS = 4000;
 const READ_GAP_MS = 800;
 // 満ちていく輪の円周（storybook.css の stroke-dasharray と同じ値）
 const RING_LENGTH = 415;
+// 消す長押しの時間。ぜんぶ消すほうを長くして、保護者だけが行う操作にする（2026-10-16 決定）
+const DELETE_PAGE_MS = 2000;
+const DELETE_ALL_MS = 5000;
+// 長押しの輪と吹き出しを出し始める進み具合。ふつうのタップで輪がちらつかないようにするため。
+// 題名は遅くする。たまたま題名を押した子に、押し続けると何か起きることを教えないため
+const HOLD_SHOW_AT = 0.1;
+const HOLD_SHOW_AT_TITLE = 0.4;
+// 長押しの輪の円周（storybook.css の .hold-mark__fill と同じ値。半径26）
+const HOLD_RING_LENGTH = 163.4;
+// 指がこれより動いたら長押しをやめる（なぞる・ずらす操作で消さないため）
+const HOLD_MOVE_PX = 16;
 
 const screen = document.querySelector("[data-screen]");
 const announcer = document.querySelector("[data-announce]");
 const shelfGrid = document.querySelector("[data-shelf-grid]");
+const shelfTitle = document.querySelector(".book-title");
+const holdBubble = document.querySelector("[data-hold-bubble]");
 const readButton = document.querySelector("[data-read]");
 const backButton = document.querySelector("[data-back]");
 const editNumber = document.querySelector("[data-edit-number]");
@@ -91,6 +105,154 @@ const drawPicture = async (target, blob) => {
   }
 };
 
+// ===== ながおしで けす =====
+
+// 満ちていく輪とごみ箱の絵（×印や赤い警告にしない。docs/design.md）
+const createHoldMark = () => {
+  const mark = document.createElement("span");
+  mark.className = "hold-mark";
+  mark.setAttribute("aria-hidden", "true");
+
+  const ring = document.createElementNS(SVG_NS, "svg");
+  ring.setAttribute("viewBox", "0 0 72 72");
+  ring.classList.add("hold-mark__ring");
+  const circle = (className, r) => {
+    const element = document.createElementNS(SVG_NS, "circle");
+    element.setAttribute("cx", "36");
+    element.setAttribute("cy", "36");
+    element.setAttribute("r", String(r));
+    element.classList.add(className);
+    return element;
+  };
+  const fill = circle("hold-mark__fill", 26);
+  ring.append(circle("hold-mark__bg", 31), circle("hold-mark__track", 26), fill);
+
+  const trash = createIcon("0 0 48 48", ["M10 14h28", "M19 14V9h10v5", "M14 14l2 26h16l2-26"]);
+  trash.classList.add("hold-mark__trash");
+
+  mark.append(ring, trash);
+  return { element: mark, fill };
+};
+
+// いま押している長押し。指を離したときの click を食べるのと、画面が隠れたときに止めるのに使う
+let currentHold = null;
+
+/**
+ * 要素に「長押しで消す」を付ける。決めた時間まで押し続けたら onDelete を呼び、ほんだなを描き直す
+ * @param {HTMLElement} element
+ * @param {{ms: number, showAt: number, onDelete: () => Promise<void>, focusAfter: () => HTMLElement | null}} options
+ */
+const attachHold = (element, { ms, showAt, onDelete, focusAfter }) => {
+  const mark = createHoldMark();
+  let origin = null;
+  let shown = false;
+
+  const show = () => {
+    shown = true;
+    element.classList.add("is-holding");
+    element.append(mark.element);
+    screen.classList.add("is-holding");
+    holdBubble.hidden = false;
+    announce("ながおしで けす");
+  };
+
+  const hide = () => {
+    shown = false;
+    origin = null;
+    element.classList.remove("is-holding");
+    mark.element.remove();
+    screen.classList.remove("is-holding");
+    holdBubble.hidden = true;
+    announce("");
+  };
+
+  const hold = createHold({
+    ms,
+    consumeAfter: showAt,
+    onProgress: (value) => {
+      if (!shown && value >= showAt) {
+        show();
+      }
+      // SVG の属性ではなく style に書く（CSS の初期値より強くするため。録音の輪と同じ）
+      mark.fill.style.strokeDashoffset = String(HOLD_RING_LENGTH * (1 - value));
+    },
+    onDone: async () => {
+      hide();
+      try {
+        await onDelete();
+      } catch {
+        // 消せなくても、子どもの画面にはエラーを出さない（ほんだなに残って見えるだけ）
+      }
+      await renderShelf();
+      // 押していたボタンは描き直しで無くなるので、同じ位置のボタンへ移す（読み上げで場所を見失わないように）
+      focusAfter()?.focus();
+      announce("けしたよ");
+    },
+    onCancel: hide,
+  });
+
+  element.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary || event.button !== 0) {
+      return;
+    }
+    origin = { x: event.clientX, y: event.clientY };
+    currentHold = hold;
+    hold.start();
+  });
+  element.addEventListener("pointermove", (event) => {
+    if (origin && Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > HOLD_MOVE_PX) {
+      hold.cancel();
+    }
+  });
+  for (const type of ["pointerup", "pointercancel", "pointerleave"]) {
+    element.addEventListener(type, () => hold.cancel());
+  }
+  // スマホの長押しで出るメニュー（画像の保存など）を出さない
+  element.addEventListener("contextmenu", (event) => event.preventDefault());
+
+  // キーボードでは、スペースキーの長押しで同じことをする。
+  // Enter は押した瞬間にページが開くので使わない。スペースは離したときに開くので、長押しのあとは止められる
+  element.addEventListener("keydown", (event) => {
+    if (event.key === " " && !event.repeat) {
+      currentHold = hold;
+      hold.start();
+    }
+  });
+  element.addEventListener("keyup", (event) => {
+    if (event.key === " ") {
+      hold.cancel();
+    }
+  });
+};
+
+// 長押しで消したあと、指を離したときの click でページが開かないようにする。
+// 消したページのボタンは描き直しで消えるので、ボタンではなく、ほんだな全体で先に受け止める
+shelfGrid.addEventListener(
+  "click",
+  (event) => {
+    if (currentHold?.consumeClick()) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  },
+  { capture: true },
+);
+
+// 長押しのあと click が来なかった（ずらして離した、ボタンが描き直しで消えた）ときに、
+// 「次の click を無視する」印が残って、あとのタップを1回飲み込まないよう、次の操作の始まりで捨てる
+for (const type of ["pointerdown", "keydown"]) {
+  document.addEventListener(type, () => currentHold?.consumeClick(), { capture: true });
+}
+
+// ぜんぶ消す：題名を長く押し続ける（保護者向け。ボタンに見せないので、子どもは押しにくい）。
+// 題名はボタンではないので、キーボードでは使えない（2026-10-16、保護者向けとして受け入れた）
+attachHold(shelfTitle, {
+  ms: DELETE_ALL_MS,
+  showAt: HOLD_SHOW_AT_TITLE,
+  onDelete: () => storage.deleteAll(),
+  focusAfter: () => shelfGrid.querySelector(".page-new"),
+});
+
 // ===== ほんだな =====
 
 const createPageButton = (page, index) => {
@@ -115,6 +277,13 @@ const createPageButton = (page, index) => {
     button.append(voice);
   }
   button.addEventListener("click", () => openEditor(page.id, index));
+  attachHold(button, {
+    ms: DELETE_PAGE_MS,
+    showAt: HOLD_SHOW_AT,
+    onDelete: () => storage.deletePage(page.id),
+    // 消したページの位置に詰めてきたページ。最後のページだったら「あたらしい ぺーじ」
+    focusAfter: () => shelfGrid.querySelectorAll(".page, .page-new")[index] ?? null,
+  });
   return button;
 };
 
@@ -153,8 +322,10 @@ const renderShelf = async () => {
 
 // ===== ページを作る =====
 
-// いま作っているページ。id は、はじめて保存したときに保存先が付ける
-const editing = { id: null, voice: null, voiceMs: 0 };
+// いま作っているページ。id は、はじめて保存したときに保存先が付ける。
+// ready は、紙にこのページの絵を描き終えたか。準備の途中で保存すると、前に開いたページの絵が残った紙を
+// このページとして保存してしまうため、ready になるまでは保存しない
+const editing = { id: null, voice: null, voiceMs: 0, ready: false };
 
 const paintTools = createPaintTools(document.querySelector("[data-tools]"));
 
@@ -165,6 +336,9 @@ let saving = Promise.resolve();
 const saveNow = () => {
   clearTimeout(saveTimer);
   saving = saving.then(async () => {
+    if (!editing.ready) {
+      return;
+    }
     const picture = paint.isBlank() ? null : await paint.toBlob();
     // 何も描かず、何も録っていない新しいページは保存しない
     if (!editing.id && !picture && !editing.voice) {
@@ -300,6 +474,7 @@ retakeButton.addEventListener("click", () => {
 // ---- 場面の行き来 ----
 
 const openEditor = async (id, index) => {
+  editing.ready = false;
   const page = id ? await storage.getPage(id) : null;
   editing.id = page ? page.id : null;
   editing.voice = page ? page.voice : null;
@@ -315,10 +490,12 @@ const openEditor = async (id, index) => {
   } else {
     paint.clear();
   }
+  editing.ready = true;
 };
 
 // ページを作る・よむ場面を離れるとき：録音と声を止める（録音中の声は残さない）
 const leaveScene = () => {
+  currentHold?.cancel();
   recorder.cancel();
   endListening();
   stopReading();
@@ -340,6 +517,10 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
     leaveScene();
     renderRecorder();
+    // 描いた直後にアプリを閉じても絵が消えないように、待たずに保存する
+    if (screen.dataset.view === "edit") {
+      saveNow();
+    }
   }
 });
 
