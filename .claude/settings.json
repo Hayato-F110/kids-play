@@ -43,6 +43,8 @@
       "Read(data/**)",
       "Read(backend/data/**)",
       "mcp__playwright__browser_run_code_unsafe",
+      "mcp__atlassian__executeWrite",
+      "mcp__atlassian__executeDestructive",
       "PowerShell(adb*content delete*)",
       "PowerShell(adb*content update*)",
       "PowerShell(adb*content insert*)",
