@@ -73,3 +73,18 @@ def test_読むだけの要求は_Origin_がなくてもよい(make_client: Call
     client.headers.pop("origin")
     assert client.get("/api/pages").status_code == 200
     assert client.get("/api/storage/status").status_code == 200
+
+
+def test_よそのサイトの要求は大きさを見る前に断る(client: TestClient) -> None:
+    # 偽の要求には、ほかの理由（411、413）を返さず、まず 403 で断る
+    huge = client.post(
+        "/api/pages",
+        content=b"x",
+        headers={
+            "origin": "https://evil.example",
+            "content-type": "multipart/form-data; boundary=x",
+            "content-length": str(10 * 1024 * 1024),
+        },
+    )
+    assert huge.status_code == 403
+    assert huge.json() == {"code": "cross-origin"}

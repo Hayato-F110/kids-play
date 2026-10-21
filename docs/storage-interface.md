@@ -50,7 +50,20 @@ uv run uvicorn app.main:create_app_from_env --factory --host 127.0.0.1 --port 80
 受け付けるのは、絵は `image/png`、声は `audio/webm`・`audio/ogg`・`audio/mp4` だけ。申告の種類と先頭のバイトの両方で確かめる。大きさは絵 2MB、声 1MB まで（超えたら 413、`too-large`）。
 API の応答には `Cache-Control: no-store` を付け、ブラウザに写しを残さない。
 
-注意：画面が隠れたときの保存は、サーバー保存では届かないことがある（ブラウザが通信を途中で止めるため）。PC の中の確認用なので、そのままにしている。
+書き込みの要求（POST・PUT・DELETE）は、`Origin` が自分自身（`http://` ＋ Host）のときだけ受け付ける（CSRF 対策。脅威分析の T-18、C-22）。ほかのサイトからの要求は 403（`cross-origin`）。
+
+サーバーが返す理由の名前：上の3つに加えて、`too-large`（413）、`length-required`（411）、`cross-origin`（403）、`server-storage-disabled`（403）。`server.js` は、そのまま `StorageError` の `code` にして渡す。
+
+#### サーバー保存だけの違い（PC の中の確認用なので、そのままにしている）
+
+- 画面が隠れたときの保存は、届かないことがある（ブラウザが通信を途中で止めるため）
+- 大きさと種類の上限は、サーバーだけにある（絵は PNG で 2MB まで、声は webm・ogg・mp4 で 1MB まで）。フロントの `validate.js` に足すと、公開版（IndexedDB）で大きな絵が保存できなくなるので、足さない（10日目の /code-review の指摘）
+- 2つのタブで同時に開き、一方で消している途中にもう一方が一覧を読むと、一覧の読み込みが失敗することがある
+
+#### 11日目への申し送り（nginx の後ろに置くとき）
+
+- CSRF の確認は、`Origin` と `Host` が一致することを見る。nginx で `proxy_set_header Host $host;` にするとポートが落ちて一致しなくなるので、`$http_host` で Host をそのまま渡す
+- nginx の後ろでは、Host の許可リスト（localhost / 127.0.0.1）が本物のホスト名を断る。そのとき `allowed_hosts=["*"]` にしない。AWS ではサーバー保存を有効にしない（10日目の /security-review の注意）
 
 ## データの形（ページ）
 
