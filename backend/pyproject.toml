@@ -1,0 +1,39 @@
+[project]
+name = "kids-play-backend"
+version = "0.1.0"
+description = "わたしのえほんのサーバー保存（PC の localhost だけで使う。既定は無効）"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.156.8",
+    "python-multipart>=0.0.32",
+    "uvicorn>=0.54.0",
+]
+
+[tool.uv]
+# パッケージとして配らない（アプリとして動かすだけ）
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# backend/ を読み込み先に足し、テストから app と tests を import できるようにする
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+# E/F/W：基本、I：import の並び、B：よくある誤り、UP：新しい書き方、S：セキュリティ（bandit 相当）
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# テストでは assert を使う（S101 は本番コードの assert を咎める規則）
+"tests/**" = ["S101"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pip-audit>=2.10.1",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
