@@ -7,6 +7,7 @@
 // - --json-schema：結果を決めた形で受け取り、スクリプトで判定できるようにする
 // 使用量はサブスクリプションの枠から引かれる。CI では動かさず、PR の前に手で回す
 import { execFileSync, spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const base = process.argv[2] ?? "origin/main";
 
@@ -38,10 +39,11 @@ const PROMPT = `あなたはプライバシーの確認担当です。標準入�
 4. 外部の CDN、外部フォント、解析タグ、広告を読み込んでいる
 rule にはルールの番号、detail には日本語で1文の理由を書きます。`;
 
-const diff = execFileSync("git", ["diff", `${base}...HEAD`], {
-  encoding: "utf8",
-  maxBuffer: 20 * 1024 * 1024,
-});
+// --stdin のときは、標準入力の差分を見る（例：git diff --cached | node scripts/ai-privacy-check.mjs --stdin）
+const diff =
+  base === "--stdin"
+    ? readFileSync(0, "utf8")
+    : execFileSync("git", ["diff", `${base}...HEAD`], { encoding: "utf8", maxBuffer: 20 * 1024 * 1024 });
 if (diff.trim() === "") {
   console.log(`${base} との差分がない`);
   process.exit(0);
