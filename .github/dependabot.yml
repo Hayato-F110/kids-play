@@ -23,6 +23,18 @@ updates:
         patterns:
           - "*"
 
+  # バックエンドの Python の部品（FastAPI など）。uv.lock を見て更新する（10日目に追加、KIDS-35）
+  - package-ecosystem: "uv"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    groups:
+      backend:
+        patterns:
+          - "*"
+
   # GitHub Actions の部品（checkout、deploy-pages など）。公開物を作る経路に入っている
   - package-ecosystem: "github-actions"
     # "/" と書くと、.github/workflows の中を見る

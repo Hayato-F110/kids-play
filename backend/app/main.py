@@ -27,6 +27,8 @@ from app.store import PageContent, PageLimitError, PageMeta, PageStore
 # ブラウザが PC の中のサーバーを開くときの名前だけを受け付ける
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 PAGES_PATH = "/api/pages"
+# 読むだけの要求。ほかのサイトからは応答を読めない（CORS の許可を出していない）ので、Origin を求めない
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 class StorageStatus(BaseModel):
@@ -58,6 +60,12 @@ def create_app(settings: Settings) -> FastAPI:
                     return _error(411, "length-required")
                 if int(length) > MAX_REQUEST_BYTES:
                     return _error(413, "too-large")
+        if request.url.path.startswith("/api/") and request.method not in SAFE_METHODS:
+            # ほかのサイトから書き込ませる攻撃（CSRF）を断る。multipart の POST は事前の問い合わせなしで
+            # 送られるので、CORS では止まらない。Origin が自分自身（確認済みの Host）のときだけ受け付ける。
+            # ブラウザは書き込みの要求に必ず Origin を付けるので、Origin がないものも断る（T-18、C-22）
+            if request.headers.get("origin") != f"http://{request.headers.get('host')}":
+                return _error(403, "cross-origin")
         response = await call_next(request)
         if request.url.path.startswith("/api/"):
             # 子どもの絵と声を、ブラウザや途中の仕組みに写しとして残させない。種類の決め打ちも止める

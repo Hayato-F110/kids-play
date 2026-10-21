@@ -15,19 +15,19 @@ const readStdin = async () => {
   return Buffer.concat(chunks).toString("utf8");
 };
 
-// npx は Windows では .cmd で、シェルなしでは起動できない。node で本体のスクリプトを直接呼ぶ
-const runTool = (root, script, args) => {
+// 指摘がなければ null、あれば出力の文を返す
+const runCommand = (command, args, cwd) => {
   try {
-    execFileSync(process.execPath, [path.join(root, "node_modules", script), ...args], {
-      cwd: root,
-      encoding: "utf8",
-      stdio: "pipe",
-    });
+    execFileSync(command, args, { cwd, encoding: "utf8", stdio: "pipe" });
     return null;
   } catch (error) {
     return `${error.stdout ?? ""}${error.stderr ?? ""}`.trim() || error.message;
   }
 };
+
+// npx は Windows では .cmd で、シェルなしでは起動できない。node で本体のスクリプトを直接呼ぶ
+const runTool = (root, script, args) =>
+  runCommand(process.execPath, [path.join(root, "node_modules", script), ...args], root);
 
 const main = async () => {
   const input = JSON.parse(await readStdin());
@@ -50,7 +50,17 @@ const main = async () => {
     if (lintError !== null) problems.push(`ESLint:\n${lintError}`);
   }
 
-  // Python（ruff）は、10日目にバックエンドを作るときにここへ追加する
+  // Python は ruff で整形と静的解析をする。設定（セキュリティの S ルールを含む）は backend/pyproject.toml
+  if (/^backend\/.*\.py$/.test(relative)) {
+    const backend = path.join(root, "backend");
+    // backend/ からの相対パスで渡す。絶対パスだと、ドライブ名の大文字・小文字の違い（c: と C:）で、
+    // pyproject.toml のファイルごとの設定（テストでは assert を許す、など）が当てはまらないことがあるため
+    const target = toSlash(path.relative("backend", relative));
+    const formatPy = runCommand("uv", ["run", "ruff", "format", target], backend);
+    if (formatPy !== null) problems.push(`ruff format:\n${formatPy}`);
+    const lintPy = runCommand("uv", ["run", "ruff", "check", target], backend);
+    if (lintPy !== null) problems.push(`ruff check:\n${lintPy}`);
+  }
 
   if (problems.length > 0) {
     console.error(`${relative} に指摘があります。直してください。\n${problems.join("\n")}`);
