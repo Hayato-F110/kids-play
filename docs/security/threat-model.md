@@ -36,7 +36,7 @@ flowchart LR
     subgraph TB2["信頼境界2：開発用PC"]
         dev["P2 VS Code + Claude Code"]
         secrets[("D2 秘密情報<br>SSH鍵、.env、署名鍵")]
-        localapi["P3 FastAPI + SQLite<br>localhostのみ ⬜10日目"]
+        localapi["P3 FastAPI + SQLite<br>localhostのみ（127.0.0.1）"]
         mcp["P9 Playwright MCP<br>開ける先は localhost だけ"]
         dev -. "読まない（deny設定）" .- secrets
         dev -- "DF-11 画面の確認" --> mcp
@@ -156,7 +156,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | C-09 | Dependabot と CodeQL を有効化。Dependabot は、脆弱性の通知（alerts）、脆弱性を直す更新（security updates）、新しい版への更新（version updates：npm と GitHub Actions、週1回、公開から7日待つ）の3つ。CodeQL は default setup で、JavaScript とワークフローを、main への push・PR・週1回に解析する。更新のPRは、人が差分を確認してからマージする | T-04、T-01 | 5日目 | 実施済み（2026-10-12 の初回の解析：JavaScript 87ルール、ワークフロー 17ルールで指摘0件。Dependabot の通知0件） | リポジトリの Settings → Advanced Security、`.github/dependabot.yml`、Security タブ（Code scanning、Dependabot） |
 | C-10 | マイクの許可は、録音ボタンを押したときだけ求める（音だけ。カメラは求めない）。録音中であることを画面に示す。止めたとき・30秒で自動で止まったとき・画面を離れたとき・画面が隠れたときに、マイクを手放す（画面を離れたときの録音は残さない） | T-06 | 8日目 | 実施（KIDS-30。Android アプリ版の権限は9日目） | `frontend/apps/storybook/recorder.js`、`tests/recorder.test.mjs`（許可を求める時期、30秒、手放す、cancel）。画面なしの Edge で、偽のマイクを使い、録音から再生までと外部への通信0件を確認 |
 | C-11 | ページの削除と、全データの削除の機能。ページは2秒、全データは題名を5秒長押しする（保護者向け。子どもがうっかり消さないため） | T-09 | 9日目 | 実施（KIDS-31） | `frontend/apps/storybook/hold.js`、`tests/hold.test.mjs`、`tests/storage-indexeddb.test.mjs`。画面なしの Edge で、消したページと全データが、再読み込みのあとも消えたままであることを確認 |
-| C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（三重の安全側。docs/storage-interface.md） | T-08 | 10日目 | 予定 | – |
+| C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（えほんの画面だけ `connect-src 'self'`）。加えて、サーバーは 127.0.0.1 だけで待ち受け、Host が localhost / 127.0.0.1 以外の要求を拒否する（DNS リバインディング対策。docs/storage-interface.md） | T-08 | 10日目 | 実施 | pytest（無効なら保存APIがすべて 403、`enabled` 以外の値では有効にならない、よその Host は 400）。node:test（公開サイト・Androidアプリでは問い合わせない、無効・つながらない・遅いときは IndexedDB）。`npm run check:pwa`（connect-src はえほんの画面だけ）。画面なしの Edge で、有効のときはサーバーだけ・無効のときは端末の中だけに保存され、外への通信が0件 |
 | C-13 | コンテナは小さいベースイメージと非root。Trivy と SBOM。GitHub Actionsの部品はバージョンを固定 | T-04 | 5日目（部品の固定）、11日目（コンテナ） | 一部実施（`pages.yml` の部品4つをコミットIDで固定） | `.github/workflows/pages.yml`（`uses:` の行） |
 | C-14 | HTTPSのみで配信。HSTSなどのセキュリティヘッダー | T-05 | 13日目 | 予定 | – |
 | C-15 | サーバーのハードニング（鍵認証のみ、ufw、SSHは自分のIPのみ、IMDSv2）。予算アラート、MFA、OIDC（アクセスキーなし） | T-07 | 12〜13日目 | 予定 | – |
@@ -198,4 +198,5 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | 2026-10-14 | 7日目の見直し。T-16 のリスク値を 9 → 3 に（対策のあとの評価）。データフロー図に P9（Playwright MCP）と DF-11 を追加し、DF-07 を「インストールとシェルの操作」に広げた。C-16、C-20 の状態を更新。TARA との対応に、意図しない誤操作の行を追加。2日目の初版との比較を4章に記録 | 7日目（スプリント1の締め）。`adb shell` で承認の画面が出ることを確認した |
 | 2026-10-16 | D1（IndexedDB）を実装した。データの流れの図にマイクと DF-12 を足し、DF-02 に削除と「画面が隠れたときの保存」を足した。C-11 を実施に、C-19 を確認済みにした | 9日目。KIDS-31。privacy-reviewer の指摘（C-11 を IndexedDB と同時に入れる、図に新しい流れを足す、C-19 の確認を記録する） |
 | 2026-10-16 | C-21 (2) を「権限は、なし」から「マイクの2つだけ（`RECORD_AUDIO`、`MODIFY_AUDIO_SETTINGS`）。`INTERNET` はなし」に変えた。T-17 にマイクの権限の脅威を足した | 9日目。KIDS-32。Androidアプリ版で、えほんの録音を使えるようにするため。Capacitor 8.5.3 は、マイクの要求に2つの権限の両方を求める |
+| 2026-10-21 | P3（FastAPI + SQLite）と DF-10 を実装した。C-12 を実施にし、四つめの対策（127.0.0.1 だけで待ち受け、よその Host を拒否）を足した | 10日目。KIDS-34。サーバー保存は PC の中だけで使う |
 | 2026-10-17 | データの流れの図に DF-13（Jira の課題の読み出し、Rovo MCP）を追加。T-11 に MCP で読む Jira の本文を加え、C-16 に Atlassian Rovo MCP（読むだけ、鍵は2つ）を追記 | 9日目。7日目に「Jira の MCP は入れない」と決めたが、読むだけに限れば書き込みの権限を AI に渡さずに済むので、学習者の判断で入れた |

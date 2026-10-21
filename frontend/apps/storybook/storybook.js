@@ -1,5 +1,6 @@
 // わたしのえほん：ページごとに絵を描いて声を録り、「よむ」で1ページめから順に見せて鳴らす（紙芝居）。
-// 絵と声は、保存のインターフェース（docs/storage-interface.md）だけを通して保存する。どこにも送信しない。
+// 絵と声は、保存のインターフェース（docs/storage-interface.md）だけを通して保存する。
+// 公開環境では端末の外に送信しない（PC 内の開発用サーバーで、サーバー保存を有効にしたときだけ、そのサーバーに送る）。
 
 import { playRecording } from "../../js/audio.js";
 import { createPaint } from "../../js/paint.js";
@@ -9,7 +10,7 @@ import { MAX_PAGES } from "../../js/storage/validate.js";
 import { createHold } from "./hold.js";
 import { createRecorder } from "./recorder.js";
 
-// 保存先。端末の中（IndexedDB）に置き、再読み込みしても残る。開くのを待ってから画面を作る
+// 保存先。ふだんは端末の中（IndexedDB）で、再読み込みしても残る。開くのを待ってから画面を作る
 const storage = await openStorage();
 
 // 描き終えてから保存するまでの間。線を引くたびに画像を作り直さないようにするため

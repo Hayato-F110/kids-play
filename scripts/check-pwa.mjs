@@ -33,13 +33,26 @@ for (const file of listed.filter((f) => !actual.includes(f))) {
   problems.push(`sw.js の一覧にあるが、ファイルがない：${file}`);
 }
 
+// えほんの画面だけは、PC 内のサーバー保存のために、自分のオリジンへの通信を許す（C-08、C-12）。
+// ほかの画面には通信の許可を広げない。違いはこの1つだけであることを確かめる
+const CONNECT_SELF = "; connect-src 'self'";
+const CONNECT_ALLOWED = new Set(["apps/storybook/index.html"]);
+
 const htmlFiles = actual.filter((file) => file.endsWith(".html"));
 const policies = new Map();
 for (const file of htmlFiles) {
   const html = readFileSync(join(root, file), "utf8");
-  const csp = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)?.[1];
+  let csp = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)?.[1];
   if (!csp) {
     problems.push(`CSP がない：${file}`);
+  } else if (CONNECT_ALLOWED.has(file)) {
+    if (!csp.endsWith(CONNECT_SELF)) {
+      problems.push(`CSP の最後に connect-src 'self' がない：${file}`);
+    }
+    csp = csp.replace(CONNECT_SELF, "");
+  }
+  if (csp?.includes("connect-src")) {
+    problems.push(`CSP に connect-src を足してよいのは、えほんの画面だけ：${file}`);
   }
   policies.set(file, csp);
   if (!/<link rel="manifest" /.test(html)) {

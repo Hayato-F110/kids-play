@@ -20,6 +20,7 @@ const FILES = [
   "js/storage/validate.js",
   "js/storage/memory.js",
   "js/storage/indexeddb.js",
+  "js/storage/server.js",
   "js/storage/index.js",
   "js/mute.js",
   "js/audio.js",

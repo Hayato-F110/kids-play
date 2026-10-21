@@ -7,9 +7,14 @@ import { test } from "node:test";
 
 import { MAX_PAGES, MAX_VOICE_MS } from "../frontend/js/storage/validate.js";
 
-// 中身は自作の小さなデータ（本物の絵や声は使わない）
-const picture = () => new Blob(["picture"], { type: "image/png" });
-const voice = () => new Blob(["voice"], { type: "audio/webm" });
+// 中身は自作の小さなデータ（本物の絵や声は使わない）。
+// 先頭のバイトだけは本物の形式（PNG、WebM）に合わせる。サーバー版は種類と中身が合っているかを確かめるため
+const PNG_HEADER = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const WEBM_HEADER = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3]);
+const picture = () => new Blob([PNG_HEADER, "picture"], { type: "image/png" });
+const voice = () => new Blob([WEBM_HEADER, "voice"], { type: "audio/webm" });
+// 見本データの、先頭の印より後ろ（中身が同じかを比べる）
+const body = async (blob, header) => (await blob.text()).slice(new TextDecoder().decode(header).length);
 const newPage = (overrides = {}) => ({ picture: picture(), voice: voice(), voiceMs: 1000, ...overrides });
 
 // 拒否されたときに、理由の名前（code）で区別できること
@@ -38,8 +43,8 @@ export const runStorageContract = (name, createStorage) => {
     const storage = await createStorage();
     const saved = await storage.savePage(newPage());
     const page = await storage.getPage(saved.id);
-    assert.equal(await page.picture.text(), "picture");
-    assert.equal(await page.voice.text(), "voice");
+    assert.equal(await body(page.picture, PNG_HEADER), "picture");
+    assert.equal(await body(page.voice, WEBM_HEADER), "voice");
     assert.equal(page.voice.type, "audio/webm");
     assert.equal(page.voiceMs, 1000);
   });
