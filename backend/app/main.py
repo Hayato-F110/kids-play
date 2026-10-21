@@ -27,6 +27,8 @@ from app.store import PageContent, PageLimitError, PageMeta, PageStore
 # ブラウザが PC の中のサーバーを開くときの名前だけを受け付ける
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 PAGES_PATH = "/api/pages"
+# 読むだけの要求。ほかのサイトからは応答を読めない（CORS の許可を出していない）ので、Origin を求めない
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 class StorageStatus(BaseModel):
@@ -43,23 +45,37 @@ def create_app(settings: Settings) -> FastAPI:
     # 無効のときは DB を作らない。受け取らないだけでなく、置き場所も作らない
     store = PageStore(settings.db_path) if settings.server_storage_enabled else None
 
+    def reject(request: Request) -> JSONResponse | None:
+        """中身（絵と声）を読む前に断る理由があれば、その応答を返す。順番は、偽の要求 → 無効 → 大きさ。"""
+        path = request.url.path
+        if request.method not in SAFE_METHODS:
+            # ほかのサイトから書き込ませる攻撃（CSRF）を、ほかの理由より先に断る。
+            # multipart の POST は事前の問い合わせなしで送られるので、CORS では止まらない。
+            # Origin が自分自身（確認済みの Host）のときだけ受け付ける。
+            # ブラウザは書き込みの要求に必ず Origin を付けるので、ないものも断る（T-18、C-22）
+            if request.headers.get("origin") != f"http://{request.headers.get('host')}":
+                return _error(403, "cross-origin")
+        if path != PAGES_PATH and not path.startswith(PAGES_PATH + "/"):
+            return None
+        # 無効なら、中身を読む前に断る。一時ファイルにも残さない
+        if store is None:
+            return _error(403, "server-storage-disabled")
+        if request.method in ("POST", "PUT"):
+            # 大きさは Content-Length で先に見る。uvicorn は宣言より多い中身を受け取らないので、
+            # Content-Length を必須にすれば、上限を超えるデータを読み込まずに済む
+            length = request.headers.get("content-length")
+            if length is None or not length.isdigit():
+                return _error(411, "length-required")
+            if int(length) > MAX_REQUEST_BYTES:
+                return _error(413, "too-large")
+        return None
+
     @app.middleware("http")
     async def guard(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        is_pages = request.url.path == PAGES_PATH or request.url.path.startswith(PAGES_PATH + "/")
-        if is_pages:
-            # 無効なら、中身（絵と声）を読む前に断る。一時ファイルにも残さない
-            if store is None:
-                return _error(403, "server-storage-disabled")
-            if request.method in ("POST", "PUT"):
-                # 大きさは Content-Length で先に見る。uvicorn は宣言より多い中身を受け取らないので、
-                # Content-Length を必須にすれば、上限を超えるデータを読み込まずに済む
-                length = request.headers.get("content-length")
-                if length is None or not length.isdigit():
-                    return _error(411, "length-required")
-                if int(length) > MAX_REQUEST_BYTES:
-                    return _error(413, "too-large")
-        response = await call_next(request)
-        if request.url.path.startswith("/api/"):
+        is_api = request.url.path.startswith("/api/")
+        rejected = reject(request) if is_api else None
+        response = rejected or await call_next(request)
+        if is_api:
             # 子どもの絵と声を、ブラウザや途中の仕組みに写しとして残させない。種類の決め打ちも止める
             response.headers["Cache-Control"] = "no-store"
             response.headers["X-Content-Type-Options"] = "nosniff"

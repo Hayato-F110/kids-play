@@ -81,9 +81,14 @@ after(() => {
   rmSync(workDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 });
 
+// ブラウザは書き込みの要求に Origin を付けるが、Node の fetch は付けない。ブラウザと同じ形にそろえる
+// （サーバーは Origin が自分自身でない書き込みを断る。CSRF 対策 C-22）
+const browserLikeFetch = (url, options = {}) =>
+  fetch(url, { ...options, headers: { ...options.headers, origin: base } });
+
 // テストごとに空から始める（約束のテストは、はじめが空であることを前提にしている）
 runStorageContract("サーバー（FastAPI）", async () => {
-  const storage = createServerStorage({ base });
+  const storage = createServerStorage({ base, fetch: browserLikeFetch });
   await storage.deleteAll();
   return storage;
 });

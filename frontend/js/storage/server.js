@@ -4,8 +4,17 @@
 
 import { StorageError, validatePage } from "./validate.js";
 
-// サーバーが返す理由の名前のうち、画面が区別するもの。それ以外は形の違いとして扱う
-const KNOWN_CODES = new Set(["page-limit", "voice-too-long", "invalid-page"]);
+// サーバーが返す理由の名前（docs/storage-interface.md）。画面が区別するのは上の3つだけだが、
+// 原因を調べやすいように、サーバーの理由はそのまま渡す。知らない名前は形の違いとして扱う
+const KNOWN_CODES = new Set([
+  "page-limit",
+  "voice-too-long",
+  "invalid-page",
+  "too-large",
+  "length-required",
+  "cross-origin",
+  "server-storage-disabled",
+]);
 
 /**
  * @param {{base?: string, fetch?: typeof globalThis.fetch}} [options]
@@ -40,12 +49,14 @@ export const createServerStorage = ({ base = "", fetch = globalThis.fetch } = {}
   };
 
   // 一覧の1行（中身なし）から、約束の形のページを作る。絵と声は別の URL から読む
-  const toPage = async ({ id, pictureType, voiceType, voiceMs }) => ({
-    id,
-    picture: await media(id, "picture", pictureType),
-    voice: await media(id, "voice", voiceType),
-    voiceMs,
-  });
+  // 絵と声は互いに関係しないので、並行して取りに行く
+  const toPage = async ({ id, pictureType, voiceType, voiceMs }) => {
+    const [picture, voice] = await Promise.all([
+      media(id, "picture", pictureType),
+      media(id, "voice", voiceType),
+    ]);
+    return { id, picture, voice, voiceMs };
+  };
 
   const listMeta = async () => {
     const response = await request("/api/pages");
@@ -68,8 +79,10 @@ export const createServerStorage = ({ base = "", fetch = globalThis.fetch } = {}
       // サーバーも同じ確認をするが、送る前にも確かめ、だめなものは端末の外に出さない
       validatePage(page);
       // 送るのは約束の項目だけ。画面の作りかけの値などを足さない
+      // サーバーは長さを整数で受け取る。返す値も、保存した値（丸めたあと）にそろえる
+      const voiceMs = Math.round(page.voiceMs);
       const form = new FormData();
-      form.append("voiceMs", String(Math.round(page.voiceMs)));
+      form.append("voiceMs", String(voiceMs));
       if (page.picture) {
         form.append("picture", page.picture, "picture");
       }
@@ -82,7 +95,7 @@ export const createServerStorage = ({ base = "", fetch = globalThis.fetch } = {}
         throw await failed(response);
       }
       const { id } = await response.json();
-      return { id, picture: page.picture, voice: page.voice, voiceMs: page.voiceMs };
+      return { id, picture: page.picture, voice: page.voice, voiceMs };
     },
 
     deletePage: async (id) => {

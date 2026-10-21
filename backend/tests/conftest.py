@@ -44,8 +44,11 @@ def make_client(tmp_path: Path) -> Callable[..., TestClient]:
             db_path=tmp_path / "kids.sqlite3",
             frontend_dir=frontend,
         )
-        # ブラウザが localhost で開いたときと同じ Host ヘッダーにする
-        return TestClient(create_app(settings), base_url="http://localhost")
+        # ブラウザが localhost で開いたときと同じ Host と Origin にする
+        # （ブラウザは書き込みの要求に Origin を付ける）
+        return TestClient(
+            create_app(settings), base_url="http://localhost", headers={"origin": "http://localhost"}
+        )
 
     return _make
 
