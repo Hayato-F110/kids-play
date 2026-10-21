@@ -31,6 +31,17 @@ def test_enabled_と書いたときだけ有効(monkeypatch: pytest.MonkeyPatch)
     assert Settings.from_env().server_storage_enabled is True
 
 
+def test_DB_の置き場所は環境変数で変えられる(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    # フロントの約束のテスト（npm run test:server）で、一時フォルダの DB を使うため
+    monkeypatch.setenv("KIDS_DB_PATH", str(tmp_path / "test.sqlite3"))
+    assert Settings.from_env().db_path == tmp_path / "test.sqlite3"
+
+
+def test_DB_の置き場所の既定は_backend_data(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("KIDS_DB_PATH", raising=False)
+    assert Settings.from_env().db_path == Settings().db_path
+
+
 def test_無効なら状態は_false_と答える(make_client: Callable[..., TestClient]) -> None:
     response = make_client(enabled=False).get("/api/storage/status")
     assert response.status_code == 200
