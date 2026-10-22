@@ -1,0 +1,163 @@
+# CI：PR でテストとイメージの検査をし、main に入ったら検査を通ったイメージを GHCR に置く。
+#   test ─┐
+#   scan ─┴─▶ push（main のときだけ。GHCR への書き込みの権限は、この作業だけに渡す）
+# scan では外部のスキャナー（Trivy）を動かすので、書き込みの権限を渡さない。
+# 2026年3月に trivy-action のタグが乗っ取られ、CI の秘密情報を盗む事件があったため（CVE-2026-33634、T-04）
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 既定はリポジトリを読むだけ。必要な作業にだけ、必要な権限を足す（最小権限）
+permissions:
+  contents: read
+
+# 同じ PR に新しいコミットが来たら、古い実行は止める。main への実行は最後まで進める
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: テスト（フロントとバックエンド）
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # アクションは、タグではなくコミットIDで固定する（タグは付け替えられるため）
+      - name: リポジトリを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # 取り出したあとに認証情報を残さない
+
+      - name: Node.js を用意する
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      # package-lock.json のとおりの版だけを入れる
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run check:pwa
+      - run: npm test
+
+      - name: uv を用意する
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.12.23"
+      - name: バックエンドの静的解析とテスト
+        working-directory: backend
+        run: |
+          uv sync --locked
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest
+
+  scan:
+    name: イメージの検査（${{ matrix.image }}）
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [api, web]
+    env:
+      IMAGE: kids-play-${{ matrix.image }}:ci
+    steps:
+      - name: リポジトリを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # 外部の部品を増やさないよう、ビルドは docker コマンドで直接行う。
+      # source のラベルで、GHCR のパッケージをこのリポジトリに結びつける
+      - name: イメージをビルドする
+        run: >-
+          docker build
+          --file docker/${{ matrix.image }}.Dockerfile
+          --label org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          --label org.opencontainers.image.revision=${{ github.sha }}
+          --tag "$IMAGE" .
+
+      # SBOM（部品表）は、検査に落ちても残す。どの部品が原因かを調べるのに使う
+      - name: SBOM（CycloneDX）を作る
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.0
+          image-ref: ${{ env.IMAGE }}
+          format: cyclonedx
+          output: sbom-${{ matrix.image }}.cdx.json
+
+      # 直し方が出ている「重大（CRITICAL）」の脆弱性が1つでもあれば、CI を失敗させる。
+      # 直し方がまだないものは、ベースイメージの更新（Dependabot）で直るのを待つ
+      - name: 重大な脆弱性があれば失敗させる
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.0
+          skip-setup-trivy: true
+          image-ref: ${{ env.IMAGE }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+      - name: SBOM を成果物として保存する
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-${{ matrix.image }}
+          path: sbom-${{ matrix.image }}.cdx.json
+          if-no-files-found: error
+
+      # 検査を通ったイメージそのものを push の作業に渡す（push の側で作り直すと、検査したものと違うものになりうる）
+      - name: 検査したイメージを渡す（main のときだけ）
+        if: ${{ github.event_name == 'push' }}
+        run: docker save "$IMAGE" | gzip > image-${{ matrix.image }}.tar.gz
+      - if: ${{ github.event_name == 'push' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-${{ matrix.image }}
+          path: image-${{ matrix.image }}.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+
+  push:
+    name: GHCR に置く
+    needs: [test, scan]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # GHCR への書き込みは、この作業だけ。外部のスキャナーは動かさない
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # GHCR の名前は小文字だけ
+      OWNER: ${{ github.repository_owner }}
+    steps:
+      - name: 検査したイメージを受け取る
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-*
+          merge-multiple: true
+
+      - name: GHCR にログインして push する
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          owner="${OWNER,,}"
+          # トークンはコマンドの引数に書かず、標準入力で渡す（ログやプロセスの一覧に残さない）
+          echo "$TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          for name in api web; do
+            gunzip -c "image-$name.tar.gz" | docker load
+            for tag in "sha-$SHA" main; do
+              docker tag "kids-play-$name:ci" "ghcr.io/$owner/kids-play-$name:$tag"
+              docker push "ghcr.io/$owner/kids-play-$name:$tag"
+            done
+          done
+          docker logout ghcr.io
