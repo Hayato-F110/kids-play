@@ -87,7 +87,7 @@ flowchart TD
 | Androidアプリ | ✅ | 6日目 | |
 | FastAPI（localhost） | ✅ | 10日目 | 127.0.0.1:8000。サーバー保存は既定で無効 |
 | Docker / compose | ✅ | 11日目 | WSL2（Ubuntu 24.04）＋ Docker Desktop。`docker compose up -d --build` で 127.0.0.1:8080。web（nginx）と api（FastAPI）、どちらも root 以外。サーバー保存は無効 |
-| CI（GitHub Actions、GHCR） | ⬜ | 11日目 | |
+| CI（GitHub Actions、GHCR） | ✅ | 11日目 | `.github/workflows/ci.yml`。PR でテストとイメージの検査（Trivy で CRITICAL なら失敗、SBOM を成果物に）。main で GHCR へ push（非公開） |
 | EC2 + nginx（HTTP） | ⬜ | 12日目 | |
 | HTTPS（DuckDNS + Let's Encrypt） | ⬜ | 13日目 | |
 | CD（OIDC + SSM） | ⬜ | 13日目 | |
