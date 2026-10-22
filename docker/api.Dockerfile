@@ -2,7 +2,7 @@
 # ベースイメージは版とダイジェストの両方で固定する。更新は Dependabot が PR で知らせる（T-04、C-09）
 
 # uv（部品を入れる道具）。FROM の行に書くと、Dependabot が新しい版を知らせる
-FROM ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.5@sha256:32a7bb39b496babbd997b0a39a4d66c126bdaf5661b302bf6f06abda8deca6ff AS uv
 
 # ---- 1段目：部品を入れる（uv はここだけで使い、動かす側のイメージには入れない）----
 FROM python:3.14.9-alpine3.24@sha256:d55673c233e28839c1c0c69766428cb6d50174a2ecfdcf915b6f58a0b0991562 AS build
