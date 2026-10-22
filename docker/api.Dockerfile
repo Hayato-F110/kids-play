@@ -17,8 +17,7 @@ RUN uv sync --locked --no-dev --no-install-project
 COPY backend/app ./app
 
 # ---- 2段目：動かす ----
-# 【一時的な確認用。マージ前に元に戻す】古いベースイメージで、重大な脆弱性があると CI が失敗することを確かめる
-FROM python:3.10.0-alpine3.14
+FROM python:3.14.9-alpine3.24@sha256:d55673c233e28839c1c0c69766428cb6d50174a2ecfdcf915b6f58a0b0991562
 
 # 動かすときに使わない pip は消す（使わない部品を残さない）。root 以外の専用ユーザーを作る
 RUN python -m pip uninstall -y pip \
