@@ -170,8 +170,10 @@ def create_app(settings: Settings) -> FastAPI:
 
     # フロントを同じオリジンで配る。通信先が自分のオリジンだけになり、
     # CSP を connect-src 'self' にとどめられる。
-    # API の経路より後に置く（先に置くと、/api/... もファイルとして探してしまう）
-    app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")
+    # API の経路より後に置く（先に置くと、/api/... もファイルとして探してしまう）。
+    # コンテナでは nginx がフロントを配り、api のイメージにはフロントを入れないので、ないときは配らない
+    if settings.frontend_dir.is_dir():
+        app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")
 
     return app
 

@@ -1,0 +1,37 @@
+# nginx（web）と FastAPI（api）をまとめて動かす。起動はリポジトリの一番上で：
+#   docker compose up -d --build
+# サーバー保存の環境変数（KIDS_SERVER_STORAGE）は渡さない。コンテナの版は、公開版と同じく
+# 絵と声を端末の中（IndexedDB）に保存する（T-08、C-12）
+name: kids-play
+
+# 2つのコンテナに共通の守り（最小権限）
+x-hardening: &hardening # イメージの中身を書き換えさせない。書けるのはメモリ上の /tmp だけ
+  read_only: true
+  tmpfs:
+    - /tmp
+  # Linux の特権（capabilities）を全部外し、あとから権限が増えるのも禁止する
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  web:
+    <<: *hardening
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    image: kids-play-web:local
+    # この PC の中（127.0.0.1）からだけ開ける。同じ Wi-Fi のほかの機器からは届かない
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - api
+
+  api:
+    <<: *hardening
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: kids-play-api:local
+    # ports は書かない。web からだけ届く

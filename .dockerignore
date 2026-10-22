@@ -1,0 +1,35 @@
+# イメージに渡してよいものだけを書く「許可リスト」。まず全部を除き、必要なものだけ戻す。
+# data/・backend/data/・secrets/・.env など（子どものデータと秘密情報）は、ここに書き忘れても入らない（T-08、T-02）
+*
+!frontend/
+!backend/app/
+!backend/pyproject.toml
+!backend/uv.lock
+!server/nginx/
+
+# 戻したフォルダの中でも、手元で生まれるものは入れない
+**/__pycache__
+**/.gitkeep
+
+# 念のための除外。戻したフォルダに、Git の外のファイル（確認用の録音や画像、DB、秘密情報）を
+# 誤って置いても、手元のビルドで入らないようにする。CI は Git の中身だけでビルドするので、もともと入らない
+# （png はアイコンで使うので除かない）
+**/.env*
+**/*.pem
+**/*.key
+**/*.sqlite*
+**/*.db
+**/data
+**/*.log
+**/*.bak
+**/*.tmp
+**/Thumbs.db
+**/desktop.ini
+**/*.webm
+**/*.ogg
+**/*.wav
+**/*.mp3
+**/*.m4a
+**/*.mp4
+**/*.jpg
+**/*.jpeg

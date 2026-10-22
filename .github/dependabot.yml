@@ -35,6 +35,18 @@ updates:
         patterns:
           - "*"
 
+  # コンテナのベースイメージ（python、nginx、uv）。Dockerfile の FROM の行を見て、版とダイジェストを更新する（11日目に追加、KIDS-37）
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    groups:
+      docker:
+        patterns:
+          - "*"
+
   # GitHub Actions の部品（checkout、deploy-pages など）。公開物を作る経路に入っている
   - package-ecosystem: "github-actions"
     # "/" と書くと、.github/workflows の中を見る

@@ -1,6 +1,6 @@
 # 脅威分析（Threat Model）
 
-初版（2026-10-09）。7日目（2026-10-14）に見直した（4章の「7日目の見直し」）。構成が変わる日（5日目、10日目、11日目、12日目）にも、該当する脅威を見直す。
+初版（2026-10-09）。7日目（2026-10-14）に見直した（4章の「7日目の見直し」）。構成が変わる日（5日目、10日目、11日目、12日目）にも、該当する脅威を見直す（11日目は4章の「11日目の見直し」）。
 
 - 手法：データフロー図 + STRIDE
 - 対象：自分が管理するリポジトリ、アプリ、サーバーのみ
@@ -38,8 +38,10 @@ flowchart LR
         secrets[("D2 秘密情報<br>SSH鍵、.env、署名鍵")]
         localapi["P3 FastAPI + SQLite<br>localhostのみ（127.0.0.1）"]
         mcp["P9 Playwright MCP<br>開ける先は localhost だけ"]
+        compose["P10 docker compose<br>nginx + FastAPI（root 以外）<br>127.0.0.1:8080 のみ。保存は無効"]
         dev -. "読まない（deny設定）" .- secrets
         dev -- "DF-11 画面の確認" --> mcp
+        dev -- "DF-14 イメージのビルド<br>.dockerignore の許可リストだけ渡す" --> compose
     end
 
     subgraph TB3["信頼境界3：GitHub"]
@@ -66,6 +68,7 @@ flowchart LR
     dev -- "DF-08 コード、指示、デザイン" --> claude
     repo -- "DF-09 ブランチ・PRの情報" --> jira
     ui -. "DF-10 サーバー保存<br>localhostのときだけ" .-> localapi
+    compose -- "DF-15 配信（http、PC の中だけ）<br>nginx → api の中継は読む要求だけ" --> ui
     jira -- "DF-13 課題の読み出し（Rovo MCP）<br>読むだけ。書き込みは二重に止める" --> dev
 ```
 
@@ -104,6 +107,8 @@ STRIDEの当てはめ方（STRIDE per element）：データフロー（矢印�
 | T-16 | P7（AIエージェント）、開発用PCのシェル、adb、家族の端末 | T、I、E | Claude Code が、開発用PCのシェルから adb を通して、家族の端末を誤って操作する。USBデバッグを許可した端末は、PCからの操作をほぼ無条件に受け入れるので、アプリと関係のないデータの削除、ほかのアプリの操作、端末の画面の撮影ができてしまう。攻撃者がいなくても、エージェント自身の誤り（対象を確かめない削除、画面を見ない操作）だけで起こる。Claude Code の作業フォルダの制限は、ファイルを読み書きする道具にだけ効き、シェルのコマンドには効かない | A6、A1 |
 | T-17 | Androidアプリ（Capacitor、WebView）、アプリの中の保存場所、Web から呼べるアプリ側の入口 | I、T、E | アプリの中のデータ（9日目からの絵と声）が、端末のバックアップや機種変更の転送で端末の外に出る。ひな形のままの広い設定（ほかのアプリにファイルを渡す入口、通信の権限）が、使っていないのに残る。えほんの録音のために足したマイクの権限が、録音していないときにも使われる、または通信の権限と組み合わさって声が外に出る。Web の画面から呼べるアプリ側の入口（保存）に、想定していない名前やデータを渡される。リリース版でデバッグ接続が有効のままになり、USB経由でアプリの中を読まれる | A1、A4 |
 | T-18 | P3（PC 内の FastAPI）、DF-10 | S、T | 保護者が PC でサーバー保存を有効にしている間に、同じブラウザで開いた別のサイトのスクリプトが、PC 内のサーバーにページを送り込む（CSRF）。multipart の POST は事前の問い合わせなしで送られるので、CORS では止まらない。次に子どもがえほんを開くと、知らない絵と声が紙芝居として流れる。読み出し・削除・上書きは、CORS と事前の問い合わせで止まる | A1、A5 |
+| T-19 | DF-14（イメージのビルド）、P10、GHCR（11日目〜） | I | イメージを作るときに、リポジトリのフォルダにある子どものデータ（`data/`、`backend/data/` の SQLite）や秘密情報（`.env`、鍵）がイメージに入る。イメージは GHCR に置かれ、公開のパッケージなら誰でも取り出して中を読める。`.gitignore` はイメージには効かないので、Git で守っていても漏れる。イメージのほかにも、コンテナから子どもや家族の情報が残る場所がある：nginx の一時ファイル（API が断る前に、送られた中身をためる）、アクセスログ（EC2 では家族の端末の IP と User-Agent が残る）、ビルドの記録（build-arg、provenance、レジストリに置くビルドのキャッシュ） | A1、A2 |
+| T-20 | P10（コンテナ）、開発用PCと EC2 の docker | E、T | コンテナの中の弱点（nginx や Python の部品の脆弱性）を突かれたとき、コンテナが root や広い権限で動いていると、中身の書き換えやホストへの抜け出しにつながる。また、docker を使えるユーザー（`docker` グループ）は、コンテナを通して実質 root と同じことができる | A3、A4、A6 |
 
 STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報の安全（機密性・完全性・可用性など）の分類で、人への直接の害（聴覚、目）を表す項目がないため。ここでは「改ざん・不具合の結果」として T に置いた（6章の気づきを参照）。
 
@@ -131,6 +136,8 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | T-16 | 3 | 1 | 3 | 低減（C-20）。2026-10-13 に実際に起きた（そのときの評価は 3 × 3 = 9）。7日目に、対策のあとの起こりやすさを 1 に下げた（下の「7日目の見直し」） |
 | T-17 | 3 | 2 | 6 | 低減（C-21） |
 | T-18 | 2 | 1 | 2 | 低減（C-22） |
+| T-19 | 3 | 1 | 3 | 低減（C-23、C-12 の nginx の部分）。アクセスログの項目と保存期間は、EC2 に置く12日目に決める（C-15） |
+| T-20 | 3 | 1 | 3 | 低減（C-13。EC2 の docker を使えるユーザーは C-15 で絞る） |
 
 起こりやすさを 1 としたものは、今の構成（外部のライブラリも通信もない静的なページ）が前提。構成が変わる日（5日目のPWA、10日目のAPI、11日目の依存パッケージ）に見直す。
 
@@ -142,6 +149,8 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 - T-16 の起こりやすさを 3 → 1 にした。独立した層が4つ重なっている：(1) 危険な adb の操作を deny で止める、(2) `adb shell` は毎回、人が承認する（7日目に、承認の画面が出ることを確認。auto モードでも ask は人に確認を求める）、(3) 端末が、このPCからのUSBデバッグを許可していない（7日目に `device unauthorized` を確認。実機を使う日に許可し直すと、この層はなくなる）、(4) 使わないときはUSBケーブルを抜く。残るリスクは、人が承認の内容を読まずに許可すること。承認の画面では、コマンドの対象を読んでから許可する
 - T-11 は、6日目に MCP（Playwright）を追加したので見直した。版を固定し、開ける先を localhost に限ったので、起こりやすさは 2 のままにする（C-16）
 - 9日目（2026-10-17）に Atlassian Rovo MCP を読むだけで追加し、T-11 を見直した。Jira の課題の本文は、Claude にとって外部の文章になる。書き込みは、Atlassian 側と Claude Code 側の2か所で止めたので、読んだ指示で Jira が書き換わることはない。読める範囲も、自分の Jira（課題は学習者だけが書く）に限られる。起こりやすさは 2 のままにする
+
+11日目の見直し（2026-10-22）：コンテナにしたことで、配布物にベースイメージの OS の部品（Alpine、Python、nginx）が入った。5日目の「公開物に外部の部品を持たない」という T-04 の前提は、コンテナの版では成り立たない。ベースイメージを版とダイジェストで固定し、Dependabot（docker）で更新を知らせる（C-09、C-13）。T-04 の起こりやすさは 1 のままにするが、Trivy で既知の脆弱性を CI で止める（KIDS-38）までは、この評価は確かめられていない
 
 ## 5. 対策
 
@@ -155,11 +164,11 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | C-06 | innerHTML を使わない。外部のスクリプト・フォント・画像・リンクを置かない。HTMLに style 属性を書かない | T-01、T-04、T-10 | 2日目 | 実施済み（検索で0件） | `frontend/` を innerHTML、style=、http で検索 |
 | C-07 | 子どもの実名・写真・絵・声を、外部サービス（Claude、Jira、GitHub）に入力しないルール。反応の記録は個人を特定しない書き方にする | T-02 | 1日目 | 実施済み（運用） | `CLAUDE.md`、`docs/design.md` の反応メモ |
 | C-08 | CSP（Content Security Policy）で、読み込み元を自分のオリジンに限定し、通信を禁止する。すべてのHTMLの meta タグに `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'` を置く。meta タグでは指定できない項目（他サイトの枠への埋め込みの禁止 frame-ancestors、違反の報告）は、GitHub Pages では設定できないので、AWS版の nginx のヘッダーで行う（C-14） | T-01、T-05 | 5日目（meta）、13日目（ヘッダー） | 一部実施 | 各 `index.html` の先頭。画面なしのブラウザで、全画面とおえかきの「ほぞん」の違反が0件であること、HTMLに直接書いた script と style、外部への通信、外部の画像が止まることを確認 |
-| C-09 | Dependabot と CodeQL を有効化。Dependabot は、脆弱性の通知（alerts）、脆弱性を直す更新（security updates）、新しい版への更新（version updates：npm と GitHub Actions、週1回、公開から7日待つ）の3つ。CodeQL は default setup で、JavaScript とワークフローを、main への push・PR・週1回に解析する。更新のPRは、人が差分を確認してからマージする | T-04、T-01 | 5日目 | 実施済み（2026-10-12 の初回の解析：JavaScript 87ルール、ワークフロー 17ルールで指摘0件。Dependabot の通知0件） | リポジトリの Settings → Advanced Security、`.github/dependabot.yml`、Security タブ（Code scanning、Dependabot） |
+| C-09 | Dependabot と CodeQL を有効化。Dependabot は、脆弱性の通知（alerts）、脆弱性を直す更新（security updates）、新しい版への更新（version updates：npm と GitHub Actions。10日目に uv、11日目に docker のベースイメージを追加。週1回、公開から7日待つ）の3つ。CodeQL は default setup で、JavaScript とワークフローを、main への push・PR・週1回に解析する。更新のPRは、人が差分を確認してからマージする | T-04、T-01 | 5日目 | 実施済み（2026-10-12 の初回の解析：JavaScript 87ルール、ワークフロー 17ルールで指摘0件。Dependabot の通知0件） | リポジトリの Settings → Advanced Security、`.github/dependabot.yml`、Security タブ（Code scanning、Dependabot） |
 | C-10 | マイクの許可は、録音ボタンを押したときだけ求める（音だけ。カメラは求めない）。録音中であることを画面に示す。止めたとき・30秒で自動で止まったとき・画面を離れたとき・画面が隠れたときに、マイクを手放す（画面を離れたときの録音は残さない） | T-06 | 8日目 | 実施（KIDS-30。Android アプリ版の権限は9日目） | `frontend/apps/storybook/recorder.js`、`tests/recorder.test.mjs`（許可を求める時期、30秒、手放す、cancel）。画面なしの Edge で、偽のマイクを使い、録音から再生までと外部への通信0件を確認 |
 | C-11 | ページの削除と、全データの削除の機能。ページは2秒、全データは題名を5秒長押しする（保護者向け。子どもがうっかり消さないため） | T-09 | 9日目 | 実施（KIDS-31） | `frontend/apps/storybook/hold.js`、`tests/hold.test.mjs`、`tests/storage-indexeddb.test.mjs`。画面なしの Edge で、消したページと全データが、再読み込みのあとも消えたままであることを確認 |
-| C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（えほんの画面だけ `connect-src 'self'`）。加えて、サーバーは 127.0.0.1 だけで待ち受け、Host が localhost / 127.0.0.1 以外の要求を拒否する（DNS リバインディング対策。docs/storage-interface.md） | T-08 | 10日目 | 実施 | pytest（無効なら保存APIがすべて 403、`enabled` 以外の値では有効にならない、よその Host は 400）。node:test（公開サイト・Androidアプリでは問い合わせない、無効・つながらない・遅いときは IndexedDB）。`npm run check:pwa`（connect-src はえほんの画面だけ）。画面なしの Edge で、有効のときはサーバーだけ・無効のときは端末の中だけに保存され、外への通信が0件 |
-| C-13 | コンテナは小さいベースイメージと非root。Trivy と SBOM。GitHub Actionsの部品はバージョンを固定 | T-04 | 5日目（部品の固定）、11日目（コンテナ） | 一部実施（`pages.yml` の部品4つをコミットIDで固定） | `.github/workflows/pages.yml`（`uses:` の行） |
+| C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（えほんの画面だけ `connect-src 'self'`）。加えて、サーバーは 127.0.0.1 だけで待ち受け、Host が localhost / 127.0.0.1 以外の要求を拒否する（DNS リバインディング対策。docs/storage-interface.md）。11日目：nginx の後ろ（コンテナの版）では、API に届いてから断ると、その前に nginx が中身を一時ファイルにためてしまう。そのため nginx が `/api/` の書き込みの要求を中身を受け取る前に断り（`limit_except GET HEAD`、上限 1KB）、読む要求だけを中継する | T-08 | 10日目、11日目（nginx） | 実施 | pytest（無効なら保存APIがすべて 403、`enabled` 以外の値では有効にならない、よその Host は 400）。node:test（公開サイト・Androidアプリでは問い合わせない、無効・つながらない・遅いときは IndexedDB）。`npm run check:pwa`（connect-src はえほんの画面だけ）。画面なしの Edge で、有効のときはサーバーだけ・無効のときは端末の中だけに保存され、外への通信が0件 |
+| C-13 | コンテナは小さいベースイメージと非root。Trivy と SBOM。GitHub Actionsの部品はバージョンを固定 | T-04、T-20 | 5日目（部品の固定）、11日目（コンテナ） | 一部実施（`pages.yml` の部品4つをコミットIDで固定。11日目（KIDS-37）：Alpine のベースイメージを版とダイジェストで固定。api は uid 10001、web は uid 101 で動く。ファイルの持ち主は root で、動くユーザーは書き換えられない。読み取り専用のファイルシステム、capabilities をすべて外す、no-new-privileges。api は PC の外に公開せず、web は 127.0.0.1:8080 だけ。動かす側のイメージに uv と pip を入れない。Trivy と SBOM は KIDS-38） | `.github/workflows/pages.yml`（`uses:` の行）、`docker/*.Dockerfile`、`compose.yaml`。`docker compose exec` で `id` が root 以外、`/app` と `/usr/share/nginx/html` に書けないことを確認 |
 | C-14 | HTTPSのみで配信。HSTSなどのセキュリティヘッダー | T-05 | 13日目 | 予定 | – |
 | C-15 | サーバーのハードニング（鍵認証のみ、ufw、SSHは自分のIPのみ、IMDSv2）。予算アラート、MFA、OIDC（アクセスキーなし） | T-07 | 12〜13日目 | 予定 | – |
 | C-16 | Claude Codeが外部から読んだ文章は、指示ではなくデータとして扱う。外部サービスの操作と push は実行前に確認する。MCPは最小権限 | T-11 | 1日目（確認のルール）、6日目（MCP） | 一部実施（MCP は2つ。Playwright：版を 0.0.83 に固定し、開ける先を localhost:8000 に限定。Atlassian Rovo MCP（9日目）：読むだけ。鍵は2つ。(1) Atlassian の管理画面で読み取りを `read_jira` だけ許可し、書き込み・検索・削除・管理は0、新しい道具の自動許可もオフ。サインインの同意で求められた権限は Read だけ。(2) Claude Code の deny で `executeWrite` と `executeDestructive` を止める） | `CLAUDE.md`、`.claude/settings.json`、`.mcp.json`、Atlassian の管理画面（Rovo MCP サーバー → 権限） |
@@ -169,6 +178,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | C-20 | AIエージェントが実機に届く経路を、仕組みで絞る。(1) adb 経由の削除・書き換え（`content delete`、`rm`、`-delete` など）、入力の送信（`input`）、端末の画面の撮影（`screencap`）を、Claude Code の deny で止める。(2) `adb shell` で始まるコマンドは、毎回、人の承認を求める（ask）。(3) 実機の画面の確認は、アプリの WebView へのデバッグ接続（アプリの中身だけが取れる）で行い、音・指の操作・端末の見た目は人が確かめる。(4) 確認で端末に作ったファイルの後片づけは、人が行う。(5) 実機を使わないときはUSBケーブルを抜き、作業のあとはUSBデバッグをオフにする。(6) 実機をつなぐ前に、端末の大事なデータのバックアップがあることを確かめる | T-16 | 6日目 | 一部実施（(1)(2) を設定。(2) は7日目に、承認の画面が出ることを確認。(3)(4) は運用。(5)(6) は学習者の運用） | `.claude/settings.json`（deny と ask の adb の行）。deny は書き方を変えたコマンドまでは防げないので、(2) の承認と重ねる |
 | C-21 | Androidアプリの設定を最小にする。(1) バックアップと機種変更の転送を無効にする（`allowBackup="false"` に加えて、Android 12 以上の `dataExtractionRules` と、Android 11 以下の `fullBackupContent` で、全データを対象から外す）。(2) 権限は、マイクの2つ（`RECORD_AUDIO`、`MODIFY_AUDIO_SETTINGS`）だけにする。えほんの録音に使う。Capacitor 8.5.3 は、WebView がマイクを求めたときに両方を求め、どちらかがないと拒否する。許可を求めるのは録音ボタンを押したときだけ。`INTERNET` は外したまま（画面のファイルはアプリの中にあり、録音した声を外に送る手段がない）。(3) ひな形の FileProvider を外す。(4) Web から呼べる入口は `PictureSaver` の1つだけにし、ファイル名の形・大きさ・PNGであることを確かめる。(5) 署名鍵は、リポジトリの外に置く（`.gitignore` で二重に除外）。リリース版は作っていないので、鍵はまだない。(6) WebView のデバッグ接続は、Capacitor の既定（開発中だけ有効）のままにする。リリース版を作るときに、無効であることを確かめる | T-17、T-13 | 6日目 | 一部実施（(1)〜(5) を実施。(6) は、リリース版を作るときに確認。(2) のマイクの権限は、KIDS-32 のマージ後のビルドで、APK の権限と実機の録音を確認する） | `android/app/src/main/AndroidManifest.xml`、`res/xml/data_extraction_rules.xml`、`res/xml/backup_rules_legacy.xml`、`PictureSaverPlugin.java`。APK の中のマニフェストを aapt2 で読み、権限が自分用の1つだけ、`allowBackup=false`、FileProvider がないことを確認。実機で、権限なしでも5画面が開くこと、保存の入口が不正な入力を断ることを確認 |
 | C-22 | PC 内のサーバーは、書き込みの要求（POST・PUT・DELETE）を、Origin が自分自身（`http://` ＋ 確認済みの Host）のときだけ受け付ける。Origin がない要求も断る（ブラウザは書き込みに必ず付けるため）。読むだけの要求には CORS の許可を出さない | T-18 | 10日目 | 実施 | pytest（よそのサイト・`null`・Origin なし・Host と違う Origin の書き込みは 403、自分自身なら保存できる）。画面なしの Edge で、同じサイトからの保存はこれまでどおり動く |
+| C-23 | イメージに渡すファイルを `.dockerignore` の許可リストで決める（まず全部を除き、`frontend/`、`backend/app/`、`backend/pyproject.toml`・`uv.lock`、`server/nginx/` だけを戻す）。書き忘れた新しいファイルは、入らない側に倒れる。許可したフォルダの中に Git の外のファイル（録音、画像、DB、`.env`、鍵、ログ）を誤って置いても入らないよう、念のための除外も書く。コンテナの版では、サーバー保存の環境変数を渡さない（T-08 の対策 C-12 と同じ形）。compose の上書きファイル（`compose.override.yaml`）は、断りなく自動で読まれるので置かない。設定を変えたら `docker compose config` で、合わさった最終の設定を確かめる。KIDS-38 で決めること：GHCR へ push するのは CI でビルドしたイメージだけ（手元の `:local` は push しない）、秘密情報を build-arg で渡さない、provenance は min、レジストリにビルドのキャッシュを置くか | T-19、T-08 | 11日目 | 一部実施（KIDS-38 の分は予定） | `.dockerignore`。イメージの中に `/app/data` がなく、web には公開物の種類（html、css、js、svg、png、webmanifest）だけがあることを `docker compose exec` で確認。`/api/storage/status` が `{"enabled":false}`。保存の API は nginx が 403（大きな中身は 413）で断り、api には届かない（api のログに書き込みの要求が0件） |
 
 ## 6. ISO/SAE 21434（TARA）との対応
 
@@ -204,3 +214,5 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | 2026-10-17 | データの流れの図に DF-13（Jira の課題の読み出し、Rovo MCP）を追加。T-11 に MCP で読む Jira の本文を加え、C-16 に Atlassian Rovo MCP（読むだけ、鍵は2つ）を追記 | 9日目。7日目に「Jira の MCP は入れない」と決めたが、読むだけに限れば書き込みの権限を AI に渡さずに済むので、学習者の判断で入れた |
 | 2026-10-21 | P3（FastAPI + SQLite）と DF-10 を実装した。C-12 を実施にし、四つめの対策（127.0.0.1 だけで待ち受け、よその Host を拒否）を足した | 10日目。KIDS-34。サーバー保存は PC の中だけで使う |
 | 2026-10-21 | 脅威 T-18（PC 内のサーバーへの CSRF）と対策 C-22 を追加し、実施した | 10日目。KIDS-35。/security-review の指摘（確信度 8/10）。T-08 は「送ってしまう」側だったが、API を足したことで「受け取ってしまう」側の脅威が新しくできた |
+| 2026-10-22 | データの流れの図に P10（docker compose）、DF-14（イメージのビルド）、DF-15（PC の中の配信）を追加。脅威 T-19（イメージに子どものデータや秘密情報が入る）、T-20（コンテナの権限、docker グループ）と、対策 C-23 を追加。C-13 を更新。4章に11日目の見直しを追記 | 11日目。KIDS-37。WSL2 と Docker Desktop を入れ、nginx と FastAPI をコンテナにした。Ubuntu のユーザーが `docker` グループに入ったことで、T-20 に気づいた |
+| 2026-10-22 | C-12 に nginx の部分（書き込みを中身を受け取る前に断る）を追加。T-19 に nginx の一時ファイル、アクセスログ、ビルドの記録を追加。C-23 に念のための除外、compose の上書きファイル、KIDS-38 で決めることを追加 | 11日目。KIDS-37。privacy-reviewer の指摘（中1件、低3件）。10日目の「中身を読む前に断る」は、前に nginx を置くと成り立たなくなっていた |

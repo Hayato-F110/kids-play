@@ -82,11 +82,11 @@ flowchart TD
 | 要素 | 状態 | 構築日 | メモ |
 |---|---|---|---|
 | ローカルのフロントエンド | ✅ | 2日目 | トップ画面とどうぶつタッチ。`python -m http.server` で確認 |
-| GitHub Pages | ⬜ | 5日目 | |
-| PWA | ⬜ | 5日目 | |
-| Androidアプリ | ⬜ | 6日目 | |
-| FastAPI（localhost） | ⬜ | 10日目 | |
-| Docker / compose | ⬜ | 11日目 | |
+| GitHub Pages | ✅ | 5日目 | |
+| PWA | ✅ | 5日目 | |
+| Androidアプリ | ✅ | 6日目 | |
+| FastAPI（localhost） | ✅ | 10日目 | 127.0.0.1:8000。サーバー保存は既定で無効 |
+| Docker / compose | ✅ | 11日目 | WSL2（Ubuntu 24.04）＋ Docker Desktop。`docker compose up -d --build` で 127.0.0.1:8080。web（nginx）と api（FastAPI）、どちらも root 以外。サーバー保存は無効 |
 | CI（GitHub Actions、GHCR） | ⬜ | 11日目 | |
 | EC2 + nginx（HTTP） | ⬜ | 12日目 | |
 | HTTPS（DuckDNS + Let's Encrypt） | ⬜ | 13日目 | |
