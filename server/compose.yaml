@@ -1,0 +1,42 @@
+# EC2 の上で動かす compose（12日目）。手元の compose.yaml との違いは3つ：
+#   1. イメージを手元で作らず、CI が検査して GHCR に置いたものを使う（Trivy と SBOM を通ったもの）
+#   2. web を外（80）に出す。api は外に出さない
+#   3. ログを journald に送り、保存期間を systemd の側で決める（T-19）
+# 起動は EC2 の /opt/kids-play で：
+#   sudo docker compose up -d
+# サーバー保存の環境変数（KIDS_SERVER_STORAGE）は渡さない。公開環境では絵と声を受け取らない（T-08、C-12）
+name: kids-play
+
+# 2つのコンテナに共通の守り（最小権限）。手元の compose.yaml と同じ
+x-hardening: &hardening # イメージの中身を書き換えさせない。書けるのはメモリ上の /tmp だけ
+  read_only: true
+  tmpfs:
+    - /tmp
+  # Linux の特権（capabilities）を全部外し、あとから権限が増えるのも禁止する
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  # サーバーの再起動のあとも、自分で止めない限り立ち上げ直す
+  restart: unless-stopped
+  logging:
+    driver: journald
+    options:
+      tag: "{{.Name}}"
+
+services:
+  web:
+    <<: *hardening
+    # タグは13日目の自動デプロイで sha-<コミット> に差し替えられるよう、環境変数にしておく
+    image: ghcr.io/hayato-f110/kids-play-web:${KIDS_TAG:-main}
+    # Docker が外に出したポートは ufw を通らない（公式の注意）。外に出すのは 80 だけにし、
+    # 守りはセキュリティグループに任せる
+    ports:
+      - "80:8080"
+    depends_on:
+      - api
+
+  api:
+    <<: *hardening
+    image: ghcr.io/hayato-f110/kids-play-api:${KIDS_TAG:-main}
+    # ports は書かない。web からだけ届く

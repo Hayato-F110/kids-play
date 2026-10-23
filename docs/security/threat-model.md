@@ -53,8 +53,9 @@ flowchart LR
         actions -- "DF-16 push（main のときだけ）<br>書き込みの権限は push の作業だけ" --> ghcr
     end
 
-    subgraph TB4["信頼境界4：AWS ⬜12〜13日目"]
-        ec2["P6 EC2：nginx + コンテナ"]
+    subgraph TB4["信頼境界4：AWS（12日目〜）"]
+        ec2["P6 EC2（Ubuntu 24.04）<br>web（nginx）+ api のコンテナ、root 以外<br>外に出すのは 80 だけ。保存は無効"]
+        iam["P11 AWS アカウント<br>root は封印（MFA）、作業は IAM ユーザー（MFA）"]
     end
 
     subgraph TB5["信頼境界5：外部サービス"]
@@ -64,7 +65,9 @@ flowchart LR
 
     dev -- "DF-03 git push（SSH）" --> repo
     pages -- "DF-04 配信（HTTPS）" --> ui
-    ec2 -- "DF-05 配信（HTTPS）" --> ui
+    ec2 -- "DF-05 配信<br>12日目は HTTP、⬜13日目に HTTPS" --> ui
+    ghcr -- "DF-17 イメージの取得（pull）<br>公開イメージ、ログインなし" --> ec2
+    dev -- "DF-18 SSH（kidsops の鍵だけ）<br>SG で自分の IP に限る" --> ec2
     actions -- "DF-06 デプロイ（OIDC + SSM）" --> ec2
     dev -- "DF-07 USB（adb）<br>インストールとシェルの操作<br>端末の全データ（A6）に届く" --> ui
     dev -- "DF-08 コード、指示、デザイン" --> claude
@@ -111,6 +114,7 @@ STRIDEの当てはめ方（STRIDE per element）：データフロー（矢印�
 | T-18 | P3（PC 内の FastAPI）、DF-10 | S、T | 保護者が PC でサーバー保存を有効にしている間に、同じブラウザで開いた別のサイトのスクリプトが、PC 内のサーバーにページを送り込む（CSRF）。multipart の POST は事前の問い合わせなしで送られるので、CORS では止まらない。次に子どもがえほんを開くと、知らない絵と声が紙芝居として流れる。読み出し・削除・上書きは、CORS と事前の問い合わせで止まる | A1、A5 |
 | T-19 | DF-14（イメージのビルド）、P10、GHCR（11日目〜） | I | イメージを作るときに、リポジトリのフォルダにある子どものデータ（`data/`、`backend/data/` の SQLite）や秘密情報（`.env`、鍵）がイメージに入る。イメージは GHCR に置かれ、公開のパッケージなら誰でも取り出して中を読める。`.gitignore` はイメージには効かないので、Git で守っていても漏れる。イメージのほかにも、コンテナから子どもや家族の情報が残る場所がある：nginx の一時ファイル（API が断る前に、送られた中身をためる）、アクセスログ（EC2 では家族の端末の IP と User-Agent が残る）、ビルドの記録（build-arg、provenance、レジストリに置くビルドのキャッシュ） | A1、A2 |
 | T-20 | P10（コンテナ）、開発用PCと EC2 の docker | E、T | コンテナの中の弱点（nginx や Python の部品の脆弱性）を突かれたとき、コンテナが root や広い権限で動いていると、中身の書き換えやホストへの抜け出しにつながる。また、docker を使えるユーザー（`docker` グループ）は、コンテナを通して実質 root と同じことができる | A3、A4、A6 |
+| T-21 | P11（AWS アカウント）、IAM ユーザー | S、E | AWS のサインイン情報（root、または AdministratorAccess を持つ IAM ユーザー）が盗まれ、アカウントを乗っ取られる。EC2 を大量に立てられて高額な請求が発生する、またはサーバーを書き換えられる。AWS の推奨は、人には一時的な認証情報（IAM Identity Center などのフェデレーション）を使うことだが、Identity Center で AWS アカウントの権限を配るには Organizations が要り、無料プランが有料プランに自動で上がるため、長く使う認証情報（IAM ユーザーのパスワード）を選んだ | A3 |
 
 STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報の安全（機密性・完全性・可用性など）の分類で、人への直接の害（聴覚、目）を表す項目がないため。ここでは「改ざん・不具合の結果」として T に置いた（6章の気づきを参照）。
 
@@ -138,8 +142,9 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | T-16 | 3 | 1 | 3 | 低減（C-20）。2026-10-13 に実際に起きた（そのときの評価は 3 × 3 = 9）。7日目に、対策のあとの起こりやすさを 1 に下げた（下の「7日目の見直し」） |
 | T-17 | 3 | 2 | 6 | 低減（C-21） |
 | T-18 | 2 | 1 | 2 | 低減（C-22） |
-| T-19 | 3 | 1 | 3 | 低減（C-23、C-12 の nginx の部分）。アクセスログの項目と保存期間は、EC2 に置く12日目に決める（C-15） |
-| T-20 | 3 | 1 | 3 | 低減（C-13。EC2 の docker を使えるユーザーは C-15 で絞る） |
+| T-19 | 3 | 1 | 3 | 低減（C-23、C-12 の nginx の部分）。EC2 のアクセスログは journald で 14日・200MB まで（C-15。学習者の判断、12日目） |
+| T-20 | 3 | 1 | 3 | 低減（C-13。EC2 の `docker` グループはだれも入れず、`sudo docker` をパスワードで守る（C-15）） |
+| T-21 | 3 | 1 | 3 | 低減（C-24）＋受容（IAM ユーザーという長く使う認証情報。MFA で守る） |
 
 起こりやすさを 1 としたものは、今の構成（外部のライブラリも通信もない静的なページ）が前提。構成が変わる日（5日目のPWA、10日目のAPI、11日目の依存パッケージ）に見直す。
 
@@ -156,6 +161,14 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 
 CI の部品そのものも T-04 の経路になる。2026年3月に trivy-action のタグが乗っ取られ、CI の秘密情報を盗むコードが入った（CVE-2026-33634）。そこで、(1) 部品をコミットIDで固定し、(2) Trivy を動かす作業には書き込みの権限を渡さず、GHCR への書き込みは外部のスキャナーを動かさない別の作業に分けた。スキャナーが乗っ取られても、盗める権限は読むだけになる
 
+12日目の見直し（2026-10-23）：EC2 を足し、信頼境界4が実体になった。
+
+- T-07 の起こりやすさは 2 のままにする。SSH は鍵だけ・kidsops だけ・自分の IP だけに絞ったが、インターネットに 80 を開いたサーバーは、常に自動の攻撃にさらされる。また、家の IP アドレスが変わると SSH で入れなくなるので、そのときは SG を直す（広げて済ませない）
+- Docker が外に出したポートは ufw の規則を通らない（Docker の公式の注意）。外に出すのは web の 80 だけにし、api は外に出さない。外からの通信の守りは、セキュリティグループ（AWS 側）が主になる。PC からポート 8000 に届かないことを確かめた
+- ubuntu ユーザーには、パスワードなしの sudo が残っている（cloud-init の `90-cloud-init-users`）。ubuntu は SSH で入れない（`AllowUsers kidsops`）ので、残すリスクは小さいとして受け入れる。13日目に SSM を使うと、Agent が `ssm-user` を作り、パスワードなしの sudo を付ける。そのときに見直す
+- 12日目は HTTP だけで配信している（T-05 の途中の改ざん）。HTTPS は13日目。それまで、この URL を家族に渡さない。えほんの録音は、ブラウザが HTTPS でないとマイクを使わせないので、HTTP の間は使えない
+- 新しい脅威として T-21（AWS アカウントの乗っ取り）を足した。これまで C-15 にまとめていた AWS アカウントの守り（MFA、予算）を C-24 に分けた
+
 ## 5. 対策
 
 | ID | 対策 | 対応する脅威 | 実施日 | 状態 | 確認方法（証拠） |
@@ -171,10 +184,10 @@ CI の部品そのものも T-04 の経路になる。2026年3月に trivy-actio
 | C-09 | Dependabot と CodeQL を有効化。Dependabot は、脆弱性の通知（alerts）、脆弱性を直す更新（security updates）、新しい版への更新（version updates：npm と GitHub Actions。10日目に uv、11日目に docker のベースイメージを追加。週1回、公開から7日待つ）の3つ。CodeQL は default setup で、JavaScript とワークフローを、main への push・PR・週1回に解析する。更新のPRは、人が差分を確認してからマージする | T-04、T-01 | 5日目 | 実施済み（2026-10-12 の初回の解析：JavaScript 87ルール、ワークフロー 17ルールで指摘0件。Dependabot の通知0件） | リポジトリの Settings → Advanced Security、`.github/dependabot.yml`、Security タブ（Code scanning、Dependabot） |
 | C-10 | マイクの許可は、録音ボタンを押したときだけ求める（音だけ。カメラは求めない）。録音中であることを画面に示す。止めたとき・30秒で自動で止まったとき・画面を離れたとき・画面が隠れたときに、マイクを手放す（画面を離れたときの録音は残さない） | T-06 | 8日目 | 実施（KIDS-30。Android アプリ版の権限は9日目） | `frontend/apps/storybook/recorder.js`、`tests/recorder.test.mjs`（許可を求める時期、30秒、手放す、cancel）。画面なしの Edge で、偽のマイクを使い、録音から再生までと外部への通信0件を確認 |
 | C-11 | ページの削除と、全データの削除の機能。ページは2秒、全データは題名を5秒長押しする（保護者向け。子どもがうっかり消さないため） | T-09 | 9日目 | 実施（KIDS-31） | `frontend/apps/storybook/hold.js`、`tests/hold.test.mjs`、`tests/storage-indexeddb.test.mjs`。画面なしの Edge で、消したページと全データが、再読み込みのあとも消えたままであることを確認 |
-| C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（えほんの画面だけ `connect-src 'self'`）。加えて、サーバーは 127.0.0.1 だけで待ち受け、Host が localhost / 127.0.0.1 以外の要求を拒否する（DNS リバインディング対策。docs/storage-interface.md）。11日目：nginx の後ろ（コンテナの版）では、API に届いてから断ると、その前に nginx が中身を一時ファイルにためてしまう。そのため nginx が `/api/` の書き込みの要求を中身を受け取る前に断り（`limit_except GET HEAD`、上限 1KB）、読む要求だけを中継する | T-08 | 10日目、11日目（nginx） | 実施 | pytest（無効なら保存APIがすべて 403、`enabled` 以外の値では有効にならない、よその Host は 400）。node:test（公開サイト・Androidアプリでは問い合わせない、無効・つながらない・遅いときは IndexedDB）。`npm run check:pwa`（connect-src はえほんの画面だけ）。画面なしの Edge で、有効のときはサーバーだけ・無効のときは端末の中だけに保存され、外への通信が0件 |
+| C-12 | サーバー保存は環境変数で切り替え、既定は無効（fail-safe）。無効のときAPIが拒否することをテストで確認。フロントも、PC 内の開発用サーバー（localhost の 8000 番、Android アプリの中ではない）のときだけサーバーに問い合わせる。CSP の通信先は自分のオリジンまで（えほんの画面だけ `connect-src 'self'`）。加えて、サーバーは 127.0.0.1 だけで待ち受け、Host が localhost / 127.0.0.1 以外の要求を拒否する（DNS リバインディング対策。docs/storage-interface.md）。11日目：nginx の後ろ（コンテナの版）では、API に届いてから断ると、その前に nginx が中身を一時ファイルにためてしまう。そのため nginx が `/api/` の書き込みの要求を中身を受け取る前に断り（`limit_except GET HEAD`、上限 1KB）、読む要求だけを中継する。12日目：EC2 では、読む要求も API の Host の確認で 400 になる（Host が公開の IP アドレスのため）。書き込みは nginx の 403、読み出しは API の 400 の2段で止まる | T-08 | 10日目、11日目（nginx）、12日目（EC2） | 実施 | pytest（無効なら保存APIがすべて 403、`enabled` 以外の値では有効にならない、よその Host は 400）。node:test（公開サイト・Androidアプリでは問い合わせない、無効・つながらない・遅いときは IndexedDB）。`npm run check:pwa`（connect-src はえほんの画面だけ）。画面なしの Edge で、有効のときはサーバーだけ・無効のときは端末の中だけに保存され、外への通信が0件 |
 | C-13 | コンテナは小さいベースイメージと非root。Trivy と SBOM。GitHub Actionsの部品はバージョンを固定 | T-04、T-20 | 5日目（部品の固定）、11日目（コンテナ） | 実施（`pages.yml` の部品4つをコミットIDで固定。11日目（KIDS-37）：Alpine のベースイメージを版とダイジェストで固定。api は uid 10001、web は uid 101 で動く。ファイルの持ち主は root で、動くユーザーは書き換えられない。読み取り専用のファイルシステム、capabilities をすべて外す、no-new-privileges。api は PC の外に公開せず、web は 127.0.0.1:8080 だけ。動かす側のイメージに uv と pip を入れない。KIDS-38：CI で Trivy（v0.36.0 のアクション、本体 v0.76.0）が SBOM（CycloneDX）を作って成果物に残し、直し方のある CRITICAL があれば失敗させる。Trivy の作業は読むだけの権限で動かし、GHCR への push は検査したイメージそのものを別の作業で行う。`ci.yml` の部品もコミットIDで固定） | `.github/workflows/pages.yml`・`ci.yml`（`uses:` の行）、`docker/*.Dockerfile`、`compose.yaml`。`docker compose exec` で `id` が root 以外、`/app` と `/usr/share/nginx/html` に書けないことを確認。PR #58 の CI：緑（CRITICAL 0件）、SBOM は api 46・web 71 の部品。古いベースイメージでは CRITICAL 8件で赤 |
 | C-14 | HTTPSのみで配信。HSTSなどのセキュリティヘッダー | T-05 | 13日目 | 予定 | – |
-| C-15 | サーバーのハードニング（鍵認証のみ、ufw、SSHは自分のIPのみ、IMDSv2）。予算アラート、MFA、OIDC（アクセスキーなし） | T-07 | 12〜13日目 | 予定 | – |
+| C-15 | サーバーのハードニング。(1) SG：SSH（22）は自分の IP（/32）だけ、HTTP（80）だけを全体に開く。(2) SSH：鍵（ED25519）だけ。root・パスワード・キーボード対話式のログインを禁止。入れるのは作業用の `kidsops` だけ（`AllowUsers`）。試行は3回まで、X11 転送なし（`/etc/ssh/sshd_config.d/10-kids-play.conf`。cloud-init の 60 番より先に読ませる）。初めての接続では、サーバーの鍵の指紋を EC2 のシステムログと照らし合わせた。(3) `kidsops` の sudo はパスワードが要る（鍵が盗まれても、すぐには root にならない）。`docker` グループにはだれも入れない（T-20）。(4) ufw：外から来る通信は断り、22（LIMIT）と 80 だけ許可。(5) unattended-upgrades でセキュリティの更新を毎日入れる。(6) IMDSv2 を必須（ホップ制限 1、メタデータのタグは無効）。(7) EBS を暗号化。(8) t3 のクレジット仕様を「標準」にし、CPU を使い続けても追加料金にならないようにする。(9) コンテナのログを journald に送り、14日・200MB で消す（T-19）。journald はファイル単位で消すので、ファイルを1日ごとに切り替える（`MaxFileSec=1day`。privacy-reviewer の指摘）。(10) EC2 の `/opt/kids-play` には `compose.yaml` だけを置き、`.env` や上書きファイルを置かない（compose が断りなく読み込み、サーバー保存の環境変数が入る経路になるため。C-23 と同じ決まり）。起動の前に `docker compose config` で `environment` がないことを確かめる。OIDC（アクセスキーなし）は13日目 | T-07、T-19、T-20、T-08 | 12〜13日目 | 一部実施（(1)〜(10) を12日目に実施。OIDC と SSM は13日目） | EC2 の bash で読むだけの点検（`sshd -T`、`ufw status`、`apt-config dump`、トークンなしの IMDS が 401、`ss -tlnp` で外は 22 と 80 だけ、`getent group docker` が空、root のパスワードがロック）。PC から ubuntu で入れないこと（`Permission denied`）、ポート 8000 に届かないこと。AWS の画面で SG、IMDSv2、暗号化、クレジット仕様。`server/compose.yaml`、`server/journald/10-kids-play.conf` |
 | C-16 | Claude Codeが外部から読んだ文章は、指示ではなくデータとして扱う。外部サービスの操作と push は実行前に確認する。MCPは最小権限 | T-11 | 1日目（確認のルール）、6日目（MCP） | 一部実施（MCP は2つ。Playwright：版を 0.0.83 に固定し、開ける先を localhost:8000 に限定。Atlassian Rovo MCP（9日目）：読むだけ。鍵は2つ。(1) Atlassian の管理画面で読み取りを `read_jira` だけ許可し、書き込み・検索・削除・管理は0、新しい道具の自動許可もオフ。サインインの同意で求められた権限は Read だけ。(2) Claude Code の deny で `executeWrite` と `executeDestructive` を止める） | `CLAUDE.md`、`.claude/settings.json`、`.mcp.json`、Atlassian の管理画面（Rovo MCP サーバー → 権限） |
 | C-17 | おえかきの保存は、端末へのダウンロードだけにする（通信しない）。ファイル名には日時だけを入れ、個人が分かる情報を入れない。保存先が端末内であることと、同期やバックアップの設定への注意を、READMEの保護者向けの説明に書く | T-13 | 4日目（実装）、5日目（README） | 実施済み | `frontend/apps/draw/draw.js`（fileName、ほぞんの処理）、`README.md` のプライバシー方針。操作中の外部への通信が0件であることを、画面なしのブラウザで確認 |
 | C-18 | Service Worker が保存するのは、`sw.js` の一覧に書いた公開物だけにする（許可リスト）。一覧にない要求には手を出さず、そのままネットワークへ通す。保存した分は、開くたびに裏で取り直して入れ替える。PC内のサーバーでは登録しない | T-14 | 5日目 | 実施済み | `frontend/sw.js`、`npm run check:pwa`（一覧と実際のファイルのずれを検出）。画面なしのブラウザで、保存が27件であること、サーバーを止めても5画面が開くこと、一覧にない要求では保存が増えないことを確認 |
@@ -183,6 +196,7 @@ CI の部品そのものも T-04 の経路になる。2026年3月に trivy-actio
 | C-21 | Androidアプリの設定を最小にする。(1) バックアップと機種変更の転送を無効にする（`allowBackup="false"` に加えて、Android 12 以上の `dataExtractionRules` と、Android 11 以下の `fullBackupContent` で、全データを対象から外す）。(2) 権限は、マイクの2つ（`RECORD_AUDIO`、`MODIFY_AUDIO_SETTINGS`）だけにする。えほんの録音に使う。Capacitor 8.5.3 は、WebView がマイクを求めたときに両方を求め、どちらかがないと拒否する。許可を求めるのは録音ボタンを押したときだけ。`INTERNET` は外したまま（画面のファイルはアプリの中にあり、録音した声を外に送る手段がない）。(3) ひな形の FileProvider を外す。(4) Web から呼べる入口は `PictureSaver` の1つだけにし、ファイル名の形・大きさ・PNGであることを確かめる。(5) 署名鍵は、リポジトリの外に置く（`.gitignore` で二重に除外）。リリース版は作っていないので、鍵はまだない。(6) WebView のデバッグ接続は、Capacitor の既定（開発中だけ有効）のままにする。リリース版を作るときに、無効であることを確かめる | T-17、T-13 | 6日目 | 一部実施（(1)〜(5) を実施。(6) は、リリース版を作るときに確認。(2) のマイクの権限は、KIDS-32 のマージ後のビルドで、APK の権限と実機の録音を確認する） | `android/app/src/main/AndroidManifest.xml`、`res/xml/data_extraction_rules.xml`、`res/xml/backup_rules_legacy.xml`、`PictureSaverPlugin.java`。APK の中のマニフェストを aapt2 で読み、権限が自分用の1つだけ、`allowBackup=false`、FileProvider がないことを確認。実機で、権限なしでも5画面が開くこと、保存の入口が不正な入力を断ることを確認 |
 | C-22 | PC 内のサーバーは、書き込みの要求（POST・PUT・DELETE）を、Origin が自分自身（`http://` ＋ 確認済みの Host）のときだけ受け付ける。Origin がない要求も断る（ブラウザは書き込みに必ず付けるため）。読むだけの要求には CORS の許可を出さない | T-18 | 10日目 | 実施 | pytest（よそのサイト・`null`・Origin なし・Host と違う Origin の書き込みは 403、自分自身なら保存できる）。画面なしの Edge で、同じサイトからの保存はこれまでどおり動く |
 | C-23 | イメージに渡すファイルを `.dockerignore` の許可リストで決める（まず全部を除き、`frontend/`、`backend/app/`、`backend/pyproject.toml`・`uv.lock`、`server/nginx/` だけを戻す）。書き忘れた新しいファイルは、入らない側に倒れる。許可したフォルダの中に Git の外のファイル（録音、画像、DB、`.env`、鍵、ログ）を誤って置いても入らないよう、念のための除外も書く。コンテナの版では、サーバー保存の環境変数を渡さない（T-08 の対策 C-12 と同じ形）。compose の上書きファイル（`compose.override.yaml`）は、断りなく自動で読まれるので置かない。設定を変えたら `docker compose config` で、合わさった最終の設定を確かめる。KIDS-38 で決めたこと：GHCR へ push するのは CI で検査したイメージだけ（手元の `:local` は push しない）。build-arg は使わない。イメージは `docker save` で受け渡すので、ビルドの記録（provenance）は付かない。レジストリにビルドのキャッシュは置かない。GHCR のパッケージは公開（誰でも取り出せる）。ワークフローが `GITHUB_TOKEN` で作ったパッケージは、リポジトリの公開範囲を引き継ぐので、公開のリポジトリから作ると最初の push で公開になる（非公開には戻せない）。中身は公開リポジトリにあるものと OS・Python の部品だけなので、学習者の判断で公開のままにした。そのため、イメージに入るものの制限（この対策）が、公開してよいかどうかの唯一の歯止めになる | T-19、T-08 | 11日目 | 実施 | `.dockerignore`。イメージの中に `/app/data` がなく、web には公開物の種類（html、css、js、svg、png、webmanifest）だけがあることを `docker compose exec` で確認。`/api/storage/status` が `{"enabled":false}`。保存の API は nginx が 403（大きな中身は 413）で断り、api には届かない（api のログに書き込みの要求が0件） |
+| C-24 | AWS アカウントの守り。(1) 無料プランにする（請求が起こらない。Organizations は使わない。使うと有料プランに上がる）。(2) root は MFA（認証アプリ）を付けて封印し、アクセスキーは作らない。(3) 日常の作業は IAM ユーザー `kids-admin`（AdministratorAccess のグループ `admins`）。MFA を付け、アクセスキーは作らない。(4) 予算アラートを2つ（ゼロ支出、月 $15）。(5) 請求情報への IAM のアクセスを有効にし、IAM ユーザーでクレジットと予算を見られるようにする。最小権限は、人ではなく、13日目に GitHub Actions と EC2 に渡すロールで徹底する | T-21、T-07 | 12日目 | 実施 | AWS の画面：root と kids-admin の MFA が各1件、アクセスキーが0件。kids-admin でのサインインで MFA を求められた。Budgets に2件。無料プランの残り（$100、183日） |
 
 ## 6. ISO/SAE 21434（TARA）との対応
 
@@ -222,3 +236,4 @@ CI の部品そのものも T-04 の経路になる。2026年3月に trivy-actio
 | 2026-10-22 | C-12 に nginx の部分（書き込みを中身を受け取る前に断る）を追加。T-19 に nginx の一時ファイル、アクセスログ、ビルドの記録を追加。C-23 に念のための除外、compose の上書きファイル、KIDS-38 で決めることを追加 | 11日目。KIDS-37。privacy-reviewer の指摘（中1件、低3件）。10日目の「中身を読む前に断る」は、前に nginx を置くと成り立たなくなっていた |
 | 2026-10-22 | データの流れの図に D4（GHCR）と DF-16（push）を追加し、P4 を CI に広げた。C-13 を実施に、C-23 の KIDS-38 の分を実施にした。4章の11日目の見直しに、Trivy で止まることの確認と、CI の部品の乗っ取り（trivy-action の事件）への対策を追記 | 11日目。KIDS-38。GitHub Actions の CI と GHCR を足した |
 | 2026-10-22 | D4（GHCR）と C-23 を「非公開」から「公開」に直した | 11日目。main の CI で最初に push したとき、パッケージがリポジトリの公開範囲を引き継いで公開になった（ログインなしで取り出せることを確認）。「既定は非公開」というドキュメントの記述を根拠に、push の前に公開範囲を確かめていなかった。非公開には戻せないので、中身（公開リポジトリと同じもの）を確かめたうえで、学習者の判断で公開のままにした |
+| 2026-10-23 | データの流れの図の信頼境界4を実体にし、P11（AWS アカウント）、DF-17（イメージの取得）、DF-18（SSH）を追加。DF-05 を「12日目は HTTP」に。脅威 T-21（AWS アカウントの乗っ取り）と対策 C-24 を追加。C-15 を一部実施に、T-19 と T-20 の EC2 の分を決めた。4章に12日目の見直しを追記 | 12日目。KIDS-39・40・41。AWS のアカウントを作り、EC2 にハードニングをしてから、GHCR のイメージで HTTP の配信を始めた。IAM ユーザーは AWS の推奨（フェデレーション）から外れるので、受け入れたリスクとして記録した |
