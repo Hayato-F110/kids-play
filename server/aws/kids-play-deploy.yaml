@@ -1,0 +1,47 @@
+# SSM の命令書（ドキュメント）KidsPlayDeploy（13日目、KIDS-43）。
+# GitHub Actions のデプロイ用ロールは、この命令書を EC2 に送ることしかできない（任意のシェルは送れない）。
+# 受け取る引数は Tag だけで、sha-<コミットID 40桁> の形しか通さない（命令の中に別のコマンドを混ぜさせない）。
+# 登録は AWS の画面（Systems Manager → ドキュメント → ドキュメントの作成 → コマンドまたはセッション、YAML）で行う。
+# 中身を変えたら、AWS の画面でも新しい版を登録して既定の版にし、使わない古い版は消す
+schemaVersion: "2.2"
+description: kids-play を GHCR の指定したタグで起動し直す
+parameters:
+  Tag:
+    type: String
+    description: "GHCR のイメージのタグ（sha-<コミットID 40桁>）"
+    allowedPattern: "^sha-[0-9a-f]{40}$"
+mainSteps:
+  - action: aws:runShellScript
+    name: deploy
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      timeoutSeconds: "300"
+      runCommand:
+        # 1つでも失敗したら、そこで止める
+        - set -eu
+        # Run Command には HOME がなく、docker の設定ファイルの場所が決まらないため
+        - export HOME=/root
+        - cd /opt/kids-play
+        # 読むファイルを compose.yaml だけにする（上書きファイルを断りなく読ませない。C-15 (10)）
+        - dc() { docker compose -f compose.yaml "$@"; }
+        # .env と上書きファイルがあれば止める。サーバー保存の環境変数が入る経路をなくす（C-15 (10)、T-08）
+        - if [ -e .env ] || [ -e compose.override.yaml ] || [ -e compose.override.yml ]; then echo "/opt/kids-play に .env か上書きファイルがある"; exit 1; fi
+        # タグは .env に書かず、環境変数で渡す（compose.yaml は KIDS_TAG を必須にしてある）
+        - export KIDS_TAG="{{ Tag }}"
+        # コンテナに環境変数が渡る設定になっていたら止める（公開環境ではサーバー保存を有効にしない）
+        - if dc config | grep -Eq 'environment:|KIDS_SERVER_STORAGE'; then echo "compose に environment がある"; exit 1; fi
+        # 確認に落ちたときに戻すため、いま動いている版を覚えておく（初めてのデプロイでは空）
+        - prev="$(cat deployed-tag 2>/dev/null || true)"
+        - healthy() { for i in $(seq 1 15); do curl -fsS -o /dev/null http://127.0.0.1:8080/ && return 0; sleep 2; done; return 1; }
+        - dc pull --quiet
+        - dc up -d
+        # 画面が返ってこなければ、前の版に戻してから失敗にする（壊れた版を動かし続けない）
+        - if ! healthy; then echo "起動の確認に失敗。前の版（${prev:-なし}）に戻す"; if [ -n "$prev" ]; then KIDS_TAG="$prev" dc up -d; fi; exit 1; fi
+        # 動いている版を記録する。手で操作するときは：sudo KIDS_TAG="$(cat deployed-tag)" docker compose -f compose.yaml <up -d / ps / logs>
+        - printf '%s\n' "$KIDS_TAG" > deployed-tag
+        # 動いていない古い版のイメージを消す（ディスクは 10GiB しかない。戻すときは GHCR から取り直す）
+        - docker image prune -af
+        - dc ps

@@ -46,7 +46,7 @@ flowchart LR
 
     subgraph TB3["信頼境界3：GitHub"]
         repo[("D3 リポジトリ")]
-        actions["P4 GitHub Actions<br>Pagesへの公開、CI（テスト、Trivy、SBOM）<br>デプロイは ⬜13日目"]
+        actions["P4 GitHub Actions<br>Pagesへの公開、CI（テスト、Trivy、SBOM）<br>EC2 へのデプロイ（13日目〜）"]
         pages["P5 GitHub Pages"]
         ghcr[("D4 GHCR<br>検査を通ったイメージ<br>公開（誰でも取り出せる）")]
         repo --> actions --> pages
@@ -54,7 +54,7 @@ flowchart LR
     end
 
     subgraph TB4["信頼境界4：AWS（12日目〜）"]
-        ec2["P6 EC2（Ubuntu 24.04）<br>web（nginx）+ api のコンテナ、root 以外<br>外に出すのは 80 だけ。保存は無効"]
+        ec2["P6 EC2（Ubuntu 24.04）<br>EC2 の nginx（443。80 は転送だけ）<br>→ web（nginx）+ api のコンテナ、root 以外、127.0.0.1 だけ。保存は無効"]
         iam["P11 AWS アカウント<br>root は封印（MFA）、作業は IAM ユーザー（MFA）"]
     end
 
@@ -65,10 +65,10 @@ flowchart LR
 
     dev -- "DF-03 git push（SSH）" --> repo
     pages -- "DF-04 配信（HTTPS）" --> ui
-    ec2 -- "DF-05 配信<br>12日目は HTTP、⬜13日目に HTTPS" --> ui
+    ec2 -- "DF-05 配信（HTTPS、13日目〜）<br>HSTS とセキュリティヘッダー" --> ui
     ghcr -- "DF-17 イメージの取得（pull）<br>公開イメージ、ログインなし" --> ec2
     dev -- "DF-18 SSH（kidsops の鍵だけ）<br>SG で自分の IP に限る" --> ec2
-    actions -- "DF-06 デプロイ（OIDC + SSM）" --> ec2
+    actions -- "DF-06 デプロイ（OIDC + SSM Run Command）<br>main だけ。送れるのは命令書 KidsPlayDeploy だけ<br>命令の出力は公開の Actions のログに出る" --> ec2
     dev -- "DF-07 USB（adb）<br>インストールとシェルの操作<br>端末の全データ（A6）に届く" --> ui
     dev -- "DF-08 コード、指示、デザイン" --> claude
     repo -- "DF-09 ブランチ・PRの情報" --> jira
@@ -115,6 +115,7 @@ STRIDEの当てはめ方（STRIDE per element）：データフロー（矢印�
 | T-19 | DF-14（イメージのビルド）、P10、GHCR（11日目〜） | I | イメージを作るときに、リポジトリのフォルダにある子どものデータ（`data/`、`backend/data/` の SQLite）や秘密情報（`.env`、鍵）がイメージに入る。イメージは GHCR に置かれ、公開のパッケージなら誰でも取り出して中を読める。`.gitignore` はイメージには効かないので、Git で守っていても漏れる。イメージのほかにも、コンテナから子どもや家族の情報が残る場所がある：nginx の一時ファイル（API が断る前に、送られた中身をためる）、アクセスログ（EC2 では家族の端末の IP と User-Agent が残る）、ビルドの記録（build-arg、provenance、レジストリに置くビルドのキャッシュ） | A1、A2 |
 | T-20 | P10（コンテナ）、開発用PCと EC2 の docker | E、T | コンテナの中の弱点（nginx や Python の部品の脆弱性）を突かれたとき、コンテナが root や広い権限で動いていると、中身の書き換えやホストへの抜け出しにつながる。また、docker を使えるユーザー（`docker` グループ）は、コンテナを通して実質 root と同じことができる | A3、A4、A6 |
 | T-21 | P11（AWS アカウント）、IAM ユーザー | S、E | AWS のサインイン情報（root、または AdministratorAccess を持つ IAM ユーザー）が盗まれ、アカウントを乗っ取られる。EC2 を大量に立てられて高額な請求が発生する、またはサーバーを書き換えられる。AWS の推奨は、人には一時的な認証情報（IAM Identity Center などのフェデレーション）を使うことだが、Identity Center で AWS アカウントの権限を配るには Organizations が要り、無料プランが有料プランに自動で上がるため、長く使う認証情報（IAM ユーザーのパスワード）を選んだ | A3 |
+| T-22 | P4（CI）、P11（AWS）、P6（EC2）、DF-06（デプロイ） | E、T | CI（GitHub Actions）の部品の乗っ取りや、ワークフローの書き換えにより、デプロイ用のロールが悪用される。EC2 で root として任意のコマンドを実行される、または改ざんしたイメージに差し替えられる。13日目に自動デプロイ（OIDC と SSM Run Command）を足したことで、新しくできた経路 | A3、A4、A5 |
 
 STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報の安全（機密性・完全性・可用性など）の分類で、人への直接の害（聴覚、目）を表す項目がないため。ここでは「改ざん・不具合の結果」として T に置いた（6章の気づきを参照）。
 
@@ -145,6 +146,7 @@ STRIDEの6分類のうち、T-10 は当てはまりが悪い。STRIDEは情報�
 | T-19 | 3 | 1 | 3 | 低減（C-23、C-12 の nginx の部分）。EC2 のアクセスログは journald で 14日・200MB まで（C-15。学習者の判断、12日目） |
 | T-20 | 3 | 1 | 3 | 低減（C-13。EC2 の `docker` グループはだれも入れず、`sudo docker` をパスワードで守る（C-15）） |
 | T-21 | 3 | 1 | 3 | 低減（C-24）＋受容（IAM ユーザーという長く使う認証情報。MFA で守る） |
+| T-22 | 3 | 1 | 3 | 低減（C-25） |
 
 起こりやすさを 1 としたものは、今の構成（外部のライブラリも通信もない静的なページ）が前提。構成が変わる日（5日目のPWA、10日目のAPI、11日目の依存パッケージ）に見直す。
 
@@ -165,7 +167,7 @@ CI の部品そのものも T-04 の経路になる。2026年3月に trivy-actio
 
 - T-07 の起こりやすさは 2 のままにする。SSH は鍵だけ・kidsops だけ・自分の IP だけに絞ったが、インターネットに 80 を開いたサーバーは、常に自動の攻撃にさらされる。また、家の IP アドレスが変わると SSH で入れなくなるので、そのときは SG を直す（広げて済ませない）
 - Docker が外に出したポートは ufw の規則を通らない（Docker の公式の注意）。外に出すのは web の 80 だけにし、api は外に出さない。外からの通信の守りは、セキュリティグループ（AWS 側）が主になる。PC からポート 8000 に届かないことを確かめた
-- ubuntu ユーザーには、パスワードなしの sudo が残っている（cloud-init の `90-cloud-init-users`）。ubuntu は SSH で入れない（`AllowUsers kidsops`）ので、残すリスクは小さいとして受け入れる。13日目に SSM を使うと、Agent が `ssm-user` を作り、パスワードなしの sudo を付ける。そのときに見直す
+- ubuntu ユーザーには、パスワードなしの sudo が残っている（cloud-init の `90-cloud-init-users`）。ubuntu は SSH で入れない（`AllowUsers kidsops`）ので、残すリスクは小さいとして受け入れる。13日目に SSM を使うと、Agent が `ssm-user` を作り、パスワードなしの sudo を付ける。そのときに見直す。→ 13日目に見直した：`ssm-user` は Session Manager で最初に入ったときに作られる。自動デプロイの Run Command は root として動き、`ssm-user` を作らない。Session Manager はだれにも許可しないので、作られないまま（`id ssm-user` で、ないことを確かめた。C-25 (5)）
 - 12日目は HTTP だけで配信している（T-05 の途中の改ざん）。HTTPS は13日目。それまで、この URL を家族に渡さない。えほんの録音は、ブラウザが HTTPS でないとマイクを使わせないので、HTTP の間は使えない
 - 新しい脅威として T-21（AWS アカウントの乗っ取り）を足した。これまで C-15 にまとめていた AWS アカウントの守り（MFA、予算）を C-24 に分けた
 
@@ -197,6 +199,7 @@ CI の部品そのものも T-04 の経路になる。2026年3月に trivy-actio
 | C-22 | PC 内のサーバーは、書き込みの要求（POST・PUT・DELETE）を、Origin が自分自身（`http://` ＋ 確認済みの Host）のときだけ受け付ける。Origin がない要求も断る（ブラウザは書き込みに必ず付けるため）。読むだけの要求には CORS の許可を出さない | T-18 | 10日目 | 実施 | pytest（よそのサイト・`null`・Origin なし・Host と違う Origin の書き込みは 403、自分自身なら保存できる）。画面なしの Edge で、同じサイトからの保存はこれまでどおり動く |
 | C-23 | イメージに渡すファイルを `.dockerignore` の許可リストで決める（まず全部を除き、`frontend/`、`backend/app/`、`backend/pyproject.toml`・`uv.lock`、`server/nginx/` だけを戻す）。書き忘れた新しいファイルは、入らない側に倒れる。許可したフォルダの中に Git の外のファイル（録音、画像、DB、`.env`、鍵、ログ）を誤って置いても入らないよう、念のための除外も書く。コンテナの版では、サーバー保存の環境変数を渡さない（T-08 の対策 C-12 と同じ形）。compose の上書きファイル（`compose.override.yaml`）は、断りなく自動で読まれるので置かない。設定を変えたら `docker compose config` で、合わさった最終の設定を確かめる。KIDS-38 で決めたこと：GHCR へ push するのは CI で検査したイメージだけ（手元の `:local` は push しない）。build-arg は使わない。イメージは `docker save` で受け渡すので、ビルドの記録（provenance）は付かない。レジストリにビルドのキャッシュは置かない。GHCR のパッケージは公開（誰でも取り出せる）。ワークフローが `GITHUB_TOKEN` で作ったパッケージは、リポジトリの公開範囲を引き継ぐので、公開のリポジトリから作ると最初の push で公開になる（非公開には戻せない）。中身は公開リポジトリにあるものと OS・Python の部品だけなので、学習者の判断で公開のままにした。そのため、イメージに入るものの制限（この対策）が、公開してよいかどうかの唯一の歯止めになる | T-19、T-08 | 11日目 | 実施 | `.dockerignore`。イメージの中に `/app/data` がなく、web には公開物の種類（html、css、js、svg、png、webmanifest）だけがあることを `docker compose exec` で確認。`/api/storage/status` が `{"enabled":false}`。保存の API は nginx が 403（大きな中身は 413）で断り、api には届かない（api のログに書き込みの要求が0件） |
 | C-24 | AWS アカウントの守り。(1) 無料プランにする（請求が起こらない。Organizations は使わない。使うと有料プランに上がる）。(2) root は MFA（認証アプリ）を付けて封印し、アクセスキーは作らない。(3) 日常の作業は IAM ユーザー `kids-admin`（AdministratorAccess のグループ `admins`）。MFA を付け、アクセスキーは作らない。(4) 予算アラートを2つ（ゼロ支出、月 $15）。(5) 請求情報への IAM のアクセスを有効にし、IAM ユーザーでクレジットと予算を見られるようにする。最小権限は、人ではなく、13日目に GitHub Actions と EC2 に渡すロールで徹底する | T-21、T-07 | 12日目 | 実施 | AWS の画面：root と kids-admin の MFA が各1件、アクセスキーが0件。kids-admin でのサインインで MFA を求められた。Budgets に2件。無料プランの残り（$100、183日） |
+| C-25 | 自動デプロイの最小権限。(1) GitHub Actions は OIDC でその場かぎりの認証情報を受け取り、AWS のアクセスキーを作らない。(2) デプロイ用ロール `kids-play-github-deploy` の信頼ポリシーは、`aud` が `sts.amazonaws.com`、`sub` が `repo:Hayato-F110/kids-play:ref:refs/heads/main` のときだけ（PR やほかのブランチ、フォークからは引き受けられない）。(3) ロールにできるのは、命令書 `KidsPlayDeploy` をこのインスタンスに送ることと、結果を読むことだけ。任意のシェル（`AWS-RunShellScript`）や Session Manager は許さない。(4) 命令書の引数は `Tag` だけで、`^sha-[0-9a-f]{40}$` の形しか通さない（命令の中に別のコマンドを混ぜさせない）。中身は、環境変数のファイルと上書きファイルがないことと、`compose config` に `environment` がないことの確かめ（C-15 (10)）、`-f compose.yaml` での pull と up、起動の確認（失敗したら前の版に戻す）、動いている版の記録（`deployed-tag`）、古いイメージの削除だけ。(5) EC2 のロール `kids-play-ec2-ssm` は `AmazonSSMManagedInstanceCore` だけ。Session Manager を使わないので、パスワードなしで sudo を使える `ssm-user` は作られない（13日目に `id ssm-user` で、ないことを確かめた）。(6) ワークフローの deploy は `id-token: write` と `contents: read` だけ。部品はコミット ID で固定（C-13）。デプロイは同時に1つだけ。失敗したときのログでアカウント ID を伏せる（`mask-aws-account-id`）。(7) 受け入れたこと：結果を読む `ssm:GetCommandInvocation` はリソースを絞れないので `*`（同じアカウントのほかのコマンドの出力も読める）。イメージはダイジェストではなくタグで指す（タグを書き換えられるのは、GHCR に書ける push の作業だけで、その作業は検査済みのイメージしか扱わない）。命令の出力（`docker compose ps` など。子どものデータは含まない）は、SSM と公開の Actions のログに残る。今後 main で動くワークフローに `id-token: write` を足すと、そのワークフローもこのロールを引き受けられる（足すときは environment で絞る） | T-22、T-03、T-07 | 13日目 | 実施（最初の自動デプロイで確認待ち） | `server/aws/`（命令書、信頼ポリシー、許可ポリシー。アカウント ID とインスタンス ID は書かない）。`.github/workflows/ci.yml` の deploy。main へのマージで deploy が緑になり、EC2 で `sha-<コミットID>` が動くこと |
 
 ## 6. ISO/SAE 21434（TARA）との対応
 
@@ -238,3 +241,4 @@ CI の部品そのものも T-04 の経路になる。2026年3月に trivy-actio
 | 2026-10-22 | D4（GHCR）と C-23 を「非公開」から「公開」に直した | 11日目。main の CI で最初に push したとき、パッケージがリポジトリの公開範囲を引き継いで公開になった（ログインなしで取り出せることを確認）。「既定は非公開」というドキュメントの記述を根拠に、push の前に公開範囲を確かめていなかった。非公開には戻せないので、中身（公開リポジトリと同じもの）を確かめたうえで、学習者の判断で公開のままにした |
 | 2026-10-23 | データの流れの図の信頼境界4を実体にし、P11（AWS アカウント）、DF-17（イメージの取得）、DF-18（SSH）を追加。DF-05 を「12日目は HTTP」に。脅威 T-21（AWS アカウントの乗っ取り）と対策 C-24 を追加。C-15 を一部実施に、T-19 と T-20 の EC2 の分を決めた。4章に12日目の見直しを追記 | 12日目。KIDS-39・40・41。AWS のアカウントを作り、EC2 にハードニングをしてから、GHCR のイメージで HTTP の配信を始めた。IAM ユーザーは AWS の推奨（フェデレーション）から外れるので、受け入れたリスクとして記録した |
 | 2026-10-24 | C-14 を実施に（HTTPS、転送、自動更新、セキュリティヘッダー）、C-08 を実施に（ヘッダーの frame-ancestors。違反の報告は入れない）。C-12 にヘッダーの connect-src を、C-15 に (11)（443、コンテナは 127.0.0.1 だけ、前に置いた nginx でも書き込みを断る）を追加 | 13日目。KIDS-42・44。SSL Labs で A+、ZAP のベースラインで FAIL 0（[day13-tls-zap.md](day13-tls-zap.md)）。privacy-reviewer の指摘（中1件、低3件） |
+| 2026-10-24 | 脅威 T-22（自動デプロイの経路の悪用）と対策 C-25 を追加し、実施した。データの流れの図の P4、P6、DF-05、DF-06 を13日目の形（HTTPS、EC2 の nginx、OIDC と SSM）に更新 | 13日目。KIDS-43。OIDC と SSM の自動デプロイを足した。ロールには、専用の命令書を送ることだけを許した（学習者の判断） |

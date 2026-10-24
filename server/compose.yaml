@@ -2,8 +2,9 @@
 #   1. イメージを手元で作らず、CI が検査して GHCR に置いたものを使う（Trivy と SBOM を通ったもの）
 #   2. web は EC2 の nginx（13日目に追加。HTTPS の担当）の後ろに置く。api は外に出さない
 #   3. ログを journald に送り、保存期間を systemd の側で決める（T-19）
-# 起動は EC2 の /opt/kids-play で：
-#   sudo docker compose up -d
+# 起動は、main へのマージで GitHub Actions が SSM の命令書（server/aws/kids-play-deploy.yaml）を送って行う。
+# 手で起動し直すときは、EC2 の /opt/kids-play で：
+#   sudo KIDS_TAG="$(cat deployed-tag)" docker compose up -d
 # サーバー保存の環境変数（KIDS_SERVER_STORAGE）は渡さない。公開環境では絵と声を受け取らない（T-08、C-12）
 name: kids-play
 
@@ -27,8 +28,10 @@ x-hardening: &hardening # イメージの中身を書き換えさせない。書
 services:
   web:
     <<: *hardening
-    # タグは13日目の自動デプロイで sha-<コミット> に差し替えられるよう、環境変数にしておく
-    image: ghcr.io/hayato-f110/kids-play-web:${KIDS_TAG:-main}
+    # タグは自動デプロイ（server/aws/kids-play-deploy.yaml）が sha-<コミットID> で渡す。
+    # 動く版を決めずに起動しないよう、既定の値を置かず必須にする（13日目、KIDS-43）。
+    # 手で起動し直すときは：sudo KIDS_TAG="$(cat deployed-tag)" docker compose up -d
+    image: ghcr.io/hayato-f110/kids-play-web:${KIDS_TAG:?KIDS_TAG を指定する}
     # Docker が外に出したポートは ufw を通らない（公式の注意）。13日目から、外（80、443）で待つのは
     # EC2 の nginx（HTTPS と証明書の担当。server/nginx/kids-play.conf）にし、このコンテナは EC2 の中からだけ届くようにする
     ports:
@@ -38,5 +41,5 @@ services:
 
   api:
     <<: *hardening
-    image: ghcr.io/hayato-f110/kids-play-api:${KIDS_TAG:-main}
+    image: ghcr.io/hayato-f110/kids-play-api:${KIDS_TAG:?KIDS_TAG を指定する}
     # ports は書かない。web からだけ届く
