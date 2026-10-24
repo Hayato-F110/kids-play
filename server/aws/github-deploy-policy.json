@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SendOnlyTheDeployDocumentToThisInstance",
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": [
+        "arn:aws:ssm:ap-northeast-1:<ACCOUNT_ID>:document/KidsPlayDeploy",
+        "arn:aws:ec2:ap-northeast-1:<ACCOUNT_ID>:instance/<INSTANCE_ID>"
+      ]
+    },
+    {
+      "Sid": "ReadTheResult",
+      "Effect": "Allow",
+      "Action": "ssm:GetCommandInvocation",
+      "Resource": "*"
+    }
+  ]
+}
