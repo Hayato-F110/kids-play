@@ -10,7 +10,7 @@
       "Condition": {
         "StringEquals": {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": "repo:Hayato-F110/kids-play:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub": "repo:Hayato-F110@226114657/kids-play@1410155943:ref:refs/heads/main"
         }
       }
     }
