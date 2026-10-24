@@ -1,6 +1,6 @@
 # EC2 の上で動かす compose（12日目）。手元の compose.yaml との違いは3つ：
 #   1. イメージを手元で作らず、CI が検査して GHCR に置いたものを使う（Trivy と SBOM を通ったもの）
-#   2. web を外（80）に出す。api は外に出さない
+#   2. web は EC2 の nginx（13日目に追加。HTTPS の担当）の後ろに置く。api は外に出さない
 #   3. ログを journald に送り、保存期間を systemd の側で決める（T-19）
 # 起動は EC2 の /opt/kids-play で：
 #   sudo docker compose up -d
@@ -29,10 +29,10 @@ services:
     <<: *hardening
     # タグは13日目の自動デプロイで sha-<コミット> に差し替えられるよう、環境変数にしておく
     image: ghcr.io/hayato-f110/kids-play-web:${KIDS_TAG:-main}
-    # Docker が外に出したポートは ufw を通らない（公式の注意）。外に出すのは 80 だけにし、
-    # 守りはセキュリティグループに任せる
+    # Docker が外に出したポートは ufw を通らない（公式の注意）。13日目から、外（80、443）で待つのは
+    # EC2 の nginx（HTTPS と証明書の担当。server/nginx/kids-play.conf）にし、このコンテナは EC2 の中からだけ届くようにする
     ports:
-      - "80:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       - api
 
