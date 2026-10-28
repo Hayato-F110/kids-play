@@ -107,3 +107,8 @@ $RECYCLE.BIN/
 
 # Remotion の書き出し（動画と画像は成果物なのでコミットしない）
 video/title/out/
+
+# スマホやPCの画面の写し（壁紙や通知に個人の情報が写るため、リポジトリに置かない）
+Screenshot_*
+*App Launcher*.png
+スクリーンショット*
