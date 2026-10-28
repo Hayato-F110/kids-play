@@ -1,0 +1,29 @@
+Summary,Issue Type,Description,完了条件,Sprint,Labels
+15日目 MCPサーバーの自作とエージェントのセキュリティ,Task,"Python で読むだけの MCP サーバーを自作し、Claude Code につないで権限を絞る。指示を仕込んだデータを読ませ、プロンプトインジェクションの動きと防ぎ方を確かめる。
+
+【完了条件】
+自作の MCP を Claude Code から呼べる。インジェクションの試験と対策が docs/security/ にあり、threat-model.md に追記されている",自作の MCP を Claude Code から呼べる。インジェクションの試験と対策が docs/security/ にあり、threat-model.md に追記されている,KIDS Sprint 3,day15
+16日目 イメージの署名と来歴（サプライチェーン）,Task,"GHCR のイメージに cosign で署名し、GitHub の artifact attestations で来歴を付ける。pull の前に検証し、別のイメージで検証が失敗することを確かめる。UN-R156・Uptane との対比を書く。
+
+【完了条件】
+main のイメージに署名と来歴があり、検証の成功と失敗を確かめた記録がある",main のイメージに署名と来歴があり、検証の成功と失敗を確かめた記録がある,KIDS Sprint 3,day16
+17日目 C のファジングと静的解析、Rust での書き直し,Task,"自作の小さな C のパーサーを libFuzzer とサニタイザーでファジングし、CodeQL と cppcheck で静的解析する。バグを直し、同じ処理を Rust で書き直して比べる。
+
+【完了条件】
+ファザーが見つけたバグが修正後に再発しない。静的解析の結果が記録され、Rust 版が同じテストに通る",ファザーが見つけたバグが修正後に再発しない。静的解析の結果が記録され、Rust 版が同じテストに通る,KIDS Sprint 3,day17
+18日目 ゼロトラスト（パスキーとmTLS）,Task,"kids-play のローカル構成を「何も信用しない」形にする。パスキーでログイン、短い期限のトークン、要求ごとの認可、nginx と API の間を mTLS にする。localhost だけで動かす。
+
+【完了条件】
+パスキーでログインでき、トークンなし・期限切れ・証明書なしの要求が拒否されることをテストで確認した",パスキーでログインでき、トークンなし・期限切れ・証明書なしの要求が拒否されることをテストで確認した,KIDS Sprint 3,day18
+19日目 PQC（ML-KEMのTLS）と暗号の一覧,Task,"OpenSSL 3.5 以降の nginx を Docker で動かし、ML-KEM のハイブリッド鍵交換で TLS をつなぐ。従来の鍵交換とハンドシェイクの大きさと時間を比べ、kids-play が使う暗号の一覧（CBOM）を作る。
+
+【完了条件】
+ML-KEM で TLS がつながり、計測結果と暗号の一覧が docs/security/ にある",ML-KEM で TLS がつながり、計測結果と暗号の一覧が docs/security/ にある,KIDS Sprint 3,day19
+20日目 Kubernetes（kind）で動かして守る,Task,"kind で kids-play を動かす。マニフェストで構成を書き、Pod Security と NetworkPolicy で守り、Trivy で設定を検査する。
+
+【完了条件】
+kind で kids-play が表示され、許可していない通信が NetworkPolicy で止まる。Trivy の重大な指摘がない",kind で kids-play が表示され、許可していない通信が NetworkPolicy で止まる。Trivy の重大な指摘がない,KIDS Sprint 3,day20
+21日目 最新動向の整理とスプリント3の振り返り,Task,"Claude Code の最近の新機能を3つ試す。R155/R156、21434 の改訂、ISO/PAS 8800、CRA の適用範囲を整理する。playbook を最終版にし、11月以降の学び方を決める。
+
+【完了条件】
+動向の整理が docs/ にあり、playbook が最終版になり、スプリント3が完了している",動向の整理が docs/ にあり、playbook が最終版になり、スプリント3が完了している,KIDS Sprint 3,day21
