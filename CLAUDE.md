@@ -119,7 +119,7 @@ docker compose up -d ; docker compose logs -f      # コンテナ起動とログ
 - WSL2は `.wslconfig` でメモリ上限を設定。Docker Desktopは使うときだけ起動
 - 無料のツール・サービスのみ。有料になりうる操作（AWSなど）は事前に料金条件を説明して確認を取る
 - インストールや大きなダウンロードは、容量の目安を伝えて確認を取る
-- JDK：システムはJDK 26。Androidのビルドは Android Studio 同梱のJBRを使う
+- JDK：システムはJDK 27（Oracle、JAVA_HOME は `C:\Program Files\Java\latest\jdk-27`。2026-10-29 に JDK 25・26 を削除）。Androidのビルドは Android Studio 同梱のJBRを使う（Android Studio はほかのアプリの開発でも使うので残す）
 
 ## 学習の進め方（Claudeへのお願い）
 
