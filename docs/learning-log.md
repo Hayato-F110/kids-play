@@ -1195,4 +1195,34 @@ PR（プルリクエスト）とは：ブランチで行った変更を「main �
 - 15日目（10/29）：KIDS-60。MCP サーバーの自作と、Gemini API の無料枠で RAG と evals。最初に、Gemini API の利用規約（送った内容の扱い）を公式で確かめ、API キーを作る（外部の操作なので確認を取る）
 - 17日目の最初：ZAP のイメージ（約1.15GB）を消す。WSL の Ubuntu を更新する
 - Dependabot の #70 は見送り中（手元で動かして確かめてから判断）
-- 残っている確認：TalkBack の読み上げの文言、子どもに長押しのしきい値、pytest の httpx の警告。Android アプリのアイコンを星にそろえる件（発展）
+- 残っている確認：TalkBack の読み上げの文言、子どもに長押しのしきい値、pytest の httpx の警告
+
+### /end-day のあとに行ったことと、次のセッションへの引き継ぎ（2026-10-29 朝）
+
+`/end-day` のあと、同じセッションで PC とスマホの片付けを行った。続きは次のセッション（15日目）で行う。次の `/start-day` は **15日目**として扱う。
+
+**行ったこと**
+
+- スマホのアプリを1つにすると決めた：**PWA（星のアイコン「あそびらんど」、GitHub Pages）を残し、Android アプリ（青いアイコン「あそびランド」）を消す**。PWA は開くたびに最新になり、アイコンも星。Android アプリのビルドの仕組み（`android/`）はリポジトリに残す。これで「Android アプリのアイコンを星にそろえる件」は不要になった
+- プロジェクトのフォルダーを片付けた（元に戻せるものだけ）：`backend/.venv` を `uv.lock` から作り直し（4.1GB → 68MB。pytest 93件・ruff は通過）、`video/title/node_modules`・`out`、`video/raw` の途中のファイル（`cut/`、試しの書き出し、v1・v2、アカウント ID が写った `04_aws_cicd.mp4` の写し。元の録画は「ビデオ」フォルダーにある）、Android のビルドの出力、マージ済みのローカルのブランチ18本。空きが約5GB増えた。`video/raw` には元の素材（01、03、03a）と完成版の動画を残した
+- `backend/.venv` に、`uv.lock` にない TensorFlow 2.22.0rc0・PyTorch・Polars が **pip で**入っていた（10/24・10/26）。原因は、別のプロジェクト（cardio-research001）の `pip install` を、kids-play の `.venv` が有効なターミナルで実行したこと（PowerShell の履歴と、そのプロジェクトの会話の記録で確認）。悪意はない。PC 全体の Python にも同じ部品が入っている。TensorFlow が試験版なのは、Python 3.14 に対応した正式版がまだないため（最新の正式版 2.21.0 は Python 3.13 まで。PyPI で確認）。脅威 T-04（部品は `uv.lock` でだけ入れる）が、プロジェクトの外の操作で崩れた例
+- JDK を 27 だけにした（JDK 25・Oracle 26・Temurin 26 を削除）。JAVA_HOME は `C:\Program Files\Java\latest\jdk-27`、PATH は `javapath` の1行だけ。CLAUDE.md を直した（#83）。Android Studio は、ほかのアプリの開発で使うので残す
+- Temurin（Eclipse Adoptium が配る、無料で仕事にも使える OpenJDK のビルド）と Oracle JDK の違いを整理した
+
+**学習者が行うこと（次のセッションの前、または最初に）**
+
+1. スマホ：Android アプリ（青いアイコン）の**えほんに残したい作品がないか確かめてから**アンインストールする。そのあと、開発者向けオプションで **USB デバッグをオフ**にし、「**USB デバッグの承認を取り消す**」を押す（Claude は実機で削除しない決まり）
+2. EC2 用の SSH の鍵：`~/.ssh` の `kids-play-ec2` の鍵のファイルと、`known_hosts` の古い Elastic IP の行を消す（GitHub 用の鍵は残す。鍵のフォルダーは Claude からは触らない決まり）
+3. アンインストールの候補：**DaVinci Resolve**（＋Control Panels、Blackmagic RAW、約7GB。動画は完成）、**Python Launcher 3.14.7**（古い版の残り）。消すかは学習者が決める
+4. 任意：ダウンロードのフォルダーの PDF 2つ（リポジトリに入れ済み）を消す。DuckDNS の token を作り直すかアカウントを消す。一時フォルダーの `ruff-old-*.exe`（使用中だったため移したもの）を消す
+
+**次のセッションで決めること**
+
+- VS Code の設定 `python.terminal.activateEnvironment` を、このプロジェクトだけ `false` にするか（ターミナルで `.venv` が自動で有効になり、別のプロジェクトの `pip install` がこちらに入るのを防ぐ）
+- cardio-research001 は、そのプロジェクト専用の仮想環境で部品を入れるのが安全（kids-play の作業の範囲外。必要なら、そちらのセッションで扱う）
+
+**15日目（KIDS-60）の始め方**
+
+- `/start-day` → 最初に「その日の最小の完成形」を決める（1日2テーマのため。14日目の Try）
+- 最初の作業：Gemini API の利用規約（無料枠で送った内容の扱い）を公式で確かめ、API キーを作る（外部の操作なので確認を取る）。キーは gitignore 済みの環境変数のファイルに置き、会話に貼らない
+- 使う前に、脅威分析に「外部の AI への通信」を足す
