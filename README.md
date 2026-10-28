@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/e48b3895-02bf-483d-bb89-e8952b75ec23
 | Web（GitHub Pages） | https://hayato-f110.github.io/kids-play/ |
 | PWA | 上のURLをAndroidのChromeで開き、「ホーム画面に追加」 |
 | Androidアプリ | Android Studioでビルドし、USBデバッグで実機にインストール（Google Playでは配布しない） |
-| AWS版（HTTPS） | （13日目に追加。学習後に停止する場合がある） |
+| AWS版（HTTPS） | 2026-10-24〜10-28 に公開し、学習の区切りで終了した（AWS のリソースは削除済み）。作り方は [docs/architecture.md](docs/architecture.md) と `server/` に残している |
 | ローカル | （2日目に手順を追加） |
 
 ## 使用技術
