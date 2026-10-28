@@ -1,7 +1,8 @@
 # 14日間の計画
 
-- 期間：2026-10-08（1日目）〜 2026-10-25（14日目）。1日4〜6時間
+- 期間：2026-10-08（1日目）〜 2026-10-28（14日目）。1日4〜6時間
 - 日程の変更（2026-10-21）：10日目の開始が4日遅れたため、10〜14日目を4日ずらした（10/21〜10/25）。作業は何も削っていない
+- 日程の変更（2026-10-28）：14日目の開始が3日遅れたため、14日目を 10/28 にずらした。作業は何も削っていない
 - 進捗の記録は [learning-log.md](learning-log.md)、課題は Jira（キー：KIDS、元データは [jira-import.csv](jira-import.csv)）
 - 状態の記号：⬜ 未着手 ／ 🟨 作業中 ／ ✅ 完了 ／ ⚠️ 遅れ
 - 進め方：コードはClaudeが書き、学習者は依頼・動作確認・判断を担当する（2026-10-10に変更。目的は、AIに指示して動くものを作ること）
@@ -34,7 +35,7 @@ gantt
     WSL・Docker・CI       :d11, after d10, 1d
     AWSサーバー構築        :d12, after d11, 1d
     HTTPS・自動デプロイ    :d13, after d12, 1d
-    動画・仕上げ・後片付け  :d14, after d13, 1d
+    動画・仕上げ・後片付け  :d14, 2026-10-28, 1d
 ```
 
 ## スプリント1（1〜7日目）
@@ -59,7 +60,7 @@ gantt
 | 11<br>10/22 | ✅ | WSL2導入とLinuxコマンド復習。Docker Desktop導入、Dockerfileとdocker compose（nginx + フロント + API）。GitHub ActionsでCI（PRでテスト、mainでビルドしGHCRへpush） | WSL2、Linux、Docker、compose、GitHub Actions、GHCR | Claude CodeとGitHub Actionsの連携（費用条件を確認後） | コンテナのセキュリティ：小さいベースイメージ、非root、Trivy、SBOM（CycloneDX）、重大な脆弱性でCIを失敗させる | – | `docker compose up` でローカル起動／PRでCIが緑／GHCRにイメージ／SBOMが成果物にある | 6h |
 | 12<br>10/23 | ✅ | AWSサーバー構築（HTTP）：アカウント安全設定、EC2・キーペア・Elastic IP・セキュリティグループ、SSH接続・更新・作業用ユーザー・ufw、Docker導入とcompose起動、nginxリバースプロキシ、systemdとログ | AWS（IAM、EC2、SG、EIP）、Ubuntu、SSH、ufw、nginx、systemd、journalctl | サーバー作業での安全な使い方：危険なコマンドの確認・禁止ルール、作業ログの残し方 | サーバーのハードニング：鍵認証のみ、パスワード・rootログイン無効、ufw、unattended-upgrades、IMDSv2必須、SG最小化 | – | 予算アラート・MFA設定済み／Elastic IPにHTTPでデモ版が表示／ハードニング項目を確認済み | 6h |
 | 13<br>10/24 | ✅ | HTTPS化と自動デプロイ：DuckDNS、certbot、リダイレクトと自動更新、AWS版で録音有効化（端末内保存のみ）、SSM用IAMロール、OIDCプロバイダーとIAMロール、mainマージで自動デプロイ確認、画面録画（素材④） | DNS、TLS、Let's Encrypt、OIDC、IAMロール、SSM Run Command、CD | プラグイン：コマンド・スキル・サブエージェント・Hooksを1つにまとめる | TLS評価（SSL Labs）、セキュリティヘッダー（HSTS、CSP等）、OIDC信頼ポリシーの限定、IAM最小権限、ZAPベースラインスキャン | – | HTTPSで表示／実機ブラウザで録音できる／小さな変更が自動でデプロイされる／素材④あり | 6h |
-| 14<br>10/25 | ⬜ | DaVinci Resolveの導入と試しの書き出し（7日目から移動）。DaVinci Resolveで1分の紹介動画を編集しREADMEに掲載（内蔵GPUで重すぎたら Clipchamp に切り替える）。Remotion と Claude Code で、動画のタイトル画面をコードから作る（2026-10-21 に追加。AIエージェントに動画を作らせる流れを学ぶため。導入は容量とライセンスの条件を公式で確かめてから）。README整備。スプリント2のレビューとレトロスペクティブ。AWSを残すか判断し、不要なら全リソース削除。手元のWSL（Ubuntu）とDocker Desktopも、発展を続けるか合わせて判断し、不要なら削除（2026-10-22 に追加。更新されないLinuxを残さないため）。活用ガイドの仕上げ。振り返り | 動画編集（カット、テロップ、音量正規化、色補正、書き出し）、AWSの後片付け | 総まとめ：playbookを「仕事で使えるClaude Code活用ガイド（QCD別）」に仕上げる | security-report.md にまとめる。SECURITY.md 作成 | 成果発表スライド（Claude Slides）、1枚資料、動画タイトル画像（Design）。実装からデザインシステムを読み取り、最初との差を確認 | 動画がREADMEから見られる／security-report.md 完成／AWSの料金発生源がゼロ（または残す判断を記録）／スプリント2完了 | 6h |
+| 14<br>10/28 | 🟨 | DaVinci Resolveの導入と試しの書き出し（7日目から移動）。DaVinci Resolveで1分の紹介動画を編集しREADMEに掲載（内蔵GPUで重すぎたら Clipchamp に切り替える）。Remotion と Claude Code で、動画のタイトル画面をコードから作る（2026-10-21 に追加。AIエージェントに動画を作らせる流れを学ぶため。導入は容量とライセンスの条件を公式で確かめてから）。README整備。スプリント2のレビューとレトロスペクティブ。AWSを残すか判断し、不要なら全リソース削除。手元のWSL（Ubuntu）とDocker Desktopも、発展を続けるか合わせて判断し、不要なら削除（2026-10-22 に追加。更新されないLinuxを残さないため）。活用ガイドの仕上げ。振り返り | 動画編集（カット、テロップ、音量正規化、色補正、書き出し）、AWSの後片付け | 総まとめ：playbookを「仕事で使えるClaude Code活用ガイド（QCD別）」に仕上げる | security-report.md にまとめる。SECURITY.md 作成 | 成果発表スライド（Claude Slides）、1枚資料、動画タイトル画像（Design）。実装からデザインシステムを読み取り、最初との差を確認 | 動画がREADMEから見られる／security-report.md 完成／AWSの料金発生源がゼロ（または残す判断を記録）／スプリント2完了 | 6h |
 
 ## 遅れたときに削る候補（学習の目的は削らない）
 
