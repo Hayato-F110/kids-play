@@ -104,3 +104,6 @@ $RECYCLE.BIN/
 *.log
 *.tmp
 *.bak
+
+# Remotion の書き出し（動画と画像は成果物なのでコミットしない）
+video/title/out/

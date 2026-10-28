@@ -1,0 +1,20 @@
+{
+  "name": "kids-play-title",
+  "version": "1.0.0",
+  "private": true,
+  "description": "紹介動画のタイトル画面を Remotion でコードから作る（アプリとは依存を分ける）",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render KidsTitle out/title.mp4",
+    "still": "remotion still KidsTitle out/title.png --frame=75"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.539",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.539"
+  },
+  "overrides": {
+    "zod": "4.6.7"
+  }
+}
