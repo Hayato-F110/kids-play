@@ -31,6 +31,15 @@ https://github.com/user-attachments/assets/e48b3895-02bf-483d-bb89-e8952b75ec23
 - 映っている絵と音は、すべてサンプル（自作SVGと合成音）。人の声は入っていない
 - 編集：DaVinci Resolve（無料版）。タイトルと最後の場面は Remotion でコードから作成（[video/title/](video/title/)）。作り方は [docs/video-storyboard.md](docs/video-storyboard.md)
 
+## 発表資料
+
+| 資料 | 内容 |
+|---|---|
+| [成果発表（PDF、17ページ）](docs/slides/kids-play-presentation.pdf) | 目的と結果、作ったもの、構成図、進め方、プライバシーとセキュリティ、AI との分担、学んだこと、失敗から学んだこと |
+| [1枚資料（PDF）](docs/slides/kids-play-one-pager.pdf) | 全体を1枚にまとめたもの |
+
+どちらも Claude Design（Claude Code の会話の中）で、アプリのデザインシステムを読み込んで作った。
+
 ## 遊び方
 
 | 環境 | 方法 |
