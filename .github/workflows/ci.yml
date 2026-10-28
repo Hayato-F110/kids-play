@@ -162,4 +162,3 @@ jobs:
             done
           done
           docker logout ghcr.io
-
