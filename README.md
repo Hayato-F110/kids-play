@@ -20,7 +20,12 @@
 
 ## 紹介動画
 
-（14日目に追加）
+1分で、ミニアプリ、Androidアプリ、えほん（サンプルデータ）、マージから AWS への自動デプロイまでを紹介する。
+
+VIDEO_URL_HERE
+
+- 映っている絵と音は、すべてサンプル（自作SVGと合成音）。人の声は入っていない
+- 編集：DaVinci Resolve（無料版）。タイトルと最後の場面は Remotion でコードから作成（[video/title/](video/title/)）。作り方は [docs/video-storyboard.md](docs/video-storyboard.md)
 
 ## 遊び方
 
