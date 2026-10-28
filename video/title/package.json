@@ -6,7 +6,8 @@
   "scripts": {
     "studio": "remotion studio",
     "render": "remotion render KidsTitle out/title.mp4",
-    "still": "remotion still KidsTitle out/title.png --frame=75"
+    "still": "remotion still KidsTitle out/title.png --frame=75",
+    "render:outro": "remotion render KidsOutro out/outro.mp4"
   },
   "dependencies": {
     "@remotion/cli": "4.0.539",
