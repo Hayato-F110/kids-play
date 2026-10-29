@@ -20,6 +20,10 @@
     "atlassian": {
       "type": "http",
       "url": "https://mcp.atlassian.com/v2/mcp"
+    },
+    "kids-docs": {
+      "command": "uv",
+      "args": ["run", "--directory", "tools/ai", "--frozen", "python", "docs_mcp.py"]
     }
   }
 }
