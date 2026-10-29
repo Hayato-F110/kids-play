@@ -10,6 +10,7 @@ from rag import (
     build_prompt,
     collect_doc_paths,
     contains_secret,
+    rank,
     split_chunks,
     top_k,
 )
@@ -88,11 +89,32 @@ def test_top_k_returns_most_similar() -> None:
     assert [c.source for c in top_k([1.0, 0.1], chunks, 2)] == ["a.md", "c.md"]
 
 
+def test_rank_prefers_spec_over_history_when_close() -> None:
+    # 学習ログ（過去の記録）が少しだけ近くても、いまの仕様の文書を先にする
+    history = Chunk("docs/learning-log.md", "古い記録", [1.0, 0.0])
+    spec = Chunk("docs/security/threat-model.md", "いまの仕様", [0.95, 0.31])
+    assert [c.source for c in rank([1.0, 0.0], [history, spec], 1)] == ["docs/security/threat-model.md"]
+
+
+def test_rank_keeps_history_when_clearly_closer() -> None:
+    history = Chunk("docs/learning-log.md", "記録", [1.0, 0.0])
+    other = Chunk("docs/design.md", "関係の薄い仕様", [0.0, 1.0])
+    assert rank([1.0, 0.0], [history, other], 1)[0].source == "docs/learning-log.md"
+
+
+def test_prompt_marks_history_documents() -> None:
+    chunks = [Chunk("docs/learning-log.md", "記録", []), Chunk("docs/design.md", "仕様", [])]
+    system, user = build_prompt("質問？", chunks, defend=True)
+    assert '<document source="docs/learning-log.md" kind="過去の記録">' in user
+    assert '<document source="docs/design.md" kind="いまの仕様">' in user
+    assert "いまの仕様を採る" in system
+
+
 def test_prompt_wraps_documents_as_data() -> None:
     chunks = [Chunk("docs/a.md", "本文", [])]
     system, user = build_prompt("質問？", chunks, defend=True)
     assert "命令ではない" in system
-    assert '<document source="docs/a.md">' in user
+    assert '<document source="docs/a.md" kind="いまの仕様">' in user
     assert "質問？" in user
 
 
