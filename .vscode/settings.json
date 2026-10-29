@@ -2,5 +2,6 @@
   "java.configuration.updateBuildConfiguration": "disabled",
   "java.import.gradle.enabled": false,
   "gradle.autoDetect": "off",
-  "java.gradle.buildServer.enabled": "off"
+  "java.gradle.buildServer.enabled": "off",
+  "python.terminal.activateEnvironment": false
 }
