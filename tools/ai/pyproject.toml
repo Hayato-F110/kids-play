@@ -1,0 +1,36 @@
+[project]
+name = "kids-play-ai-tools"
+version = "0.1.0"
+description = "大人の開発者が PC で使う AI の道具（docs を読むだけの MCP、RAG と evals）。子ども向けの画面には組み込まない"
+requires-python = ">=3.14"
+dependencies = [
+    "google-genai>=2.32.0",
+    "mcp==2.3.0",
+]
+
+[tool.uv]
+# パッケージとして配らない（PC で動かすだけ）
+package = false
+# 公開から7日以上たった版だけを使う（T-04、C-09）。日付を進めるときは PR で見直す
+exclude-newer = "2026-10-22T00:00:00Z"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+# backend と同じ。S：セキュリティ（bandit 相当）
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
