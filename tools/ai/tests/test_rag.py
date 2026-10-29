@@ -11,6 +11,7 @@ from rag import (
     collect_doc_paths,
     contains_secret,
     rank,
+    read_published,
     split_chunks,
     top_k,
 )
@@ -34,13 +35,22 @@ def repo(tmp_path: Path) -> Path:
     (tmp_path / "CLAUDE.md").write_text("# 指示", encoding="utf-8")
     git(tmp_path, "add", "docs/plan.md", "docs/security/tm.md", "docs/notes.txt", "README.md", "CLAUDE.md")
     git(tmp_path, "add", "-f", "data/child.md")
+    git(tmp_path, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "init")
+    # コミットのあとの変更：作業中の書きかけと、add しただけの新しい文書
+    (tmp_path / "docs" / "plan.md").write_text("# 計画\n書きかけの個人のメモ", encoding="utf-8")
+    (tmp_path / "docs" / "staged.md").write_text("# add しただけ", encoding="utf-8")
+    git(tmp_path, "add", "docs/staged.md")
     return tmp_path
 
 
-def test_collects_only_tracked_md_in_docs_and_readme(repo: Path) -> None:
-    paths = [p.relative_to(repo).as_posix() for p in collect_doc_paths(repo)]
-    # Git の外の下書き、md 以外、docs/ の外（data/、CLAUDE.md）は送らない
-    assert paths == ["README.md", "docs/plan.md", "docs/security/tm.md"]
+def test_collects_only_committed_md_in_docs_and_readme(repo: Path) -> None:
+    # Git の外の下書き、add しただけの文書、md 以外、docs/ の外（data/、CLAUDE.md）は送らない
+    assert collect_doc_paths(repo, "HEAD") == ["README.md", "docs/plan.md", "docs/security/tm.md"]
+
+
+def test_reads_committed_content_not_working_copy(repo: Path) -> None:
+    # 中身もコミットした版から読む。作業中の書きかけは送らない
+    assert read_published(repo, "HEAD", "docs/plan.md") == "# 計画"
 
 
 @pytest.mark.parametrize(

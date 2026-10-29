@@ -76,6 +76,19 @@ def test_rejects_symlink_to_outside(docs: Path) -> None:
         resolve_doc_path(docs, "link.md")
 
 
+def test_rejects_junction_to_outside(docs: Path) -> None:
+    # ジャンクション（Windows のフォルダーのリンク）は管理者の権限なしで作れる。
+    # リンクを解いてから範囲を確かめる
+    _winapi = pytest.importorskip("_winapi")
+    outside = docs.parent / "outside"
+    outside.mkdir()
+    (outside / "secret.md").write_text("SECRET", encoding="utf-8")
+    _winapi.CreateJunction(str(outside), str(docs / "j"))
+    with pytest.raises(DocAccessError):
+        resolve_doc_path(docs, "j/secret.md")
+    assert "j/secret.md" not in list_doc_paths(docs)
+
+
 def test_rejects_too_large_file(docs: Path) -> None:
     (docs / "big.md").write_text("a" * 300_000, encoding="utf-8")
     with pytest.raises(DocAccessError):

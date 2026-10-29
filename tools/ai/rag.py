@@ -1,6 +1,8 @@
 """kids-play の公開文書に答える小さな RAG（大人の開発者が PC で使う）。
 
-送る範囲（C-27、T-24）：Git で管理されている docs/ の .md と README.md だけ。秘密の値らしい断片は送らない。
+送る範囲（C-27、T-24）：公開済みの版（origin/main）の docs/ の .md と README.md だけ。
+秘密の値らしい断片は送らない。
+evals のときだけ、tools/ai/evals/injected/ の試験用の文書（作り話）も送る。
 インジェクション対策（C-29、T-25）：文書を区切りの印で囲み、データとして扱わせる。答えは表示するだけ。道具を持たせない。
 
 使い方：uv run python rag.py "質問"（--no-defense で対策なしの形を比べる）
@@ -25,6 +27,8 @@ from gemini_client import load_api_key
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CACHE_FILE = Path(__file__).resolve().parent / ".cache" / "index.json"
+# 送ってよいのは公開済みの内容だけ。origin/main は、最後に fetch した時点の GitHub の main
+PUBLISHED_REF = "origin/main"
 GEN_MODEL = "gemini-3.5-flash-lite"
 EMBED_MODEL = "gemini-embedding-2"
 EMBED_DIM = 768
@@ -54,16 +58,30 @@ def contains_secret(text: str) -> bool:
     return any(p.search(text) for p in SECRET_PATTERNS)
 
 
-def collect_doc_paths(repo: Path = REPO_ROOT) -> list[Path]:
-    # Git の外のファイル（下書き、data/、.env）を拾わないよう、許可リストを git ls-files で作る
-    out = subprocess.run(  # noqa: S603
-        ["git", "ls-files", "-z", "--", "docs", "README.md"],  # noqa: S607
-        cwd=repo,
-        check=True,
-        capture_output=True,
-    ).stdout.decode("utf-8")
-    names = [n for n in out.split("\0") if n.endswith(".md") and (n == "README.md" or n.startswith("docs/"))]
-    return [repo / n for n in sorted(names)]
+def _git(repo: Path, *args: str) -> bytes:
+    return subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True).stdout  # noqa: S603, S607
+
+
+def collect_doc_paths(repo: Path = REPO_ROOT, ref: str = PUBLISHED_REF) -> list[str]:
+    # 一覧も中身も、Git の確定した版（既定は GitHub に公開済みの origin/main）から取る。
+    # 作業中の書きかけ、add しただけの文書、Git の外の下書き・data/・.env は入らない
+    out = _git(repo, "ls-tree", "-r", "-z", ref, "--", "docs", "README.md").decode("utf-8")
+    names = []
+    for entry in filter(None, out.split("\0")):
+        meta, _, name = entry.partition("\t")
+        mode = meta.split(" ")[0]
+        # ふつうのファイルだけ（120000 のシンボリックリンクなどは除く）
+        if (
+            mode in ("100644", "100755")
+            and name.endswith(".md")
+            and (name == "README.md" or name.startswith("docs/"))
+        ):
+            names.append(name)
+    return sorted(names)
+
+
+def read_published(repo: Path, ref: str, path: str) -> str:
+    return _git(repo, "show", f"{ref}:{path}").decode("utf-8")
 
 
 def split_chunks(source: str, text: str, max_chars: int = CHUNK_CHARS) -> list[Chunk]:
@@ -210,11 +228,10 @@ def _text_key(text: str) -> str:
     return hashlib.sha256(f"{EMBED_MODEL}:{EMBED_DIM}:{text}".encode()).hexdigest()
 
 
-def load_chunks(paths: list[Path], repo: Path = REPO_ROOT) -> tuple[list[Chunk], int]:
+def chunks_from(docs: list[tuple[str, str]]) -> tuple[list[Chunk], int]:
     chunks, skipped = [], 0
-    for p in paths:
-        source = p.relative_to(repo).as_posix() if p.is_relative_to(repo) else p.name
-        for c in split_chunks(source, p.read_text(encoding="utf-8")):
+    for source, text in docs:
+        for c in split_chunks(source, text):
             if contains_secret(c.text):
                 skipped += 1  # 中身は表示しない。数だけ数える
                 continue
@@ -222,8 +239,14 @@ def load_chunks(paths: list[Path], repo: Path = REPO_ROOT) -> tuple[list[Chunk],
     return chunks, skipped
 
 
+def load_chunks(paths: list[Path], repo: Path = REPO_ROOT) -> tuple[list[Chunk], int]:
+    # evals の試験用の文書（作り話）を読む。公開文書は build_index が Git から読む
+    return chunks_from([(p.relative_to(repo).as_posix(), p.read_text(encoding="utf-8")) for p in paths])
+
+
 def build_index(client: genai.Client) -> list[Chunk]:
-    chunks, skipped = load_chunks(collect_doc_paths())
+    docs = [(p, read_published(REPO_ROOT, PUBLISHED_REF, p)) for p in collect_doc_paths()]
+    chunks, skipped = chunks_from(docs)
     if skipped:
         print(f"秘密の値らしい断片を {skipped} 件、送らずに除きました", file=sys.stderr)
     # 断片の本文ごとに埋め込みを保存する。文書を直したら変わった断片だけを送り直せばよく、
