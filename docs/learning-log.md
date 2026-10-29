@@ -1309,7 +1309,7 @@ PR（プルリクエスト）とは：ブランチで行った変更を「main �
 - 16日目（10/30）：KIDS-61。GHCR のイメージに cosign（キーレス署名）で署名し、artifact attestations で来歴を付ける。生成 AI で画像・動画・音声を作り、C2PA を確かめる。最初に、cosign と GitHub の attestations の最新の仕様を公式で確かめる
 - 最初に：ブランチ保護で CI を必須にするかを決める（#87 のマージのあと、main の CI が4つとも緑で GHCR に置かれたことは、15日目のうちに確かめた。0ea5b8a）
 - 見積もりを「Claude の作業／待ち時間／人の確認」に分けて示す
-- 学習者の作業：SSH の鍵のフォルダーから EC2 の鍵と、known_hosts の古い行を消す（手順は15日目の会話で案内済み）
+- ~~学習者の作業：SSH の鍵のフォルダーから EC2 の鍵と、known_hosts の古い行を消す~~ → 15日目の夜に完了。EC2 の鍵はなく、known_hosts は github.com の行だけ、控えの known_hosts.old も消した。残りは GitHub 用の鍵と known_hosts の3つ
 - 17日目の最初：ZAP のイメージ（約1.15GB）を消す。WSL の Ubuntu を更新する（KEV の Linux カーネルの件も含む）
 - 上流の nginx-unprivileged が作り直されたら、#87 の3行を消してダイジェストを更新する
 - 残っている確認：Dependabot の #70、TalkBack の読み上げの文言、長押しのしきい値、pytest の httpx の警告
