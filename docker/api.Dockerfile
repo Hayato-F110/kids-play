@@ -2,10 +2,10 @@
 # ベースイメージは版とダイジェストの両方で固定する。更新は Dependabot が PR で知らせる（T-04、C-09）
 
 # uv（部品を入れる道具）。FROM の行に書くと、Dependabot が新しい版を知らせる
-FROM ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS uv
 
 # ---- 1段目：部品を入れる（uv はここだけで使い、動かす側のイメージには入れない）----
-FROM python:3.14.9-alpine3.24@sha256:d55673c233e28839c1c0c69766428cb6d50174a2ecfdcf915b6f58a0b0991562 AS build
+FROM python:3.15.0-alpine3.24@sha256:2699b90f4d562a22e2dd076c82f964032f64814204bff36d271a54ba4cc2c7e2 AS build
 COPY --from=uv /uv /bin/uv
 
 # 起動を速くするため .pyc を先に作る。Python 本体はベースイメージのものを使い、別にダウンロードしない
@@ -17,7 +17,7 @@ RUN uv sync --locked --no-dev --no-install-project
 COPY backend/app ./app
 
 # ---- 2段目：動かす ----
-FROM python:3.14.9-alpine3.24@sha256:d55673c233e28839c1c0c69766428cb6d50174a2ecfdcf915b6f58a0b0991562
+FROM python:3.15.0-alpine3.24@sha256:2699b90f4d562a22e2dd076c82f964032f64814204bff36d271a54ba4cc2c7e2
 
 # 動かすときに使わない pip は消す（使わない部品を残さない）。root 以外の専用ユーザーを作る
 RUN python -m pip uninstall -y pip \
