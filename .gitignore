@@ -44,6 +44,8 @@ __pycache__/
 venv/
 .pytest_cache/
 .ruff_cache/
+# RAG の埋め込みのキャッシュ（作り直せる。公開文書から作るが、大きいので入れない）
+tools/ai/.cache/
 .coverage
 htmlcov/
 *.egg-info/

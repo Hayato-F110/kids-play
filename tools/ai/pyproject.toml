@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "大人の開発者が PC で使う AI の道具（docs を読むだけの MCP、RAG と evals）。子ども向けの画面には組み込まない"
 requires-python = ">=3.14"
 dependencies = [
+    "google-genai>=2.32.0",
     "mcp==2.3.0",
 ]
 
