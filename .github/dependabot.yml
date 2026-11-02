@@ -42,6 +42,13 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+    # python は 3.14 系、nginx は安定版の 1.30 系にとどめ、パッチ版だけを受け取る（17日目に追加）。
+    # 3.15 や開発版の 1.31 への版上げは、Dependabot に任せず、自分で判断して行う
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-minor"]
+      - dependency-name: "nginxinc/nginx-unprivileged"
+        update-types: ["version-update:semver-minor"]
     groups:
       docker:
         patterns:
