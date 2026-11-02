@@ -216,3 +216,10 @@
 今週試す3つ：① `blockWritesOutsideWorkingDirectories`（Q・セキュリティ）② `CLAUDE_CODE_SUBAGENT_EFFORT`（C）③ VS Code の待機中の自動圧縮（C。8日目に「効くかは書かれていない」とした件の答え）
 
 - ①の注意：変更履歴には、Claude のメモリなど作業フォルダーの外の置き場を除外するかは書かれていない。試すときは、メモリへの書き込みが止まらないかも確かめる。Bash での書き込みは対象に書かれていない
+
+### 2026-11-02（17日目）：手元は 2.1.316（公開されている最新と同じ）
+
+出典：公式の変更履歴 https://code.claude.com/docs/en/changelog （16日目から新しい版なし。最新は 2.1.316）
+
+- 新しい機能はないので、16日目の3つを予定どおり試す：① `blockWritesOutsideWorkingDirectories`（今日）② `CLAUDE_CODE_SUBAGENT_EFFORT`（18日目）③ VS Code の待機中の自動圧縮
+- 2.1.316 の中で、16日目に書かなかったもの：SSL の証明書のエラーが、考えられる原因（中間証明書の抜けなど）と直し方を示すようになった。18日目の mTLS、19日目の TLS でエラーが出たときに読む
