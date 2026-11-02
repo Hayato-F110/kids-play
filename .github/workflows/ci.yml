@@ -260,7 +260,7 @@ jobs:
             echo "$output" | grep -E "$3"
           }
           expect_rejected "$IMAGE@$DIGEST" "$WORKFLOW/other.yml@refs/heads/main" "no matching CertificateIdentity found"
-          expect_rejected "$IMAGE:$UNSIGNED_TAG" "$WORKFLOW/ci.yml@refs/heads/main" "no signatures found|no matching attestations"
+          expect_rejected "$IMAGE:$UNSIGNED_TAG" "$WORKFLOW/ci.yml@refs/heads/main" "no signatures found"
 
       - if: ${{ always() }}
         run: docker logout ghcr.io
