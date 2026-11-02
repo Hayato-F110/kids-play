@@ -41,7 +41,7 @@ tlv_result_t tlv_get_string(const tlv_record_t *records, size_t count, uint8_t t
             continue;
         }
         /* 最後の NUL の分も要るので、値の長さと同じ大きさでは入らない（ファザーが見つけた。regress/ に入力あり） */
-        if (records[i].length >= dst_size) {
+        if (records[i].length > dst_size) {
             return TLV_ERR_TOO_LONG;
         }
         memcpy(dst, records[i].value, records[i].length);
