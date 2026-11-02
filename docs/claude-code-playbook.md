@@ -200,3 +200,16 @@
 | 2.1.301 | 10/15 | OpenTelemetry の `tool_decision` に `classifier_verdict`・`permission_mode`・`classifier_category` を追加（止めたのが権限のルールか、auto モードの判定かを区別できる） | 20日目の OpenTelemetry。AI の操作の監査ログになる |
 
 今週試す3つ：① 自作の MCP を `/mcp` と `/permissions` の「最近拒否したもの」で確かめる（Q・15日目）② `/auto-mode-setup`（C・Q）③ `tool_decision` の監査ログ（Q・セキュリティ。20日目の OpenTelemetry で）
+
+### 2026-11-02（16日目）：手元は 2.1.316（公開されている最新と同じ）
+
+出典：公式の変更履歴 https://code.claude.com/docs/en/changelog （2.1.313〜2.1.316 を確認。2.1.313 と 2.1.315 は取得した変更履歴に出ていない）
+
+| バージョン | 日付 | 主な変更 | このプロジェクト・仕事との関係 |
+|---|---|---|---|
+| 2.1.316 | 10/31 | `CLAUDE_CODE_SUBAGENT_EFFORT`：ほかに指定がないサブエージェントの effort を決める。PowerShell の Hook が、型キャストや `param` などで始まるコマンドで終了コード2でも止めない不具合を修正。Windows で Grep と Glob が時間切れのあと戻らない不具合を修正。Opus 4.8 の fast mode を非推奨にした（11/30 に削除） | レビュー用のサブエージェントの費用（C）。会社で PowerShell の Hook を使うなら、2.1.316 以降にする |
+| 2.1.314 | 10/30 | `permissions.blockWritesOutsideWorkingDirectories`：どの権限モードでも、Write・Edit・NotebookEdit で作業フォルダーの外へ書かない。VS Code でも待機中の自動圧縮が動く。Bash に合わせた Hook が、Monitor の道具のシェルのコマンドで動かない不具合を修正。`claude -p` が起動に失敗しても終了コード0で何も出さない不具合を修正（今は内容を出して1で終わる） | 6日目の事故と同じ「範囲の外への操作」を、書き込みについて仕組みで止める（Q）。`claude -p` を CI で使うときの失敗の見落としが減る |
+
+今週試す3つ：① `blockWritesOutsideWorkingDirectories`（Q・セキュリティ）② `CLAUDE_CODE_SUBAGENT_EFFORT`（C）③ VS Code の待機中の自動圧縮（C。8日目に「効くかは書かれていない」とした件の答え）
+
+- ①の注意：変更履歴には、Claude のメモリなど作業フォルダーの外の置き場を除外するかは書かれていない。試すときは、メモリへの書き込みが止まらないかも確かめる。Bash での書き込みは対象に書かれていない
