@@ -22,7 +22,7 @@ kids-play の本体ではなく、車載の受信処理（診断メッセージ�
 | ふつうのテスト | clang 18 ＋ ASan / UBSan | 通った（バグを見つけられない） |
 | ファジング | libFuzzer ＋ ASan / UBSan | **起動直後に発見**。`stack-buffer-overflow`、`WRITE of size 1`、[tlv.c](../../practice/tlv/c/tlv.c) の NUL を書く行 |
 | 静的解析 | cppcheck 2.13（warning、style、performance、portability） | 直す前も直したあとも **指摘0件**（見つけられない） |
-| 静的解析 | CodeQL（GitHub） | PR で確かめる（下の「残っていること」） |
+| 静的解析 | CodeQL 2.27.3（GitHub の既定の設定、build-mode none） | 直す前も直したあとも **指摘0件**（見つけられない）。C のファイルは 4/4 を解析した |
 | Rust 版 | rustc 1.99.1 | 同じ5つの入力と期待、回帰の入力が通る。同じ誤りを書くと、黙って壊さず panic で止まる |
 
 ### ファザーが見つけた入力
@@ -43,10 +43,13 @@ kids-play の本体ではなく、車載の受信処理（診断メッセージ�
 - 回帰テストが効くことの確認：直す前のコードに戻した写しでは、この入力で同じ `stack-buffer-overflow` が出た。直したあとは出ない
 - 直したあとのファジング：120秒、約1億回（101,787,926回）でクラッシュ0件
 
-### cppcheck が見つけられなかった理由
+### cppcheck と CodeQL が見つけられなかった理由
 
 長さの値は、実行時の入力（ファザーの作ったバイト列）から来る。静的解析は、コードを読むだけで「どんな入力でも安全か」を判断するので、入力の値と配列の大きさの関係を追い切れないと、警告を出さない。誤検知を減らすため、確かでないものは出さない作りになっている。
 実行して確かめるファジングと、読むだけの静的解析は、得意なことが違うので、両方を使う。
+
+CodeQL の確かめ方：C/C++ と Rust を既定の設定の言語に足し（main に C と Rust のコードが入ってから選べるようになる）、直す前の1行（`length > dst_size`）に戻した試験用の PR（#101、マージせずに閉じた）と、直したあとの main を解析した。どちらも0件だった。
+既定の設定は、誤検知の少ないクエリだけを使う。今回の誤りは「書き込み先の大きさ」が関数の引数として外から渡されるので、配列の大きさとの関係が関数の中だけではわからず、確かな指摘にならなかったと考えられる（推測。どのクエリが何を調べたかまでは確かめていない）。
 
 ### C と Rust の比較
 
@@ -76,6 +79,4 @@ cd practice/tlv/c
 cd ../rust && cargo test   # Rust 版（rustup の minimal で入れた）
 ```
 
-## 残っていること
-
-- CodeQL：既定の設定の言語は actions、java-kotlin、javascript-typescript、python で、C/C++ と Rust は入っていない。PR で C/C++ の解析が動くかを確かめる
+CodeQL は、GitHub の Settings → Advanced Security → CodeQL analysis の Edit で、言語に C/C++ と Rust を足すと、PR と main への push のたびに動く。
