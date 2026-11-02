@@ -222,4 +222,16 @@
 出典：公式の変更履歴 https://code.claude.com/docs/en/changelog （16日目から新しい版なし。最新は 2.1.316）
 
 - 新しい機能はないので、16日目の3つを予定どおり試す：① `blockWritesOutsideWorkingDirectories`（今日）② `CLAUDE_CODE_SUBAGENT_EFFORT`（18日目）③ VS Code の待機中の自動圧縮
+- ①を試した結果（`.claude/settings.local.json` に `"blockWritesOutsideWorkingDirectories": true`。保存した時点で、会話中にも効いた）：
+
+  | 書き込み先 | 道具 | 結果 |
+  |---|---|---|
+  | プロジェクトの中 | Write | 書けた |
+  | プロジェクトの外（`Documents\`） | Write | **断られた**（`/add-dir` で足すか、設定を外すよう促す文） |
+  | セッションの一時フォルダー（scratchpad） | Write | 書けた（例外の扱い） |
+  | Claude のメモリのフォルダー | Write | 書けた（メモリの保存は止まらない） |
+  | プロジェクトの外 | PowerShell の `Set-Content` | **書けた**（シェルは対象外） |
+
+  - 分かったこと：止まるのはファイルの道具だけ。シェルからの書き込みは、`ask` のルールや Hook で別に守る必要がある。公式の設定一覧（settings reference）には、11/2 の時点でまだ載っていない（変更履歴にだけある）
+  - 会社で使うなら：設定を有効にしたうえで、シェルの書き込みを止める Hook と組み合わせる。設定だけで「範囲の外には書かない」と言い切らない
 - 2.1.316 の中で、16日目に書かなかったもの：SSL の証明書のエラーが、考えられる原因（中間証明書の抜けなど）と直し方を示すようになった。18日目の mTLS、19日目の TLS でエラーが出たときに読む
