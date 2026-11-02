@@ -1,0 +1,8 @@
+[package]
+name = "tlv"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# 外部の部品は使わない（標準ライブラリだけで書き、C 版と比べやすくする）
+[dependencies]
