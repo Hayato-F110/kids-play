@@ -4,6 +4,7 @@
 - 日程の変更（2026-10-21）：10日目の開始が4日遅れたため、10〜14日目を4日ずらした（10/21〜10/25）。作業は何も削っていない
 - 日程の変更（2026-10-28）：14日目の開始が3日遅れたため、14日目を 10/28 にずらした。作業は何も削っていない
 - 延長（2026-10-28 に決定）：15〜21日目（10/29〜11/4）をスプリント3とし、最新技術・セキュリティ・Claude Code を引き続き学ぶ。内容は下の「スプリント3」の表を参照
+- 日程の変更（2026-11-02）：16日目の開始が3日遅れたため、16〜21日目を3日ずらした（11/2〜11/7）。作業は何も削っていない
 - 進捗の記録は [learning-log.md](learning-log.md)、課題は Jira（キー：KIDS、元データは [jira-import.csv](jira-import.csv)）
 - 状態の記号：⬜ 未着手 ／ 🟨 作業中 ／ ✅ 完了 ／ ⚠️ 遅れ
 - 進め方：コードはClaudeが書き、学習者は依頼・動作確認・判断を担当する（2026-10-10に変更。目的は、AIに指示して動くものを作ること）
@@ -40,7 +41,7 @@ gantt
     動画・仕上げ・後片付け  :d14, 2026-10-28, 1d
     section スプリント3
     MCP・RAG             :d15, after d14, 1d
-    署名・生成AI          :d16, after d15, 1d
+    署名・生成AI          :d16, 2026-11-02, 1d
     ファジング・Rust       :d17, after d16, 1d
     ゼロトラスト・TS      :d18, after d17, 1d
     PQC・データ分析       :d19, after d18, 1d
@@ -86,12 +87,12 @@ gantt
 | 日 | 状態 | やること | 学ぶ技術 | 今日のClaude Code機能 | 今日のセキュリティ作業 | Claude Design作業 | 完了条件 | 目安 |
 |---|---|---|---|---|---|---|---|---|
 | 15<br>10/29 | ✅ | (1) Python で読むだけの MCP サーバーを自作し、Claude Code につないで権限を絞る。(2) Gemini API で、kids-play の公開文書を読ませて答える小さな RAG を作り、答えの質を evals（決めた質問と期待する答えで自動採点）で測る。指示を仕込んだ文書で、プロンプトインジェクションの動きと防ぎ方を確かめる | MCP（Python SDK）、LLM の API、RAG、evals | MCP サーバーの作成と登録、allow / deny による道具の権限 | OWASP の LLM とエージェントの Top 10、プロンプトインジェクション、API キーの管理、外部 AI へ送るデータの範囲。脅威分析に追加（TARA で AI を攻撃経路に入れる） | – | 自作の MCP を Claude Code から呼べる／RAG の evals の点数が出る／インジェクションの試験と対策を docs/security/ に記録 | 6h |
-| 16<br>10/30 | ⬜ | (1) GHCR のイメージに cosign（キーレス署名）で署名し、GitHub の artifact attestations で来歴を付ける。pull の前に検証し、別のイメージで失敗することを確かめる。(2) 生成 AI で画像・動画・音声を作ってみる（Gemini の画面、余裕があれば API）。生成物の来歴（C2PA）を確かめる | Sigstore（cosign）、SLSA、artifact attestations、画像・動画・音声の生成 AI、C2PA | GitHub Actions のワークフローを書かせる、`/security-review` | UN-R156・Uptane・21434 第7章との対比。生成 AI の著作権と肖像の注意、ディープフェイクと来歴の証明 | – | main のイメージに署名と来歴があり、検証の成功と失敗の記録がある／生成物と、その来歴の確認の記録がある（公開しないものは公開しない） | 6h |
-| 17<br>10/31 | ⬜ | 自作の小さな C のパーサー（例：TLV の解析）を、libFuzzer とサニタイザーでファジングする。CodeQL と cppcheck で静的解析する。見つけたバグを直し、同じ処理を Rust で書き直して比べる（clang と Rust は WSL に入れる） | ファジング、ASan / UBSan、CodeQL（C）、Rust | ファジング用のハーネスを書かせる、クラッシュの原因を調べさせる | 21434 の検証の段階（脆弱性テスト、ファジング）、メモリ安全な言語への移行（CISA の推奨） | – | ファザーがバグを見つけ、修正後に再発しない／静的解析の結果を記録／Rust 版が同じテストに通る | 6h |
-| 18<br>11/1 | ⬜ | kids-play のローカル構成（docker compose）を「何も信用しない」形にする：パスキーでログイン、短い期限のトークン、要求ごとの認可、nginx と API の間を mTLS。パスキーの画面のコードは TypeScript で書き、型の検査を CI に入れる。localhost だけで動かす | ゼロトラスト（NIST SP 800-207）、WebAuthn / FIDO2、mTLS、TypeScript | サブエージェントと worktree の並列作業 | 車内のゼロトラスト（SecOC、ECU 間の認証）との対比。認証と認可の脅威分析 | – | パスキーでログインできる／トークンなし・期限切れ・証明書なしの要求が拒否されることをテストで確認／TypeScript の型の検査が通る | 6h |
-| 19<br>11/2 | ⬜ | OpenSSL 3.5 以降の nginx を Docker で動かし、ML-KEM のハイブリッド鍵交換（X25519MLKEM768）で TLS をつなぐ。従来の鍵交換と、ハンドシェイクの大きさと時間を繰り返し計測し、結果を DuckDB に入れて SQL で分析する。kids-play が使う暗号の一覧（CBOM）を作る | PQC（ML-KEM、ML-DSA）、ハイブリッド鍵交換、CBOM、SQL、DuckDB | `/loop` で計測を繰り返す、Hooks の応用 | 暗号を入れ替えやすくする設計（クリプトアジリティ）、車の長い寿命と HSM、移行の時期の目標 | – | ML-KEM で TLS がつながる／計測結果を SQL で集計した表と、暗号の一覧を docs/security/ に記録 | 6h |
-| 20<br>11/3 | ⬜ | kind（Docker の中で動く小さな Kubernetes）で kids-play を動かす。マニフェストで構成を書き、Pod Security と NetworkPolicy で守り、Trivy で設定を検査する。FastAPI に OpenTelemetry を入れ、要求の流れ（トレース）とメトリクスを見える化する | Kubernetes、kind、マニフェスト、kubectl、OpenTelemetry | Plan モードで構成を設計 → `claude -p` でマニフェストをレビュー | Pod Security Standards、NetworkPolicy、Trivy の設定検査。テレメトリーに個人の情報を入れない。クラウド側（OTA サーバーなど）の守りとの対比 | – | kind で kids-play が表示される／許可していない通信が NetworkPolicy で止まる／トレースが見える／Trivy の重大な指摘なし | 6h |
-| 21<br>11/4 | ⬜ | OpenTofu で、手元の Docker や kind の構成をコードにし、作る → 確かめる → 消すを行う（AWS は使わない）。Claude Code の最近の新機能を3つ試す。規制と標準の動向（R155/R156、21434 の改訂、ISO/PAS 8800、CRA の適用範囲）を整理する。playbook の最終版と、11月以降の学び方を決める | OpenTofu（IaC）、最新の Claude Code、規制の動向 | `/whats-new`、新機能の試用、playbook の総まとめ | IaC の設定検査（Trivy）、state に秘密の値を入れない。規制と標準の動向の整理 | – | OpenTofu で作って消せる／動向の整理が docs/ にある／playbook の最終版／スプリント3完了 | 6h |
+| 16<br>11/2 | ✅ | (1) GHCR のイメージに cosign（キーレス署名）で署名し、GitHub の artifact attestations で来歴を付ける。pull の前に検証し、別のイメージで失敗することを確かめる。(2) 生成 AI で画像・動画・音声を作ってみる（Gemini の画面、余裕があれば API）。生成物の来歴（C2PA）を確かめる | Sigstore（cosign）、SLSA、artifact attestations、画像・動画・音声の生成 AI、C2PA | GitHub Actions のワークフローを書かせる、`/security-review` | UN-R156・Uptane・21434 第7章との対比。生成 AI の著作権と肖像の注意、ディープフェイクと来歴の証明 | – | main のイメージに署名と来歴があり、検証の成功と失敗の記録がある／生成物と、その来歴の確認の記録がある（公開しないものは公開しない） | 6h |
+| 17<br>11/3 | ⬜ | 自作の小さな C のパーサー（例：TLV の解析）を、libFuzzer とサニタイザーでファジングする。CodeQL と cppcheck で静的解析する。見つけたバグを直し、同じ処理を Rust で書き直して比べる（clang と Rust は WSL に入れる） | ファジング、ASan / UBSan、CodeQL（C）、Rust | ファジング用のハーネスを書かせる、クラッシュの原因を調べさせる | 21434 の検証の段階（脆弱性テスト、ファジング）、メモリ安全な言語への移行（CISA の推奨） | – | ファザーがバグを見つけ、修正後に再発しない／静的解析の結果を記録／Rust 版が同じテストに通る | 6h |
+| 18<br>11/4 | ⬜ | kids-play のローカル構成（docker compose）を「何も信用しない」形にする：パスキーでログイン、短い期限のトークン、要求ごとの認可、nginx と API の間を mTLS。パスキーの画面のコードは TypeScript で書き、型の検査を CI に入れる。localhost だけで動かす | ゼロトラスト（NIST SP 800-207）、WebAuthn / FIDO2、mTLS、TypeScript | サブエージェントと worktree の並列作業 | 車内のゼロトラスト（SecOC、ECU 間の認証）との対比。認証と認可の脅威分析 | – | パスキーでログインできる／トークンなし・期限切れ・証明書なしの要求が拒否されることをテストで確認／TypeScript の型の検査が通る | 6h |
+| 19<br>11/5 | ⬜ | OpenSSL 3.5 以降の nginx を Docker で動かし、ML-KEM のハイブリッド鍵交換（X25519MLKEM768）で TLS をつなぐ。従来の鍵交換と、ハンドシェイクの大きさと時間を繰り返し計測し、結果を DuckDB に入れて SQL で分析する。kids-play が使う暗号の一覧（CBOM）を作る | PQC（ML-KEM、ML-DSA）、ハイブリッド鍵交換、CBOM、SQL、DuckDB | `/loop` で計測を繰り返す、Hooks の応用 | 暗号を入れ替えやすくする設計（クリプトアジリティ）、車の長い寿命と HSM、移行の時期の目標 | – | ML-KEM で TLS がつながる／計測結果を SQL で集計した表と、暗号の一覧を docs/security/ に記録 | 6h |
+| 20<br>11/6 | ⬜ | kind（Docker の中で動く小さな Kubernetes）で kids-play を動かす。マニフェストで構成を書き、Pod Security と NetworkPolicy で守り、Trivy で設定を検査する。FastAPI に OpenTelemetry を入れ、要求の流れ（トレース）とメトリクスを見える化する | Kubernetes、kind、マニフェスト、kubectl、OpenTelemetry | Plan モードで構成を設計 → `claude -p` でマニフェストをレビュー | Pod Security Standards、NetworkPolicy、Trivy の設定検査。テレメトリーに個人の情報を入れない。クラウド側（OTA サーバーなど）の守りとの対比 | – | kind で kids-play が表示される／許可していない通信が NetworkPolicy で止まる／トレースが見える／Trivy の重大な指摘なし | 6h |
+| 21<br>11/7 | ⬜ | OpenTofu で、手元の Docker や kind の構成をコードにし、作る → 確かめる → 消すを行う（AWS は使わない）。Claude Code の最近の新機能を3つ試す。規制と標準の動向（R155/R156、21434 の改訂、ISO/PAS 8800、CRA の適用範囲）を整理する。playbook の最終版と、11月以降の学び方を決める | OpenTofu（IaC）、最新の Claude Code、規制の動向 | `/whats-new`、新機能の試用、playbook の総まとめ | IaC の設定検査（Trivy）、state に秘密の値を入れない。規制と標準の動向の整理 | – | OpenTofu で作って消せる／動向の整理が docs/ にある／playbook の最終版／スプリント3完了 | 6h |
 
 ## 遅れたときに削る候補（学習の目的は削らない）
 
