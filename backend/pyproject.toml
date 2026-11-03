@@ -4,9 +4,13 @@ version = "0.1.0"
 description = "わたしのえほんのサーバー保存（PC の localhost だけで使う。既定は無効）"
 requires-python = ">=3.14"
 dependencies = [
+    # webauthn が使う部品。最新の 6.2.0 系は公開から7日たっていない（2026-11-03 時点。T-04）ので、1つ前に固定する
+    "cbor2==6.1.5",
     "fastapi>=0.156.8",
+    "pyjwt==2.15.1",
     "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
+    "webauthn==3.0.1",
 ]
 
 [tool.uv]
