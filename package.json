@@ -12,7 +12,9 @@
     "check:ai-privacy": "node scripts/ai-privacy-check.mjs",
     "record:storybook": "node scripts/record-storybook/index.mjs",
     "test": "node --test \"tests/**/*.test.mjs\"",
-    "test:server": "node --test tests/storage-server.integration.mjs"
+    "test:server": "node --test tests/storage-server.integration.mjs",
+    "typecheck": "tsc -p zerotrust/web --noEmit",
+    "build:zerotrust": "tsc -p zerotrust/web"
   },
   "overrides": {
     "xcode": {
@@ -26,7 +28,8 @@
     "eslint-plugin-no-unsanitized": "^4.1.5",
     "fake-indexeddb": "6.2.6",
     "globals": "^17.13.0",
-    "prettier": "^3.9.10"
+    "prettier": "^3.9.10",
+    "typescript": "7.0.2"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

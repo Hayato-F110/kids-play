@@ -1,0 +1,74 @@
+# ゼロトラストの構成（18日目、KIDS-62）。いつもの compose.yaml に重ねて使う。PC の中（127.0.0.1）だけで動く：
+#   docker compose -f compose.yaml -f compose.zerotrust.yaml up -d --build
+# 片付け（メモリ上の証明書の置き場所も消える）：
+#   docker compose -f compose.yaml -f compose.zerotrust.yaml down -v
+#
+# 足すもの：パスキーのログイン、短い期限のトークン、要求ごとの認可（api）、nginx → api の mTLS。
+# サーバー保存の環境変数は、ここでも渡さない（T-08、C-12）。脅威分析 T-28〜T-30、対策 C-31〜C-33
+
+services:
+  # その場かぎりの CA と証明書を作り、置き場所を持ち続ける。CA の秘密鍵は書き出さない
+  certs:
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    image: kids-play-api:local
+    # 持ち主は api と同じ uid、グループは nginx と同じ gid（101）。ファイルは 0640 なので、この2つだけが読める
+    user: "10001:101"
+    command: ["python", "-m", "app.devcerts", "/certs", "--hold"]
+    volumes:
+      - zt-certs:/certs
+    restart: "no"
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import os, sys; sys.exit(0 if os.path.exists('/certs/nginx.key') else 1)"]
+      interval: 1s
+      retries: 10
+
+  api:
+    environment:
+      KIDS_ZERO_TRUST: enabled
+    # TLS で待ち、クライアントの証明書を必須にする（--ssl-cert-reqs 2 は CERT_REQUIRED）
+    command:
+      - uvicorn
+      - app.main:create_app_from_env
+      - --factory
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8443"
+      - --ssl-certfile
+      - /certs/api.crt
+      - --ssl-keyfile
+      - /certs/api.key
+      - --ssl-ca-certs
+      - /certs/ca.crt
+      - --ssl-cert-reqs
+      - "2"
+    volumes:
+      - zt-certs:/certs:ro
+    depends_on:
+      certs:
+        condition: service_healthy
+
+  web:
+    volumes:
+      - ./server/nginx/zerotrust.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./server/nginx/zerotrust-proxy.conf:/etc/nginx/zerotrust-proxy.conf:ro
+      - ./zerotrust/web/public:/usr/share/nginx/parent:ro
+      - zt-certs:/certs:ro
+    depends_on:
+      certs:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+volumes:
+  # メモリ上の置き場所。PC のディスクに書かない。uid と gid は certs のコンテナと同じにする
+  zt-certs:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=1m,uid=10001,gid=101,mode=0750"

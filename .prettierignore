@@ -2,6 +2,8 @@
 
 # 自動で作られるファイル
 package-lock.json
+# TypeScript（zerotrust/web/src/）から tsc が作る。CI で「作り直しても変わらない」ことを確かめる
+zerotrust/web/public/main.js
 
 # Capacitor が6日目に生成する
 android/

@@ -18,6 +18,10 @@ MAX_REQUEST_BYTES = MAX_PICTURE_BYTES + MAX_VOICE_BYTES + 64 * 1024
 ENV_SERVER_STORAGE = "KIDS_SERVER_STORAGE"
 ENABLED_VALUE = "enabled"
 ENV_DB_PATH = "KIDS_DB_PATH"
+# ゼロトラストの構成（compose.zerotrust.yaml）でだけ有効にする。既定は無効（脅威分析 T-28〜T-30）
+ENV_ZERO_TRUST = "KIDS_ZERO_TRUST"
+# パスキーの応答を受け付けるページの出どころ。nginx が配る「おとなのページ」
+DEFAULT_ZERO_TRUST_ORIGIN = "http://localhost:8080"
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,13 +33,17 @@ class Settings:
     # backend/data/ は .gitignore 済み。Claude Code の deny でも読めないようにしてある
     db_path: Path = BACKEND_DIR / "data" / "kids.sqlite3"
     frontend_dir: Path = BACKEND_DIR.parent / "frontend"
+    # 既定は無効。無効のときは、ログインの窓口もおとなの API も作らず、これまでと同じに動く
+    zero_trust_enabled: bool = False
+    zero_trust_origin: str = DEFAULT_ZERO_TRUST_ORIGIN
 
     @classmethod
     def from_env(cls) -> Settings:
         # "true" や "1" などの「それらしい値」では有効にしない。有効にするには、決めた1語を正確に書く
         enabled = os.environ.get(ENV_SERVER_STORAGE) == ENABLED_VALUE
+        zero_trust = os.environ.get(ENV_ZERO_TRUST) == ENABLED_VALUE
         # DB の置き場所は、テスト（npm run test:server）で一時フォルダに変えるときだけ使う
         db_path = os.environ.get(ENV_DB_PATH)
         if db_path:
-            return cls(server_storage_enabled=enabled, db_path=Path(db_path))
-        return cls(server_storage_enabled=enabled)
+            return cls(server_storage_enabled=enabled, db_path=Path(db_path), zero_trust_enabled=zero_trust)
+        return cls(server_storage_enabled=enabled, zero_trust_enabled=zero_trust)
