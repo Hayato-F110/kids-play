@@ -4,25 +4,25 @@ import logging
 
 import pytest
 
-from secoc_sim.secoc import Result, build_secoc
+from secoc_sim.secoc import Result, SecOC, build_secoc
 
 TEST_KEY = bytes(range(16))  # テスト専用。本物の鍵ではない
 OTHER_KEY = bytes(range(16, 32))  # テスト専用
 DATA_ID = 0x0123
 
 
-def make_pair(rx_key: bytes = TEST_KEY):
+def make_pair(rx_key: bytes = TEST_KEY) -> tuple[SecOC, SecOC]:
     return build_secoc(TEST_KEY, DATA_ID), build_secoc(rx_key, DATA_ID)
 
 
-def test_valid_pdu_is_accepted():
+def test_valid_pdu_is_accepted() -> None:
     tx, rx = make_pair()
     result, payload = rx.receive(tx.send(b"\x01\x02"))
     assert result is Result.OK
     assert payload == b"\x01\x02"
 
 
-def test_tampered_payload_is_rejected_and_fvm_not_advanced():
+def test_tampered_payload_is_rejected_and_fvm_not_advanced() -> None:
     tx, rx = make_pair()
     pdu = bytearray(tx.send(b"\x01\x02"))
     pdu[0] ^= 0xFF
@@ -34,21 +34,21 @@ def test_tampered_payload_is_rejected_and_fvm_not_advanced():
     assert rx.receive(tx.send(b"\x03"))[0] is Result.OK
 
 
-def test_tampered_mac_is_rejected():
+def test_tampered_mac_is_rejected() -> None:
     tx, rx = make_pair()
     pdu = bytearray(tx.send(b"\x01"))
     pdu[-1] ^= 0x01
     assert rx.receive(bytes(pdu))[0] is Result.MAC_FAILED
 
 
-def test_replay_is_rejected():
+def test_replay_is_rejected() -> None:
     tx, rx = make_pair()
     pdu = tx.send(b"\x01")
     assert rx.receive(pdu)[0] is Result.OK
     assert rx.receive(pdu)[0] is Result.FRESHNESS_FAILED
 
 
-def test_older_counter_is_rejected():
+def test_older_counter_is_rejected() -> None:
     tx, rx = make_pair()
     first = tx.send(b"\x01")
     second = tx.send(b"\x02")
@@ -56,7 +56,7 @@ def test_older_counter_is_rejected():
     assert rx.receive(first)[0] is Result.FRESHNESS_FAILED
 
 
-def test_truncated_freshness_wraparound_is_accepted():
+def test_truncated_freshness_wraparound_is_accepted() -> None:
     tx, rx = make_pair()
     tx.fvm.set_last(DATA_ID, 0x0FE)
     rx.fvm.set_last(DATA_ID, 0x0FE)
@@ -65,18 +65,18 @@ def test_truncated_freshness_wraparound_is_accepted():
     assert rx.fvm.last(DATA_ID) == 0x100
 
 
-def test_wrong_key_on_receiver_is_rejected():
+def test_wrong_key_on_receiver_is_rejected() -> None:
     tx, rx = make_pair(rx_key=OTHER_KEY)
     assert rx.receive(tx.send(b"\x01"))[0] is Result.MAC_FAILED
 
 
 @pytest.mark.parametrize("pdu", [b"", b"\x01\x02\x03", b"\x01" * 4])
-def test_too_short_pdu_is_malformed(pdu: bytes):
+def test_too_short_pdu_is_malformed(pdu: bytes) -> None:
     _, rx = make_pair()
     assert rx.receive(pdu)[0] is Result.MALFORMED
 
 
-def test_log_shows_layer_call_chain_in_order(caplog: pytest.LogCaptureFixture):
+def test_log_shows_layer_call_chain_in_order(caplog: pytest.LogCaptureFixture) -> None:
     tx, rx = make_pair()
     pdu = tx.send(b"\x01")
     with caplog.at_level(logging.INFO, logger="secoc_sim"):

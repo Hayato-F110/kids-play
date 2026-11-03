@@ -57,6 +57,13 @@ jobs:
           uv run ruff check .
           uv run ruff format --check .
           uv run pytest
+      - name: SecOC の模擬の静的解析とテスト
+        working-directory: tools/secoc
+        run: |
+          uv sync --locked
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest
 
   scan:
     name: イメージの検査（${{ matrix.image }}）
