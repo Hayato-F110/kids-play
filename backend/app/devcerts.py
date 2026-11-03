@@ -2,7 +2,10 @@
 
 compose.zerotrust.yaml の certs コンテナが、起動のたびに1回だけ動かす：
 
-    python -m app.devcerts /certs
+    python -m app.devcerts /certs --hold
+
+--hold は、書き終えたあとも止まらずに待つ。メモリ上の置き場所は、使うコンテナが1つもなくなると
+中身が消えるので、certs のコンテナが置き場所を持ち続ける。
 
 置き場所（/certs）は、メモリ上の共有の置き場所（tmpfs）にする。PC のディスク、Git、イメージには出ない。
 CA の秘密鍵は書き出さず、関数を抜けると消える。作り終えたあとは、だれも新しい証明書を作れない。
@@ -10,6 +13,7 @@ CA の秘密鍵は書き出さず、関数を抜けると消える。作り終�
 
 import datetime
 import os
+import signal
 import sys
 from pathlib import Path
 
@@ -145,3 +149,8 @@ def make_dev_certs(folder: Path, server_names: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     make_dev_certs(Path(sys.argv[1]))
+    print("証明書を作った（CA の秘密鍵は書き出していない）", flush=True)
+    if "--hold" in sys.argv[2:]:
+        # docker compose down の SIGTERM で終わる
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+        signal.pause()

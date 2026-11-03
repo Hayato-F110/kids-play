@@ -45,6 +45,13 @@ jobs:
       - run: npm run lint
       - run: npm run check:pwa
       - run: npm test
+      # おとなのページ（zerotrust/web）の型の検査。型の誤りがあれば失敗させる
+      - run: npm run typecheck
+      - name: 変換した JS が TypeScript と食い違っていないかを確かめる
+        # コミットした main.js が古いと、型の検査を通ったソースと、実際に配る JS が違ってしまう
+        run: |
+          npm run build:zerotrust
+          git diff --exit-code -- zerotrust/web/public
 
       - name: uv を用意する
         uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2

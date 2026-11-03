@@ -1,0 +1,20 @@
+{
+  // おとなのページの TypeScript。src/ を public/ の JS に変える（変えた JS もコミットする）
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "lib": ["es2022", "dom"],
+    "types": [],
+    "rootDir": "src",
+    "outDir": "public",
+    // 型の誤りがあれば JS を書き出さない
+    "strict": true,
+    "noEmitOnError": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true
+  },
+  "include": ["src"]
+}
