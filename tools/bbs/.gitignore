@@ -1,3 +1,4 @@
-# composer audit の見本が作る lock と、部品の置き場所（部品は入れない設定だが念のため）
-audit-demo/*/composer.lock
-audit-demo/*/vendor/
+# composer audit の見本は、テストのたびに一時フォルダーに作る（リポジトリに置かない）。念のため除外
+composer.json
+composer.lock
+vendor/
