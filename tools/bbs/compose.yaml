@@ -1,0 +1,34 @@
+# PHP の小さな掲示板（19日目。P19、T-32、C-35）。kids-play の compose.yaml とは別に、ここだけで起動する。
+# 危険な版（8081）は攻撃を試すために、わざと危険に書いている。127.0.0.1 だけで待ち、公開しない。
+# 起動：docker compose up -d ／ 片付け：docker compose down（データはメモリの上だけなので消える）
+name: kids-bbs
+
+x-bbs: &bbs # 8.5.12 の apache 版。ダイジェストで固定し、タグの付け替えに備える
+  image: php:8.5.12-apache-trixie@sha256:4cc63b3d4e05c40da73e7af5d39364ca2678ac07208919497bda3bbab975be95
+  read_only: true
+  tmpfs:
+    - /data:uid=33,gid=33,mode=0700 # SQLite。www-data だけが読み書きする
+    - /tmp # PHP のセッション
+    - /var/run/apache2
+    - /var/lock/apache2
+  environment:
+    BBS_DB: /data/bbs.sqlite
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  bbs-unsafe:
+    <<: *bbs
+    ports:
+      - "127.0.0.1:8081:80"
+    volumes:
+      - ./unsafe:/var/www/html:ro
+      - ./common:/var/www/common:ro
+
+  bbs-safe:
+    <<: *bbs
+    ports:
+      - "127.0.0.1:8082:80"
+    volumes:
+      - ./safe:/var/www/html:ro
+      - ./common:/var/www/common:ro

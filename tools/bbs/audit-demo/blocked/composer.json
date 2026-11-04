@@ -1,0 +1,9 @@
+{
+  "description": "見本（既定の設定）：わざと古い Twig を書く。Composer は脆弱な版を選ばずに止まる。部品は入れない",
+  "require": {
+    "twig/twig": "3.11.0"
+  },
+  "config": {
+    "allow-plugins": false
+  }
+}
