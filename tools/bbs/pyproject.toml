@@ -1,0 +1,31 @@
+[project]
+name = "bbs-attacks"
+version = "0.1.0"
+description = "PHP の掲示板（危険な版と安全な版）に、SQL インジェクション、XSS、CSRF を試すテスト（学習用）"
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.uv]
+package = false
+# T-04：公開から7日たっていない版を選ばない（11/4 の7日前）
+exclude-newer = "2026-10-28T00:00:00Z"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# テストの assert と、決めた引数で docker を呼ぶ subprocess
+"tests/**" = ["S101", "S603", "S607"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]

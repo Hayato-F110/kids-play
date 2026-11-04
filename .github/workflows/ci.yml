@@ -79,6 +79,13 @@ jobs:
           uv run ruff check .
           uv run ruff format --check .
           uv run pytest
+      # 攻撃のテストは Docker の掲示板が要るので、手元だけで動かす（ここでは静的解析だけ）
+      - name: PHP の掲示板の攻撃のテストの静的解析
+        working-directory: tools/bbs
+        run: |
+          uv sync --locked
+          uv run ruff check .
+          uv run ruff format --check .
 
   scan:
     name: イメージの検査（${{ matrix.image }}）
