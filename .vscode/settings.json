@@ -3,5 +3,6 @@
   "java.import.gradle.enabled": false,
   "gradle.autoDetect": "off",
   "java.gradle.buildServer.enabled": "off",
-  "python.terminal.activateEnvironment": false
+  "python.terminal.activateEnvironment": false,
+  "php.validate.enable": false
 }
