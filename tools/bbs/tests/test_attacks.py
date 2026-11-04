@@ -148,6 +148,24 @@ def test_4_安全な版は正しい投稿を受け付ける():
     assert marker in request(SAFE)[2]
 
 
+def test_4_リンク元の扱いは同じサイトの中だけ():
+    # no-referrer だと、ブラウザが Origin を null にして、正しい投稿が断られる
+    _, headers, _ = request(SAFE)
+    assert headers["referrer-policy"] == "same-origin"
+
+
+def test_3_CSRFを安全な版は断る_Originがnull():
+    # Origin を null にして送る手口（サンドボックスの iframe など）も断る
+    cookie, token = safe_session()
+    status, _, _ = request(
+        SAFE,
+        "POST",
+        form={"csrf": token, "name": "x", "body": "null-origin"},
+        headers={"Cookie": cookie, "Origin": "null"},
+    )
+    assert status == 403
+
+
 def test_4_安全なCookieの属性():
     _, headers, _ = request(SAFE)
     cookie = headers["set-cookie"].lower()
@@ -166,7 +184,20 @@ def test_5_よそのHostは両方の版で断る(port: int):
 # --- テスト6：composer audit -------------------------------------------------------
 
 
-def _composer(demo: str, args: str) -> subprocess.CompletedProcess[str]:
+# わざと古い Twig を書いた見本。リポジトリには置かず、テストのたびに一時フォルダーに作る。
+# 置くと、GitHub の Dependabot がこれを読んで、使っていない部品の通知を大量に出す（19日目に32件出た）
+def _demo_manifest(directory: Path, *, block: bool) -> Path:
+    config: dict[str, object] = {"allow-plugins": False}
+    if not block:
+        # composer audit が見つけることを確かめるためだけに、選ぶ段階の拒否を外す。本物の開発では外さない
+        config["policy"] = {"advisories": {"block": False}}
+    directory.mkdir(parents=True, exist_ok=True)
+    manifest = {"require": {"twig/twig": "3.11.0"}, "config": config}
+    (directory / "composer.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return directory
+
+
+def _composer(demo: Path, args: str) -> subprocess.CompletedProcess[str]:
     # 部品の中のスクリプトとプラグインを動かさない（部品のコードを PC で実行しない）
     return subprocess.run(
         [
@@ -174,7 +205,7 @@ def _composer(demo: str, args: str) -> subprocess.CompletedProcess[str]:
             "run",
             "--rm",
             "-v",
-            f"{BBS_DIR / 'audit-demo' / demo}:/app",
+            f"{demo}:/app",
             "-e",
             "COMPOSER_HOME=/tmp/composer",
             "composer:2.11.1",
@@ -192,23 +223,24 @@ def _composer(demo: str, args: str) -> subprocess.CompletedProcess[str]:
 UPDATE = "composer update --no-install --no-scripts --no-plugins --no-interaction"
 
 
-def test_6_Composerは既定で脆弱な版を選ばない():
+def test_6_Composerは既定で脆弱な版を選ばない(tmp_path: Path):
     # Composer 2.9 以降の policy.advisories.block（既定で有効）
-    lock = _composer("blocked", UPDATE)
+    lock = _composer(_demo_manifest(tmp_path, block=True), UPDATE)
     assert lock.returncode != 0
     assert "affected by security advisories" in lock.stderr
 
 
-def test_6_composer_auditは古いTwigの脆弱性を見つける():
-    lock = _composer("allowed", UPDATE + " -q")
+def test_6_composer_auditは古いTwigの脆弱性を見つける(tmp_path: Path):
+    demo = _demo_manifest(tmp_path, block=False)
+    lock = _composer(demo, UPDATE + " -q")
     assert lock.returncode == 0, lock.stderr
-    audit = _composer("allowed", "composer audit --locked --format=json --no-plugins")
+    audit = _composer(demo, "composer audit --locked --format=json --no-plugins")
     # 脆弱性があると、終了コードが 0 以外になる
     assert audit.returncode != 0
     advisories = json.loads(audit.stdout)["advisories"]
     assert advisories.get("twig/twig"), audit.stdout
 
 
-def test_6_掲示板そのものは部品を使わない():
-    assert not (BBS_DIR / "safe" / "composer.json").exists()
-    assert not (BBS_DIR / "unsafe" / "composer.json").exists()
+def test_6_リポジトリに部品の一覧のファイルを置かない():
+    # 掲示板は部品を使わない。見本も置かない（Dependabot の誤った通知を出さない）
+    assert list(BBS_DIR.rglob("composer.json")) == []

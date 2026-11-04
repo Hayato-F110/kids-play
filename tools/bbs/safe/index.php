@@ -29,7 +29,10 @@ bbs_guard_host();
 // スクリプト、外部の読み込み、よそへのフォームの送信、枠への埋め込みを、すべて止める
 header("Content-Security-Policy: default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
 header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: no-referrer');
+// no-referrer にすると、ブラウザはフォームの送信の Origin を null にする（Fetch の仕様）。
+// すると下の Origin の確認が、正しい投稿まで断る（19日目にブラウザで見つけた）。
+// same-origin なら、同じサイトの中では Origin が届き、よそのサイトにはリンク元を出さない
+header('Referrer-Policy: same-origin');
 
 session_set_cookie_params(['path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
 session_start();
