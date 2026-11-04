@@ -1,0 +1,21 @@
+# PQC の試験用 nginx（19日目。P18、C-34）。kids-play の compose.yaml とは別に、ここだけで起動する。
+# 起動：uv run python -m pqc_bench.certs ; docker compose up -d
+# 片付け：docker compose down
+name: kids-pqc
+
+services:
+  pqc-nginx:
+    # 1.31.8-alpine は OpenSSL 3.5.9（nginx -V で確認）。ダイジェストで固定し、タグの付け替えに備える
+    image: nginx:1.31.8-alpine@sha256:785835ea65db4bba6f021acc0f3be91b0fef76a53fe41f8588c6698d2aed0606
+    ports:
+      - "127.0.0.1:8443:8443" # ハイブリッドだけ
+      - "127.0.0.1:8444:8444" # 従来の方式だけ
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./.certs:/etc/nginx/certs:ro
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /run
+    security_opt:
+      - no-new-privileges:true

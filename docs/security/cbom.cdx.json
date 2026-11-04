@@ -1,0 +1,263 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-11-04T09:00:00Z",
+    "component": {
+      "type": "application",
+      "bom-ref": "kids-play",
+      "name": "kids-play"
+    },
+    "properties": [
+      {
+        "name": "kids-play:note",
+        "value": "Human-readable version: docs/security/cbom.md (19日目, KIDS-63)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/x25519mlkem768",
+      "name": "X25519MLKEM768",
+      "description": "Hybrid key exchange (X25519 + ML-KEM-768). GitHub Pages TLS, tools/pqc port 8443",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "parameterSetIdentifier": "768",
+          "cryptoFunctions": ["encapsulate", "decapsulate"],
+          "nistQuantumSecurityLevel": 3
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/x25519",
+      "name": "X25519",
+      "description": "Classical key exchange. TLS fallback, tools/pqc port 8444, SSH curve25519-sha256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "ellipticCurve": "other/Curve25519",
+          "cryptoFunctions": ["keygen", "keyderive"],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/mlkem768x25519-sha256",
+      "name": "mlkem768x25519-sha256",
+      "description": "SSH hybrid key exchange. Seen with Git for Windows OpenSSH 10.6 to GitHub (not used by default on this PC)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "parameterSetIdentifier": "768",
+          "cryptoFunctions": ["encapsulate", "decapsulate"],
+          "nistQuantumSecurityLevel": 3
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/ecdsa-p256-sha256",
+      "name": "ECDSA P-256 with SHA-256",
+      "description": "mTLS certificates (backend/app/devcerts.py), tools/pqc test certificate, cosign keyless signing, passkey ES256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "ellipticCurve": "nist/P-256",
+          "cryptoFunctions": ["sign", "verify"],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/ed25519",
+      "name": "Ed25519",
+      "description": "Zero-trust tokens (EdDSA, backend/app/zerotrust.py), SSH user key for git push, passkey EdDSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "ellipticCurve": "other/Ed25519",
+          "cryptoFunctions": ["sign", "verify"],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/rsa-pkcs1-sha256",
+      "name": "RSASSA-PKCS1-v1_5 with SHA-256",
+      "description": "Passkey RS256 (allowed by the webauthn library default; the authenticator chooses)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "cryptoFunctions": ["sign", "verify"],
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/aes128-cmac",
+      "name": "AES-128-CMAC",
+      "description": "SecOC simulation MAC (tools/secoc), truncated to 24 bits",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "mac",
+          "parameterSetIdentifier": "128",
+          "cryptoFunctions": ["tag"],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 1
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/sha256",
+      "name": "SHA-256",
+      "description": "uv.lock hashes, container image digests, certificate signatures, RAG cache keys",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "cryptoFunctions": ["digest"],
+          "nistQuantumSecurityLevel": 2
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/sha512",
+      "name": "SHA-512",
+      "description": "package-lock.json integrity",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "cryptoFunctions": ["digest"],
+          "nistQuantumSecurityLevel": 4
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/sha1",
+      "name": "SHA-1 (collision-detecting)",
+      "description": "Git object names",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "cryptoFunctions": ["digest"],
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "protocol/tls13-github-pages",
+      "name": "TLS 1.3 (GitHub Pages)",
+      "description": "Public delivery. Decided by GitHub and the browser. Hybrid confirmed on 2026-11-04",
+      "cryptoProperties": {
+        "assetType": "protocol",
+        "protocolProperties": {
+          "type": "tls",
+          "version": "1.3",
+          "relatedCryptographicAssets": [
+            {
+              "type": "algorithm",
+              "ref": "crypto/x25519mlkem768"
+            },
+            {
+              "type": "algorithm",
+              "ref": "crypto/x25519"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "protocol/tls13-pqc-test",
+      "name": "TLS 1.3 (tools/pqc test nginx)",
+      "description": "127.0.0.1 only. Port 8443 hybrid only, port 8444 X25519 only",
+      "cryptoProperties": {
+        "assetType": "protocol",
+        "protocolProperties": {
+          "type": "tls",
+          "version": "1.3",
+          "relatedCryptographicAssets": [
+            {
+              "type": "algorithm",
+              "ref": "crypto/x25519mlkem768"
+            },
+            {
+              "type": "algorithm",
+              "ref": "crypto/x25519"
+            },
+            {
+              "type": "algorithm",
+              "ref": "crypto/ecdsa-p256-sha256"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "protocol/tls13-mtls",
+      "name": "TLS 1.3 mTLS (nginx to api, zero-trust compose)",
+      "description": "Key exchange is the OpenSSL default and has not been checked yet",
+      "cryptoProperties": {
+        "assetType": "protocol",
+        "protocolProperties": {
+          "type": "tls",
+          "version": "1.3",
+          "relatedCryptographicAssets": [
+            {
+              "type": "algorithm",
+              "ref": "crypto/ecdsa-p256-sha256"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "protocol/ssh-github",
+      "name": "SSH (git push to GitHub)",
+      "description": "Windows OpenSSH 9.5 via core.sshCommand: curve25519-sha256. Git for Windows OpenSSH 10.6 would use mlkem768x25519-sha256",
+      "cryptoProperties": {
+        "assetType": "protocol",
+        "protocolProperties": {
+          "type": "ssh",
+          "version": "2.0",
+          "relatedCryptographicAssets": [
+            {
+              "type": "algorithm",
+              "ref": "crypto/x25519"
+            },
+            {
+              "type": "algorithm",
+              "ref": "crypto/ed25519"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[project]
+name = "pqc-bench"
+version = "0.1.0"
+description = "ML-KEM のハイブリッド鍵交換と従来の鍵交換の、TLS のハンドシェイクを計測して比べる（学習用）"
+requires-python = ">=3.14"
+dependencies = [
+    "cryptography==50.0.2",
+    "duckdb==2.0.0",
+]
+
+[tool.uv]
+# パッケージとして配らない（学習用に動かすだけ）
+package = false
+# T-04：公開から7日たっていない版を選ばない（一緒に入る部品にも効く）。作った日（11/4）の7日前
+exclude-newer = "2026-10-28T00:00:00Z"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
