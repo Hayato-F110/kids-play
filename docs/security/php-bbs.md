@@ -71,9 +71,10 @@ PHP は、「危険な書き方も、同じくらい簡単に書ける」のが�
 ## Composer の部品の検査
 
 - 掲示板は部品を使わない（`composer.json` がない）ので、検査する部品は0件
-- `audit-demo/blocked/`（わざと古い Twig 3.11.0）：**Composer 2.11.1 は、部品を選ぶ段階で拒否した**。17件の勧告がある版は選ばない（`policy.advisories.block`。Composer 2.9 以降は既定で有効）
-- `audit-demo/allowed/`（選ぶ段階の拒否だけを外した見本）：`composer audit` が twig/twig の勧告を見つけ、終了コードが 0 以外になった
+- 見本（わざと古い Twig 3.11.0）：**Composer 2.11.1 は、部品を選ぶ段階で拒否した**。17件の勧告がある版は選ばない（`policy.advisories.block`。Composer 2.9 以降は既定で有効）
+- 選ぶ段階の拒否だけを外した見本：`composer audit` が twig/twig の勧告を見つけ、終了コードが 0 以外になった
 - どちらも `--no-install --no-scripts --no-plugins` で、部品の一覧（lock）だけを作った。部品のコードは PC にも、コンテナにも入れていない
+- 見本の `composer.json` は、テストのたびに一時フォルダーに作る。最初はリポジトリ（`tools/bbs/audit-demo/`）に置いたが、GitHub の Dependabot がそれを読み、使っていない Twig の通知を32件（勧告16件 × 見本2つ）出した。本物の通知が埋もれる（アラート疲れ）ので、リポジトリから外した（PR #111）。21434 の脆弱性の監視（第8章）でも、関係のない部品の情報が多いと、対応が要るものを見落とす。監視の対象（どの一覧を読ませるか）も設計の一部
 
 npm の `npm audit`、Python の `pip-audit`（10日目）と同じ役目。Composer は「入れる前に止める」ところまで既定で行う点が進んでいる。
 
