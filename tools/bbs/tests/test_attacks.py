@@ -148,6 +148,24 @@ def test_4_安全な版は正しい投稿を受け付ける():
     assert marker in request(SAFE)[2]
 
 
+def test_4_リンク元の扱いは同じサイトの中だけ():
+    # no-referrer だと、ブラウザが Origin を null にして、正しい投稿が断られる
+    _, headers, _ = request(SAFE)
+    assert headers["referrer-policy"] == "same-origin"
+
+
+def test_3_CSRFを安全な版は断る_Originがnull():
+    # Origin を null にして送る手口（サンドボックスの iframe など）も断る
+    cookie, token = safe_session()
+    status, _, _ = request(
+        SAFE,
+        "POST",
+        form={"csrf": token, "name": "x", "body": "null-origin"},
+        headers={"Cookie": cookie, "Origin": "null"},
+    )
+    assert status == 403
+
+
 def test_4_安全なCookieの属性():
     _, headers, _ = request(SAFE)
     cookie = headers["set-cookie"].lower()
