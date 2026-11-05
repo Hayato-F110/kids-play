@@ -13,6 +13,8 @@ dependencies = [
 package = false
 # 公開から7日以上たった版だけを使う（T-04、C-09）。日付を進めるときは PR で見直す
 exclude-newer = "2026-10-22T00:00:00Z"
+# 脆弱性の修正版だけを例外にする（Dependabot の pyasn1 の4件。0.6.5 は 10/27 公開で、7日の決まりは満たす）
+exclude-newer-package = { pyasn1 = "2026-10-29T00:00:00Z" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
