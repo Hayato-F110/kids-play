@@ -1,0 +1,87 @@
+# api：FastAPI。保存は無効（KIDS_SERVER_STORAGE を渡さない。T-08、C-12）。
+# テレメトリーは、このクラスターでだけ有効にする（T-34、C-37）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: kids-play
+  labels:
+    app.kubernetes.io/name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: kids-play-api:local
+          imagePullPolicy: Never
+          env:
+            - name: KIDS_OTEL
+              value: enabled
+            # 送り先はクラスターの中の Jaeger だけ（外部のサービスには送らない。C-37 (1)）
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://jaeger:4318
+          ports:
+            - name: http
+              containerPort: 8000
+            # Prometheus の形式のメトリクス。Service には載せず、port-forward でだけ見る
+            - name: metrics
+              containerPort: 9464
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: kids-play
+  labels:
+    app.kubernetes.io/name: api
+spec:
+  # クラスターの中だけの宛先。nginx の設定（proxy_pass http://api:8000）がこの名前を使う
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

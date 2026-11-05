@@ -23,6 +23,8 @@ SERVICE_NAME = "kids-play-api"
 METRICS_PORT = 9464
 # URL の中で、記録してよいのは「どの道か」だけ。クエリ（? のあと）は値を含みうるので消す
 _QUERY_ATTRIBUTES = ("url.query", "http.target", "http.url", "url.full")
+# 計装の部品が既定で記録する、ヘッダーから取った値。家の中の端末を見分けられるので残さない（C-37 (2)）
+_HEADER_ATTRIBUTES = ("user_agent.original", "http.user_agent")
 
 
 @dataclass(frozen=True)
@@ -32,10 +34,10 @@ class Telemetry:
 
 
 def _drop_query(span: Span, _scope: dict[str, object]) -> None:
-    """要求を受けた直後に、クエリを含みうる属性を「道だけ」に置き換える。
+    """要求を受けた直後に、クエリを含みうる属性を「道だけ」に置き換え、User-Agent を空にする。
 
-    計装の部品は、版によってクエリを url.query や http.target に入れる。
-    部品の既定に頼らず、ここで上書きして、値が残らないようにする（C-37 (4)）。
+    計装の部品は、版によってクエリを url.query や http.target に入れ、User-Agent も記録する。
+    部品の既定に頼らず、ここで上書きして、値が残らないようにする（C-37 (2)、(4)）。
     """
     if not span.is_recording():
         return
@@ -45,6 +47,9 @@ def _drop_query(span: Span, _scope: dict[str, object]) -> None:
         if isinstance(value, str) and "?" in value:
             span.set_attribute(key, value.split("?", 1)[0])
         elif key == "url.query" and value is not None:
+            span.set_attribute(key, "")
+    for key in _HEADER_ATTRIBUTES:
+        if key in attributes:
             span.set_attribute(key, "")
 
 

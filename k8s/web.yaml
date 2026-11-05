@@ -1,0 +1,83 @@
+# web：nginx がフロントを配り、/api/ の読む要求だけを api へ中継する（compose の web と同じイメージ）。
+# イメージは手元で docker/web.Dockerfile からビルドし、kind load で入れる（C-36 (4)）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: kids-play
+  labels:
+    app.kubernetes.io/name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: web
+    spec:
+      # Kubernetes の API を使わないので、API の鍵（サービスアカウントのトークン）を Pod に入れない
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: kids-play-web:local
+          # 手元でビルドして入れたイメージだけを使う（どこかから取り寄せない）
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 64Mi
+          # HTTP で探るとトレースの雑音になるので、TCP でつながるかだけを見る
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 20
+          volumeMounts:
+            # nginx が書くのは /tmp（PID と一時ファイル）だけ。ほかは読み取り専用
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: kids-play
+  labels:
+    app.kubernetes.io/name: web
+spec:
+  # kind のノードの 30080 番に出し、kind-config.yaml で PC の 127.0.0.1:8081 につなぐ
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: web
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      nodePort: 30080

@@ -24,6 +24,8 @@ SECRET_MARKERS = {
     "authorization": "Bearer marker-token-1234",
     "cookie": "sid=marker-cookie-5678",
     "x-kids-note": "marker-header-9012",
+    # 計装の部品は既定で User-Agent を記録する。家の中の端末の見分けに使えるので、これも残さない
+    "user-agent": "marker-agent-2468",
 }
 QUERY_MARKER = "marker-query-3456"
 BODY_MARKER = b"marker-body-7890"
