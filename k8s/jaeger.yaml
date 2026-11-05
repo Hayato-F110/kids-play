@@ -1,0 +1,83 @@
+# Jaeger v2（トレースを受け取り、画面で見せる）。保存はメモリだけで、消すと消える（D5、C-37 (5)）。
+# 画面（16686）は Service に載せず、kubectl port-forward で PC の 127.0.0.1 からだけ見る
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: kids-play
+  labels:
+    app.kubernetes.io/name: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jaeger
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jaeger
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        # イメージの既定の利用者（docker image inspect で 10001 を確かめた）
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: jaeger
+          # Jaeger の Getting started の版。digest で固定する（T-04）
+          image: jaegertracing/jaeger:2.22.0@sha256:836b967b5abcf1f7758066aa6b348619267a2f1459f72d472840570f9bd88a17
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: otlp-http
+              containerPort: 4318
+            - name: ui
+              containerPort: 16686
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              # メモリの保存が際限なく増えないよう上限を置く（超えたら作り直される＝トレースは消える）
+              memory: 512Mi
+          readinessProbe:
+            tcpSocket:
+              port: otlp-http
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: ui
+            periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: kids-play
+  labels:
+    app.kubernetes.io/name: jaeger
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: jaeger
+  ports:
+    # 受け取りの口（OTLP の http）だけを載せる
+    - name: otlp-http
+      port: 4318
+      targetPort: otlp-http

@@ -1,6 +1,7 @@
 # CI：PR でテストとイメージの検査をし、main に入ったら検査を通ったイメージを GHCR に置く。
-#   test ─┐
-#   scan ─┴─▶ push ─▶ sign ─▶ verify（push から先は main のときだけ。権限は必要な作業にだけ渡す）
+#   test ───────┐
+#   scan ───────┤
+#   k8s-config ─┴─▶ push ─▶ sign ─▶ verify（push から先は main のときだけ。権限は必要な作業にだけ渡す）
 # EC2 への deploy の作業は、14日目に AWS を片付けたので外した（中身は git の履歴と server/aws/ に残る）
 # scan では外部のスキャナー（Trivy）を動かすので、書き込みの権限を渡さない。
 # 2026年3月に trivy-action のタグが乗っ取られ、CI の秘密情報を盗む事件があったため（CVE-2026-33634、T-04）
@@ -162,9 +163,32 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  # Kubernetes のマニフェスト（k8s/）の設定検査（20日目、C-36 (6)）。
+  # root で動く、権限が強すぎる、上限がない、などの書き方を、クラスターに入れる前に見つける。
+  # scan と同じく外部のスキャナーを動かすので、書き込みの権限は渡さない
+  k8s-config:
+    name: マニフェストの設定検査
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: リポジトリを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 重大（HIGH・CRITICAL）な設定の誤りがあれば失敗させる
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.0
+          scan-type: config
+          scan-ref: k8s
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
+
   push:
     name: GHCR に置く
-    needs: [test, scan]
+    needs: [test, scan, k8s-config]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10

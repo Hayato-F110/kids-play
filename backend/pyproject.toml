@@ -7,6 +7,12 @@ dependencies = [
     # webauthn が使う部品。最新の 6.2.0 系は公開から7日たっていない（2026-11-03 時点。T-04）ので、1つ前に固定する
     "cbor2==6.1.5",
     "fastapi>=0.156.8",
+    # テレメトリー（20日目）。KIDS_OTEL=enabled のときだけ使う（脅威分析 T-34、C-37）
+    "opentelemetry-api==1.45.1",
+    "opentelemetry-exporter-otlp-proto-http==1.45.1",
+    "opentelemetry-exporter-prometheus==0.66b1",
+    "opentelemetry-instrumentation-fastapi==0.66b1",
+    "opentelemetry-sdk==1.45.1",
     "pyjwt==2.15.1",
     "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
@@ -16,6 +22,8 @@ dependencies = [
 [tool.uv]
 # パッケージとして配らない（アプリとして動かすだけ）
 package = false
+# 公開から7日以上たった版だけを使う（T-04、C-09）。一緒に入る部品にも効く。日付を進めるときは PR で見直す
+exclude-newer = "2026-10-29T00:00:00Z"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

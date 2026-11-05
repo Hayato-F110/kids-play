@@ -1,0 +1,15 @@
+# kids-play の区画。Pod Security Standards の最も厳しい段階（restricted）を強制する（C-36 (1)）。
+# root で動く Pod、特権の Pod、権限を増やせる Pod、seccomp のない Pod は、作る段階で断られる
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kids-play
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    # 版を固定し、Kubernetes を上げたときに規則が黙って変わらないようにする
+    pod-security.kubernetes.io/enforce-version: v1.37
+    # Deployment を作った時点でも警告を出し、監査の記録にも残す（enforce は Pod にだけ効くため）
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.37
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.37
