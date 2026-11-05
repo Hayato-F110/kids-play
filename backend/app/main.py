@@ -17,6 +17,8 @@ from fastapi import Body, FastAPI, File, Form, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from opentelemetry.sdk.metrics.export import MetricReader
+from opentelemetry.sdk.trace.export import SpanExporter
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -24,6 +26,7 @@ from app.config import MAX_REQUEST_BYTES, MAX_VOICE_MS, Settings
 from app.errors import ApiError
 from app.media import read_picture, read_voice
 from app.store import PageContent, PageLimitError, PageMeta, PageStore
+from app.telemetry import setup_telemetry
 from app.zerotrust import AUTH_PREFIX, ZeroTrust
 
 # ブラウザが PC の中のサーバーを開くときの名前だけを受け付ける
@@ -71,9 +74,21 @@ def _length_problem(request: Request, limit: int) -> JSONResponse | None:
     return None
 
 
-def create_app(settings: Settings, clock: Callable[[], float] = time.time) -> FastAPI:
+def create_app(
+    settings: Settings,
+    clock: Callable[[], float] = time.time,
+    span_exporter: SpanExporter | None = None,
+    metric_reader: MetricReader | None = None,
+) -> FastAPI:
     # API の説明の画面（/docs）は外部の CDN からスクリプトを読むので出さない（外部通信なしのルール）
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    # テレメトリーは既定で無効。exporter が渡されても、設定が無効なら計装しない（C-37）。
+    # exporter を渡すのはテストだけ（メモリに記録する）
+    app.state.telemetry = (
+        setup_telemetry(app, span_exporter=span_exporter, metric_reader=metric_reader)
+        if settings.telemetry_enabled
+        else None
+    )
     # 無効のときは DB を作らない。受け取らないだけでなく、置き場所も作らない
     store = PageStore(settings.db_path) if settings.server_storage_enabled else None
     # 無効のときは、ログインの窓口もおとなの API も作らない（既定は無効）
