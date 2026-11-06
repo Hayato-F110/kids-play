@@ -2,6 +2,7 @@
 #   test ───────┐
 #   scan ───────┤
 #   k8s-config ─┴─▶ push ─▶ sign ─▶ verify（push から先は main のときだけ。権限は必要な作業にだけ渡す）
+#   tofu（OpenTofu の検査。イメージとは関係しないので、push の前提にしない）
 # EC2 への deploy の作業は、14日目に AWS を片付けたので外した（中身は git の履歴と server/aws/ に残る）
 # scan では外部のスキャナー（Trivy）を動かすので、書き込みの権限を渡さない。
 # 2026年3月に trivy-action のタグが乗っ取られ、CI の秘密情報を盗む事件があったため（CVE-2026-33634、T-04）
@@ -182,6 +183,63 @@ jobs:
           version: v0.76.0
           scan-type: config
           scan-ref: k8s
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
+
+  # 21日目、KIDS-65。OpenTofu の構成を、Docker を動かさずに確かめる（tofu test は偽物の provider を使う）
+  tofu:
+    name: OpenTofu の検査
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/tofu
+    steps:
+      - name: リポジトリを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # 手元と同じ版。取得した本体は、アクションが SHA256SUMS で検証する
+      - name: OpenTofu を用意する
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: 1.12.11
+          tofu_wrapper: false
+
+      # versions.tf で state と plan の暗号化を必須にしているので、鍵の設定を渡す。
+      # CI では state を作らないので、その場で作る使い捨ての鍵でよい（秘密情報は使わない）
+      - name: 使い捨ての暗号化の鍵を用意する
+        run: |
+          {
+            echo 'TF_ENCRYPTION<<EOF'
+            echo "key_provider \"pbkdf2\" \"local\" { passphrase = \"$(openssl rand -hex 24)\" }"
+            echo 'method "aes_gcm" "local" { keys = key_provider.pbkdf2.local }'
+            echo 'state { method = method.aes_gcm.local }'
+            echo 'plan { method = method.aes_gcm.local }'
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
+
+      - name: 書き方をそろえる（tofu fmt）
+        run: tofu fmt -check -recursive -diff
+
+      # .terraform.lock.hcl のハッシュと合わない provider は入れない
+      - name: provider を取得する（lock ファイルのとおり）
+        run: tofu init -input=false -lockfile=readonly
+
+      - name: 構成の形を確かめる（tofu validate）
+        run: tofu validate
+
+      - name: 守りのテスト（tofu test）
+        run: tofu test
+
+      - name: 重大（HIGH・CRITICAL）な設定の誤りがあれば失敗させる
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.0
+          scan-type: config
+          scan-ref: infra/tofu
           severity: HIGH,CRITICAL
           exit-code: "1"
           format: table
