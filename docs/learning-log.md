@@ -1756,3 +1756,91 @@ PR（プルリクエスト）とは：ブランチで行った変更を「main �
   - 総まとめ：pytest の httpx の警告（今日も `StarletteDeprecationWarning` が出た）、TalkBack の読み上げの文言、長押しのしきい値
   - ディスク：`kindest/node`（1.34GB）。21日目に使い終わったら消すか決める
 - 発展の候補：kind で GHCR の署名済みのイメージを digest で使い、入れる前に署名を検証する。Collector と Grafana でメトリクスをグラフにする。Jaeger の保存件数の上限
+
+## 21日目（2026-11-06）
+
+- 進捗：計画どおり（計画の 11/7 より1日早い）。完了条件はすべてそろい、スプリント3が完了した。作業は何も削っていない
+- 作業時間：約2時間（推定。18:20ごろ〜19:10ごろと、20:05ごろ〜21:15ごろ。/end-day を含む。間の約55分は休憩）。見積もりの4〜6時間の約半分。内訳の目安は、Claude の作業 約1時間10分、待ち時間 約20分（cosign のイメージ、CI）、人の確認 約30分（cosign の実行、`/permissions`、apply の承認、Firefly、マージ3回）
+
+### やったこと
+
+- `/whats-new`：2.1.318 のまま（新しい版なし）。2.1.317・2.1.318 から3つを選び、試した結果まで playbook に記録した（`claude -p` の終了コード、Windows の一時フォルダーのパス、`/permissions`）
+- OpenTofu（#118）：v1.12.11 を、SHA256 と cosign の署名の両方で確かめてから入れた。Docker の provider 4.6.0 で、compose と同じ web・api の構成を書いた（localhost だけで待つ、読み取り専用、権限を全部外す、`:latest` を断る）。state と plan は暗号化した
+- テストの一覧を承認してもらってから、`tofu test`（5件、`mock_provider`）を書いた。テストをわざと8通り壊し、8つとも失敗することを確かめた。CI に「OpenTofu の検査」（fmt、validate、test、Trivy）を足した
+- 作る → 確かめる → 消す：apply の前に、学習者が `/permissions` で apply・destroy・`-auto-approve` を ask に足した。apply は保存した計画だけを使った。Docker が足した値（memory_swap）のずれを、テストを先に足してから直し、2回目の plan で `No changes` を確かめた。destroy のあと、コンテナとネットワークが残らず、イメージは残ることを確かめた
+- 脅威分析：T-35（IaC の道具、state、確認なしの反映）と C-38 を足した。作る前に足すべきだったが、apply のあとに書いた
+- 規制と標準の動向（`docs/security/regulatory-trends.md`）と、Uptane の図と説明（`docs/security/uptane.md`）を書いた（#119）
+- 動画生成 AI：Grok Imagine と Kling の代わりに、Adobe Firefly を選んだ（OpenAI の Sora は 2026-04-26 と 09-24 に終了していた）。Flow と同じ英語の指示で1本作り、C2PA を読んで比べた。署名者は Adobe、`Valid`。目に見える透かしはなく、学習に使うかの設定は画面で見つからなかった
+- 総まとめ：Dependabot の minimatch（#39）を、理由をつけて「受け入れたリスク」として閉じた。pytest の httpx の警告は、httpx2 への置き換えで0件にした（#120）。kindest/node・cosign・hello-world のイメージとビルドの途中の結果を、学習者が消した（約2.2GB）
+- playbook の最終版：21日目の行を3つ足し、「QCD別のまとめ」を21日間の内容にした
+- 11月からの学び方：新しいプロジェクト NORI（のりものアドベンチャー）に移る。NORI は別のフォルダーで、別のセッションで進める
+
+### 完了条件ごとの成果
+
+| 完了条件 | 結果 | 確かめ方 |
+|---|---|---|
+| OpenTofu で作って消せる | 達成 | `tofu-verify.ps1` の up（HTTP 200、守りの設定、state の暗号化）と down（何も残らない） |
+| 動向の整理が docs/ にある | 達成 | [regulatory-trends.md](security/regulatory-trends.md)。R155/R156 の 2026 年の改正は確かめられなかったと明記した |
+| 動画生成 AI の比較 | 達成 | [provenance.md](security/provenance.md) の「Adobe Firefly と Google Flow の比べ」 |
+| Uptane の図と説明がある | 達成 | [uptane.md](security/uptane.md)（mermaid の図） |
+| playbook の最終版 | 達成 | 「QCD別のまとめ」を21日間に更新 |
+| スプリント3完了 | 達成（Jira の移動は学習者） | #118〜#120 が PR と main の CI で緑 |
+
+### 学んだこと3行
+
+1. インフラをコードにすると、変更の承認は「plan を読む」になる。apply は保存した計画だけにし、確認を省く書き方（`-auto-approve`）は止める
+2. テストが通っても、テストが効いているとは限らない。わざと壊して失敗するかを見て、初めて守りの約束を確かめたと言える
+3. 生成 AI のサービスは、数か月で終わることがある（Sora）。作った物と来歴を手元に残し、共通の規格（C2PA）のサービスを選ぶ
+
+### 今日学んだこと（3つの分類）
+
+**流行の技術**
+
+- OpenTofu（IaC）：構成をコードにし、plan で差分を見てから apply する。テストと CI で守りの設定を毎回確かめた。試験環境や社内サーバーの構成を、レビューできる形で残すのに使える
+- Adobe Firefly：Flow と同じ指示で動画を作り、2社とも C2PA を使うことを確かめた。社内の資料の素材に使うなら、規約と学習の設定を先に確かめる
+- 規制の動向：CRA の報告の義務がすでに始まり、ISO/SAE 21434 は第2版の準備中。車の外の製品や開発ツールでは、CRA に当たるかを確かめる
+- 学べなかったこと：kind の構成の OpenTofu 化（Docker の構成だけにした）、R155/R156 の 2026 年の改正の確認
+
+**Claudeの使い方**
+
+- `claude -p` の終了コード：Haiku で安くレビューを流し、終了コードと `is_error` で判定した。差分だけを渡すと、範囲の外のことを誤って指摘した
+- 権限の設定は人が行う：apply と destroy の ask は、学習者が `/permissions` で足した。Claude は自分の権限を変えられない
+- AI の言い切りを確かめる：Claude が「c2patool は消した」と確かめずに言い、学習者の問いで直した。仕事でも「消した」「テスト済み」は、どう確かめたかを聞く
+- 学べなかったこと：`/compact`（今日も区切りでは使わず、会話は自動の要約で続いた）
+
+**セキュリティ**
+
+- 道具の入手の守り：OpenTofu を、ハッシュと cosign の署名の両方で確かめてから入れた。21434 の供給者の管理と、ツールの信頼性の確認に当たる
+- state の暗号化と、確認なしの反映を止める仕組み：構成の台帳は秘密を含みうる資産として守り、変更は人の承認を通す。21434 の構成管理と変更管理（T-35、C-38）
+- 受け入れたリスク：minimatch の DoS は、攻撃者が入力できないことを確かめて、理由つきで受け入れた。TARA のリスク対応の「保有」と同じく、見直しの条件まで書く
+
+### つまずいたこと（原因と解決）
+
+- cosign の署名の証明書（.pem）の取得を、秘密を守る Hook が止めた → Hook を回り道せず、学習者が cosign を実行した。Docker の cosign で `Verified OK`
+- Claude が設定ファイル（settings.json）に ask を足せなかった → 自分の権限を変える書き込みは止められる。学習者が `/permissions` で足した
+- `tofu init` が `Invalid expression` で失敗した → state の暗号化を必須にしたのに、鍵を渡していなかった。スクリプトで鍵を渡し、コードにも注記した
+- PowerShell の `switch` が1つだけの配列を開き、tofu に「t」だけが渡った → `@()` で囲んだ
+- テストを壊す8通りのうち1つ（`condition = true`）は、OpenTofu が受け付けなかった → 別の書き方で壊した
+- 2回目の plan で memory_swap のずれが出た → Docker がメモリの2倍を入れていた。テストを先に足し、memory_swap を書いて `No changes` にした
+- 脅威分析への挿入で、空行と改行の形が崩れた → ファイルを元に戻し、編集の道具で足し直した
+- Claude が c2patool を「16日目のあとに消した」と確かめずに言った → 一時フォルダーに zip が残っていた。公式のハッシュで照合してから使った
+- 会話の要約のあと、Claude が英語で何度も返した → CLAUDE.md に書いてあるのに守れなかった。崩れやすい場面をメモリに残した
+- ローカルの main が #118・#119 より古かった → 新しいブランチを作る前に `git pull --ff-only` した
+
+### Claude Code活用メモ（QCD）
+
+- Q：テストの一覧を実装の前に承認してもらい、テストをわざと壊して効き目を確かめた。apply と destroy は人の承認を通した。PR と main の CI を3回とも見届けた
+- C：`claude -p` を Haiku で流した（約0.006ドル）。調べものは公式のページに絞った。今日も区切りでは `/compact` をしなかった
+- D：CI とイメージの取得を裏で動かし、その間に文書を書いた。PR は3本（#118〜#120）
+
+### 次にやること
+
+- 11月7日から：NORI（のりものアドベンチャー）に移る。VS Code で `C:\Users\hayat\Documents\nori_ClaudeCode` を開き、`/start-day` から始める（NORI の handoff.md、CLAUDE.md、Jira のスプリント1）
+- NORI の最初の作業：NORI-17（Blender MCP の隔離）を、学習者が `docs/security/blender-mcp-isolation.md` の手順 ①の5 から続ける
+- kids-play の、手が空いたらやること（スプリントには入れない）：
+  - TalkBack の読み上げの言い方（実機で学習者が確かめる）
+  - 長押しのしきい値（子どもに試してもらい、「消せたか、消しにくかったか」だけを記録する）
+  - CBOM の「次に見直すとき」：mTLS の鍵交換の方式、Git が使う ssh
+  - minimatch：eslint が minimatch 11 を使うようになったら更新する
+  - WSL の新しいカーネル（6.18.58.1）は、`wsl --update` で配られたら入れる
+- 発展の候補：kind の構成の OpenTofu 化、kind で署名済みのイメージを digest で使う、Collector と Grafana
