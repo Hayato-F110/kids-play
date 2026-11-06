@@ -79,7 +79,40 @@ CI の結果は、main の実行 41371882610（コミット 9b05ce3）で確か�
 | Gemini の画面、Gemini API | 無料では作れない |
 | Bing Video Creator | 入口が見つからなかった。2026年7月に終了したとする記事が1件あるが、公式の発表は未確認 |
 | Google Flow | 作れた。ヘルプの1つには有料プランが必要とあり、別のヘルプと食い違っている |
-| Adobe Firefly | プランのページに無料で動画ありと記載。試していない |
+| Adobe Firefly | プランのページに無料で動画ありと記載。試していない（2026-11-06 に試した。次の節） |
+
+### Adobe Firefly と Google Flow の比べ（2026-11-06）
+
+Flow と同じ英語の指示（くじらが青い海を泳ぐ）で、Firefly の動画を1本作った。言葉の違いが混ざらないように、日本語の指示は使わなかった。
+
+| 観点 | Google Flow（11-02） | Adobe Firefly（11-06） |
+|---|---|---|
+| 無料で作れる量 | 1日50クレジット | 動画2本まで |
+| 作るのにかかった時間 | — | 約1分 |
+| 長さと解像度 | — | 5.04秒、1920×1080 |
+| 目に見える透かし | — | なし |
+| 学習に使うかの設定 | — | 画面で見つからなかった（規約の確認は未実施） |
+| 署名者 | Google LLC | Adobe Inc.（Adobe Firefly C2PA） |
+| 生成の記録 | `c2pa.created` と、SynthID を入れた `c2pa.edited` | `c2pa.created` だけ。モデル名「Adobe Firefly Video Model 2」が記録される |
+| AI 生成の印 | `trainedAlgorithmicMedia` | `trainedAlgorithmicMedia` |
+| 署名の時刻 | — | Adobe の時刻認証局の時刻が付く（`timeStamp.validated`） |
+| 判定 | `Valid`（`signingCredential.untrusted`） | `Valid`（`signingCredential.untrusted`） |
+
+分かったこと：
+
+- 2社とも C2PA と `trainedAlgorithmicMedia` を使っている。共通の規格なので、同じ道具（`c2patool`）で読み比べられる
+- 違いは、映像そのものに入れる透かしが記録に出るかどうか。Flow の記録には SynthID が出たが、Firefly の記録には出なかった（入れていないとは言い切れない。記録に書かれていないだけ）
+- Firefly の動画には、目に見える透かしがない。見た目では AI で作ったと分からず、手がかりは C2PA だけになる。C2PA は保存し直すと消えるので（上の壊れ方の試験）、公開するときは「AI で作った」と自分で書き添える
+- 学習に使うかの設定は、画面で見つからなかった。業務で使う前に、規約と管理者の設定で確かめる
+- 2社とも `signingCredential.untrusted` だった。原因は署名者ではなく、こちらに信頼リストがないこと、という見方が強まった
+
+### サービスがなくなるリスク（Sora の終了）
+
+OpenAI の Sora は、Web とアプリが 2026-04-26、API が 2026-09-24 に終了した（出典：OpenAI のヘルプ「What to know about the Sora discontinuation」、開発者向けの Deprecations のページ）。API の終了は、半年前の 2026-03-24 に知らされた。終了のあと、利用者のデータは消される。生成 AI のサービスは、数か月で終わることがある。業務で使うときは、次を先に決めておく。
+
+- 作った物と、その来歴（C2PA）を自分の側に残す
+- 別のサービスに乗り換えられるようにする。C2PA のように共通の規格を使うサービスを選ぶ
+- 車載の部品と同じく、供給が止まったときの代わりを考えておく（ISO/SAE 21434 のサプライヤー管理、サポート終了の扱いに近い）
 
 ### 使うときの注意
 
