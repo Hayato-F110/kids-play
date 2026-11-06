@@ -12,7 +12,7 @@ import time
 from collections.abc import Iterator
 from pathlib import Path
 
-import httpx
+import httpx2 as httpx  # httpx の後継。Starlette 1.9 が非推奨にした httpx の代わり
 import pytest
 import uvicorn
 from cryptography import x509
