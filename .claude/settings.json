@@ -1,35 +1,57 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Read|Edit|Write|Grep|Glob|Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-secrets.mjs"],
-            "timeout": 10,
-            "onFailure": "block"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/format-and-lint.mjs"],
-            "timeout": 60
-          }
-        ]
-      }
-    ]
-  },
   "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(npm test:*)",
+      "Bash(npx prettier --check:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git --version)",
+      "Bash(uv --version)",
+      "Bash(python --version)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(java -version)",
+      "Bash(adb version)",
+      "Bash(docker --version)",
+      "PowerShell(git status:*)",
+      "PowerShell(git diff:*)",
+      "PowerShell(git log:*)",
+      "PowerShell(git branch:*)",
+      "PowerShell(git switch:*)",
+      "PowerShell(git add:*)",
+      "PowerShell(git commit:*)",
+      "PowerShell(git stash:*)",
+      "PowerShell(git fetch:*)",
+      "PowerShell(git pull:*)",
+      "PowerShell(git merge:*)",
+      "PowerShell(git show:*)",
+      "PowerShell(git ls-files:*)",
+      "PowerShell(git push -u origin *)",
+      "PowerShell(git push origin *)",
+      "PowerShell(node --check:*)",
+      "PowerShell(Get-ChildItem:*)",
+      "PowerShell(Get-Content:*)",
+      "PowerShell(Select-String:*)",
+      "PowerShell(uv run pytest:*)",
+      "PowerShell(uv run ruff:*)",
+      "PowerShell(npm test:*)",
+      "PowerShell(npx prettier --check:*)",
+      "PowerShell(npx eslint:*)",
+      "PowerShell(git --version)",
+      "PowerShell(uv --version)",
+      "PowerShell(python --version)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(java -version)",
+      "PowerShell(adb version)",
+      "PowerShell(docker --version)"
+    ],
     "deny": [
       "Read(**/.env)",
       "Read(**/.env.*)",
@@ -121,58 +143,40 @@
       "PowerShell(docker rmi:*)",
       "PowerShell(docker system prune:*)",
       "PowerShell(docker volume rm:*)",
-      "PowerShell(docker compose down:*)"
+      "PowerShell(docker compose down:*)",
+      "PowerShell(*tofu*apply*)",
+      "PowerShell(*tofu*destroy*)",
+      "PowerShell(*-auto-approve*)",
+      "Bash(*tofu*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|Grep|Glob|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-secrets.mjs"],
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      }
     ],
-    "allow": [
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git branch:*)",
-      "Bash(uv run pytest:*)",
-      "Bash(uv run ruff:*)",
-      "Bash(npm test:*)",
-      "Bash(npx prettier --check:*)",
-      "Bash(npx eslint:*)",
-      "Bash(git --version)",
-      "Bash(uv --version)",
-      "Bash(python --version)",
-      "Bash(node --version)",
-      "Bash(npm --version)",
-      "Bash(java -version)",
-      "Bash(adb version)",
-      "Bash(docker --version)",
-      "PowerShell(git status:*)",
-      "PowerShell(git diff:*)",
-      "PowerShell(git log:*)",
-      "PowerShell(git branch:*)",
-      "PowerShell(git switch:*)",
-      "PowerShell(git add:*)",
-      "PowerShell(git commit:*)",
-      "PowerShell(git stash:*)",
-      "PowerShell(git fetch:*)",
-      "PowerShell(git pull:*)",
-      "PowerShell(git merge:*)",
-      "PowerShell(git show:*)",
-      "PowerShell(git ls-files:*)",
-      "PowerShell(git push -u origin *)",
-      "PowerShell(git push origin *)",
-      "PowerShell(node --check:*)",
-      "PowerShell(Get-ChildItem:*)",
-      "PowerShell(Get-Content:*)",
-      "PowerShell(Select-String:*)",
-      "PowerShell(uv run pytest:*)",
-      "PowerShell(uv run ruff:*)",
-      "PowerShell(npm test:*)",
-      "PowerShell(npx prettier --check:*)",
-      "PowerShell(npx eslint:*)",
-      "PowerShell(git --version)",
-      "PowerShell(uv --version)",
-      "PowerShell(python --version)",
-      "PowerShell(node --version)",
-      "PowerShell(npm --version)",
-      "PowerShell(java -version)",
-      "PowerShell(adb version)",
-      "PowerShell(docker --version)"
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/format-and-lint.mjs"],
+            "timeout": 60
+          }
+        ]
+      }
     ]
   }
 }
