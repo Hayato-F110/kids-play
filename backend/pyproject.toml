@@ -29,6 +29,8 @@ exclude-newer = "2026-10-29T00:00:00Z"
 testpaths = ["tests"]
 # backend/ を読み込み先に足し、テストから app と tests を import できるようにする
 pythonpath = ["."]
+# Starlette の非推奨の警告は失敗にする。部品の置き換えの遅れを、警告の見落としではなく CI の赤で気づくため
+filterwarnings = ["error::starlette.exceptions.StarletteDeprecationWarning"]
 
 [tool.ruff]
 line-length = 110
@@ -44,7 +46,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S"]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
+    "httpx2==2.16.0",
     "pip-audit>=2.10.1",
     "pytest>=9.1.1",
     "ruff>=0.17.1",
