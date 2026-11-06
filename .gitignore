@@ -117,3 +117,11 @@ Screenshot_*
 
 # 16日目の生成 AI の試作物。公開するか決めていないので Git に入れない
 generated/
+
+# 21日目の OpenTofu。state と plan は作ったものの記録（暗号化していても Git に入れない）。
+# provider の本体（.terraform/）は取得し直せる。.terraform.lock.hcl はハッシュの固定なので Git に入れる
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
