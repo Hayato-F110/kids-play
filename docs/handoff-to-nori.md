@@ -61,7 +61,7 @@ kids-play で分かった決まり・環境・つまずきのうち、NORI の `
 | Git / GitHub CLI | 2.56.0 / 2.103.3 | 使う |
 | Blender | 5.2.3 | 使う（NORI-17 の隔離が先） |
 | DaVinci Resolve | 21.1（無料版） | 使う（NORI-48） |
-| Docker Desktop / WSL2（Ubuntu 24.04） | 4.98.0 | 12月のオンライン対戦（NORI-51）で使う。**使わないときは Docker Desktop を終了する**。Ubuntu は月に1回 `sudo apt update && sudo apt upgrade`（Ubuntu の中で実行） |
+| Docker Desktop / WSL2 | 4.98.0 | ほかの練習（Docker Compose）で使う。**使わないときは Docker Desktop を終了する**。WSL の Ubuntu 24.04 は 2026-11-19 に消した（NORI-51 でも使わないと判断。Docker Desktop は自分用の WSL で動くので、Ubuntu は要らない） |
 | JDK 27、Android Studio | — | ほかのアプリの開発で使うので残す。Android のビルドは Android Studio 同梱の JBR |
 | Playwright のブラウザ | — | 使う（約0.7GB） |
 
