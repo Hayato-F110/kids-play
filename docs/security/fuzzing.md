@@ -89,7 +89,7 @@ apt update && apt install -y clang libclang-rt-dev cppcheck   # コンパイラ�
 exit
 ```
 
-Rust 版。PowerShell で、リポジトリの直下から実行する（`rust` の公式イメージ。17日目は rustup の minimal で入れた）。
+Rust 版。PowerShell で、リポジトリの直下から実行する（`rust` の公式イメージ。17日目は rustup の minimal で入れた）。この手順は未確認（イメージがディスク上で数GBになるため、2026-11-20 は C 版だけを確かめた）。
 
 ```powershell
 docker run --rm -v "${PWD}:/work" -w /work/practice/tlv/rust rust:1 cargo test
