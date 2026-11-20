@@ -68,15 +68,33 @@ Rust に変えても論理の誤りは消えないが、「黙ってメモリを
 - TARA では、外部から入力を受けるパーサーは攻撃の入口になる。ファジングは、その攻撃経路が実際に使えるか（実現可能性）を確かめる材料になる
 - メモリ安全な言語への移行は、CISA などが推奨している。今回の比較は、その効果（破壊から停止へ）と限界（論理の誤りは残る）の両方を示す
 
-## 再現の手順（WSL の Ubuntu で実行）
+## 再現の手順（Docker の Ubuntu 24.04 コンテナで実行）
+
+17日目は WSL の Ubuntu で実行した。WSL の Ubuntu は 2026-11-19 に消した（KIDS-65）ので、今は Docker Desktop のコンテナで再現する。コンテナは終わると消えるので、更新の手間が残らない。
+
+C 版。PowerShell で、リポジトリの直下から実行する。
+
+```powershell
+# --rm：終わったらコンテナを消す　-v：リポジトリをコンテナの /work に見せる　-w：最初にいるフォルダー
+docker run --rm -it -v "${PWD}:/work" -w /work/practice/tlv/c ubuntu:24.04 bash
+```
+
+ここからはコンテナの中の bash で実行する（root なので `sudo` は要らない）。
 
 ```bash
-sudo apt install -y clang libclang-rt-dev cppcheck   # コンパイラー、ファザーとサニタイザー、静的解析の道具
-cd practice/tlv/c
+apt update && apt install -y clang libclang-rt-dev cppcheck   # コンパイラー、ファザーとサニタイザー、静的解析の道具
 ./run.sh test        # ふつうのテストと回帰の入力（ASan / UBSan つき）
 ./run.sh fuzz 60     # 60秒ファジングする。見つけた入力は build/crash-*
 ./run.sh check       # cppcheck
-cd ../rust && cargo test   # Rust 版（rustup の minimal で入れた）
+exit
 ```
+
+Rust 版。PowerShell で、リポジトリの直下から実行する（`rust` の公式イメージ。17日目は rustup の minimal で入れた）。この手順は未確認（イメージがディスク上で数GBになるため、2026-11-20 は C 版だけを確かめた）。
+
+```powershell
+docker run --rm -v "${PWD}:/work" -w /work/practice/tlv/rust rust:1 cargo test
+```
+
+終わったら、取得したイメージを消す：`docker rmi ubuntu:24.04 rust:1`
 
 CodeQL は、GitHub の Settings → Advanced Security → CodeQL analysis の Edit で、言語に C/C++ と Rust を足すと、PR と main への push のたびに動く。
