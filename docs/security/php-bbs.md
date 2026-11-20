@@ -94,6 +94,8 @@ npm の `npm audit`、Python の `pip-audit`（10日目）と同じ役目。Comp
 
 ## 再現の手順（tools/bbs で）
 
+動かす前に、[compose.yaml](../../tools/bbs/compose.yaml) の PHP のイメージを、最新のパッチ版に上げる（2026-11 の時点では 8.5.13 以降。IPA の注意喚起「PHPの脆弱性対策について（2026年11月）」で、8.5.12 は対象の範囲に入る）。Dependabot は tools/bbs を見ていないので、版は自動では上がらない。
+
 ```powershell
 docker compose up -d
 $env:BBS_INTEGRATION = "1"; uv run pytest
