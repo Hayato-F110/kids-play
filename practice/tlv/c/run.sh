@@ -1,5 +1,5 @@
 #!/bin/bash
-# WSL（Ubuntu）で使う。clang と libclang-rt-dev と cppcheck が要る（make は使わない）
+# Ubuntu（Docker の ubuntu:24.04 コンテナなど。手順は docs/security/fuzzing.md）で使う。clang と libclang-rt-dev と cppcheck が要る（make は使わない）
 #   ./run.sh test        ふつうのテスト（サニタイザーつき）と、回帰の入力
 #   ./run.sh fuzz [秒]   ファジング（既定で60秒）
 #   ./run.sh check       cppcheck の静的解析
