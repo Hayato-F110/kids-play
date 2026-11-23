@@ -13,7 +13,7 @@ FastAPI に OpenTelemetry を入れ、要求の流れ（トレース）と時間
 | kubectl | v1.36.1 | Docker Desktop に同梱のもの。サーバーとの差が1つ以内なので使える |
 | NetworkPolicy | kindnet（kind の既定） | kind v0.24.0 から、追加の部品なしで規則が効く |
 | Jaeger | v2.22.0 | OTLP を直接受けるので、Collector を立てなかった。ディスク上で 175MB |
-| OpenTelemetry（Python） | 1.45.1 / 0.66b1 | 最新の 1.45.2 は公開から7日たっていない（T-04）ので、1つ前 |
+| OpenTelemetry（Python） | 1.45.2 / 0.66b2 | 20日目は 1.45.1 / 0.66b1（1.45.2 が公開から7日たっていなかったため）。2026-11-23 に脆弱性 GHSA-mf5v-w3w3-f6cg の修正で上げた |
 
 ## 構成
 

@@ -8,11 +8,11 @@ dependencies = [
     "cbor2==6.1.5",
     "fastapi>=0.156.8",
     # テレメトリー（20日目）。KIDS_OTEL=enabled のときだけ使う（脅威分析 T-34、C-37）
-    "opentelemetry-api==1.45.1",
-    "opentelemetry-exporter-otlp-proto-http==1.45.1",
-    "opentelemetry-exporter-prometheus==0.66b1",
-    "opentelemetry-instrumentation-fastapi==0.66b1",
-    "opentelemetry-sdk==1.45.1",
+    "opentelemetry-api==1.45.2",
+    "opentelemetry-exporter-otlp-proto-http==1.45.2",
+    "opentelemetry-exporter-prometheus==0.66b2",
+    "opentelemetry-instrumentation-fastapi==0.66b2",
+    "opentelemetry-sdk==1.45.2",
     "pyjwt==2.15.1",
     "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
@@ -23,7 +23,8 @@ dependencies = [
 # パッケージとして配らない（アプリとして動かすだけ）
 package = false
 # 公開から7日以上たった版だけを使う（T-04、C-09）。一緒に入る部品にも効く。日付を進めるときは PR で見直す
-exclude-newer = "2026-10-29T00:00:00Z"
+# 2026-11-23：OpenTelemetry の脆弱性の修正版（1.45.2、10/29 公開）のために 10/29 から進めた
+exclude-newer = "2026-10-30T00:00:00Z"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
