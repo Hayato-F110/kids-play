@@ -3,7 +3,7 @@
 4〜8歳の子ども向けミニアプリ集。Web、PWA、Androidアプリで遊べる。
 21日間の個人学習プロジェクトとして、Web開発からCI/CD、クラウド、セキュリティまでを一通り体験し、続けて最新の技術とセキュリティを試した。
 
-> 状態：14日間の学習を 2026-10-28 に完了し、発展の学習（スプリント3、7日間）を 2026-11-06 に完了した。11月からは別のプロジェクトに移る
+> 状態：完了（2026-10-08〜11-06 の21日間）。14日間の学習を 2026-10-28 に、発展の学習（スプリント3、7日間）を 2026-11-06 に完了した。新しい機能の開発はせず、今は依存関係とイメージの更新だけを行っている
 
 ## ミニアプリ
 
@@ -37,8 +37,9 @@ https://github.com/user-attachments/assets/e48b3895-02bf-483d-bb89-e8952b75ec23
 |---|---|
 | [成果発表（PowerPoint、18枚）](docs/slides/kids-play-presentation.pptx) | 目的と結果、作ったもの、構成図、21日間の進め方、プライバシーとセキュリティ、AI との分担、学んだこと、失敗から学んだこと、スプリント3の成果、次の一歩 |
 | [1枚資料（PowerPoint）](docs/slides/kids-play-one-pager.pptx) | 全体を1枚にまとめたもの |
+| [AUTOSAR 体系的入門（PowerPoint）](docs/slides/AUTOSAR%20体系的入門.pptx) | 18日目の AUTOSAR の入門（[docs/autosar-intro.md](docs/autosar-intro.md)）をスライドにしたもの |
 
-どちらも Claude Design（Claude Code の会話の中）で、アプリのデザインシステムを読み込んで作った。数字は21日目（2026-11-06）の時点のもの。成果発表の6枚目には、1分の紹介動画が入っている（クリックで再生）。
+成果発表と1枚資料は Claude Design（Claude Code の会話の中）で、アプリのデザインシステムを読み込んで作った。数字は21日目（2026-11-06）の時点のもの。成果発表の6枚目には、1分の紹介動画が入っている（クリックで再生）。
 
 ## 遊び方
 
@@ -75,6 +76,12 @@ docker compose up -d --build
 | セキュリティ | 脅威分析（STRIDE）、Secret scanning、Dependabot、CodeQL、Trivy、SBOM（CycloneDX）、pip-audit、OWASP ZAP、SSL Labs |
 | 動画 | DaVinci Resolve、Remotion |
 | 進め方 | Jira（スクラム）、Claude Code、Claude Design |
+| AI（15日目） | MCP（Python SDK）、Gemini API、RAG、evals |
+| サプライチェーン（16日目） | Sigstore（cosign のキーレス署名）、GitHub artifact attestations、SLSA、C2PA |
+| 検証（17日目） | libFuzzer、ASan / UBSan、cppcheck、CodeQL（C）、Rust |
+| ゼロトラスト（18日目） | パスキー（WebAuthn）、短い期限のトークン、mTLS、TypeScript、SecOC の模擬、AUTOSAR の入門 |
+| 暗号・データ（19日目） | ML-KEM のハイブリッド鍵交換（X25519MLKEM768）、CBOM、DuckDB、PHP、Composer |
+| 運用（20〜21日目） | Kubernetes（kind）、NetworkPolicy、Pod Security、OpenTelemetry、Jaeger、OpenTofu |
 
 ## 構成図
 
@@ -107,8 +114,8 @@ AWS 版（EC2、nginx、HTTPS、OIDC と SSM による自動デプロイ）は 2
 
 ## CI/CDの流れ
 
-1. プルリクエスト：フロントとバックエンドのテスト、コンテナイメージの検査（Trivy。直し方のある CRITICAL があれば失敗）、SBOM の作成、CodeQL
-2. main へのマージ：検査を通ったイメージを GHCR へ push。`frontend/` は GitHub Pages へ公開
+1. プルリクエスト：フロントとバックエンドのテスト、TypeScript の型の検査、スプリント3の道具（`tools/`）のテスト、OpenTofu の検査、コンテナイメージの検査（Trivy。直し方のある CRITICAL があれば失敗）、SBOM の作成、CodeQL
+2. main へのマージ：検査を通ったイメージを GHCR へ push し、cosign で署名して来歴（attestation）を付ける。`frontend/` は GitHub Pages へ公開
 3. （13〜14日目）OIDC で AWS のロールを引き受け、SSM Run Command で EC2 へデプロイしていた。AWS の片付けに合わせて外した
 
 詳細は [docs/architecture.md](docs/architecture.md)。
@@ -126,8 +133,8 @@ AWS 版（EC2、nginx、HTTPS、OIDC と SSM による自動デプロイ）は 2
 ## セキュリティ
 
 - 脆弱性の報告：[SECURITY.md](SECURITY.md)（GitHub の非公開の報告の仕組みを使う）
-- 報告書：[docs/security/security-report.md](docs/security/security-report.md)。脅威 23件、対策 26件。今の CodeQL・Dependabot・Secret scanning の警告は 0件
-- 脅威分析：[docs/security/threat-model.md](docs/security/threat-model.md)（データフロー図、STRIDE、ISO/SAE 21434 との対応）
+- 脅威分析：[docs/security/threat-model.md](docs/security/threat-model.md)（データフロー図、STRIDE、ISO/SAE 21434 との対応）。脅威 35件、対策 38件（スプリント3で、AI エージェント、署名、ゼロトラスト、Kubernetes などを追加）
+- 報告書：[docs/security/security-report.md](docs/security/security-report.md)（14日目の時点のまとめ。脅威 23件、対策 26件）
 - 秘密情報はリポジトリに含めない。GitHub Actions から AWS へは OIDC で接続し、アクセスキーを発行しなかった
 
 ## Claude Codeの活用方法
@@ -150,6 +157,9 @@ AWS 版（EC2、nginx、HTTPS、OIDC と SSM による自動デプロイ）は 2
 | [docs/storage-interface.md](docs/storage-interface.md) | えほんの保存のインターフェース |
 | [docs/security/security-report.md](docs/security/security-report.md) | セキュリティ報告書 |
 | [docs/security/threat-model.md](docs/security/threat-model.md) | 脅威分析 |
+| [docs/security/](docs/security/) | スプリント3の各日のセキュリティの記録（下の表を参照） |
+| [docs/autosar-intro.md](docs/autosar-intro.md) | AUTOSAR の入門（層、SecOC の呼び出しの流れ、模擬との対応） |
+| [docs/k8s-otel.md](docs/k8s-otel.md) | kind で動かす手順と、OpenTelemetry |
 | [docs/video-storyboard.md](docs/video-storyboard.md) | 紹介動画の絵コンテと編集の記録 |
 | [docs/learning-log.md](docs/learning-log.md) | 毎日の学習ログ |
 | [docs/glossary.md](docs/glossary.md) | 用語集 |
@@ -164,18 +174,22 @@ AWS 版（EC2、nginx、HTTPS、OIDC と SSM による自動デプロイ）は 2
 
 外部の素材を使う場合は、ライセンスと再配布可否を確認してここに記載する。
 
-## 今後の予定
+## スプリント3でやったこと
 
-スプリント3（2026-10-29〜11-04）。詳細は [docs/plan.md](docs/plan.md)。
+2026-10-29〜11-06 の7日間。いま広く求められている技術とセキュリティを、kids-play と自作の小さなサンプルを題材に一通り試した。どれも手元（localhost、Docker、kind）で動かし、AWS は使っていない。詳細は [docs/plan.md](docs/plan.md) と [docs/learning-log.md](docs/learning-log.md)。
 
-| 日 | テーマ |
-|---|---|
-| 15日目 | MCP サーバーの自作と、AI エージェントのセキュリティ |
-| 16日目 | コンテナイメージの署名と来歴（サプライチェーン） |
-| 17日目 | C のファジングと静的解析、Rust での書き直し |
-| 18日目 | ゼロトラスト（パスキーと mTLS） |
-| 19日目 | 耐量子暗号（ML-KEM の TLS）と暗号の一覧 |
-| 20日目 | Kubernetes（kind）で動かして守る |
-| 21日目 | 最新動向の整理と振り返り |
+| 日 | テーマ | 記録とコード |
+|---|---|---|
+| 15日目 | MCP サーバーの自作、RAG と evals、プロンプトインジェクションの試験 | [docs/security/ai-injection.md](docs/security/ai-injection.md)、[tools/ai/](tools/ai/) |
+| 16日目 | コンテナイメージの署名と来歴、生成 AI と C2PA | [docs/security/provenance.md](docs/security/provenance.md) |
+| 17日目 | Web とサーバーの基礎、C のファジングと静的解析、Rust での書き直し | [docs/security/fuzzing.md](docs/security/fuzzing.md)、[practice/tlv/](practice/tlv/) |
+| 18日目 | ゼロトラスト（パスキー、mTLS）、TypeScript、SecOC の模擬、AUTOSAR の入門 | [zerotrust/](zerotrust/)、[tools/secoc/](tools/secoc/)、[docs/autosar-intro.md](docs/autosar-intro.md) |
+| 19日目 | 耐量子暗号の TLS と計測、CBOM、PHP の掲示板（SQLi・XSS・CSRF）、CAN の模擬ログの異常検知 | [docs/security/pqc-tls.md](docs/security/pqc-tls.md)、[docs/security/cbom.md](docs/security/cbom.md)、[docs/security/php-bbs.md](docs/security/php-bbs.md)、[docs/security/can-ids.md](docs/security/can-ids.md) |
+| 20日目 | Kubernetes（kind）で動かして守る、OpenTelemetry | [k8s/](k8s/)、[docs/k8s-otel.md](docs/k8s-otel.md) |
+| 21日目 | OpenTofu、規制と標準の動向、Uptane、振り返り | [infra/tofu/](infra/tofu/)、[docs/security/regulatory-trends.md](docs/security/regulatory-trends.md)、[docs/security/uptane.md](docs/security/uptane.md) |
 
-その先の発展：OpenTofu によるインフラのコード化、CloudWatch による監視、TypeScript への移行、Kotlin でのネイティブ機能。
+PHP の掲示板（[tools/bbs/](tools/bbs/)）は、わざと危険な書き方を含む学習用のコード。localhost だけで動かし、動かす前にイメージの版を上げる（[docs/security/php-bbs.md](docs/security/php-bbs.md)）。
+
+## その先
+
+学習は別のプロジェクトに移った。このリポジトリに残した発展の候補（手が空いたときに行う）：OpenTofu による AWS の構成のコード化、CloudWatch による監視、TypeScript への移行、Kotlin でのネイティブ機能。
