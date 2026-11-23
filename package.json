@@ -22,17 +22,17 @@
     }
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.3",
+    "@capacitor/cli": "8.6.2",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.13.0",
+    "eslint": "^10.15.0",
     "eslint-plugin-no-unsanitized": "^4.1.5",
-    "fake-indexeddb": "6.2.6",
-    "globals": "^17.13.0",
-    "prettier": "^3.9.10",
+    "fake-indexeddb": "6.2.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
     "typescript": "7.0.2"
   },
   "dependencies": {
-    "@capacitor/android": "8.5.3",
-    "@capacitor/core": "8.5.3"
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2"
   }
 }
