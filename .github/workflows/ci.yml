@@ -56,7 +56,7 @@ jobs:
           git diff --exit-code -- zerotrust/web/public
 
       - name: uv を用意する
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.13.6"
       - name: バックエンドの静的解析とテスト
@@ -310,7 +310,7 @@ jobs:
       DIGEST: ${{ needs.push.outputs[format('{0}_digest', matrix.image)] }}
     steps:
       - name: cosign を用意する
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
 
       - name: GHCR にログインする
         env:
@@ -353,7 +353,7 @@ jobs:
       UNSIGNED_TAG: sha-4c196d3d3ac8f6681d81263ff83f4521d43dea04
     steps:
       - name: cosign を用意する
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
 
       - name: GHCR にログインする
         env:
